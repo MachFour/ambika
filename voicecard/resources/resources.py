@@ -1,4 +1,4 @@
-#!/usr/bin/python2.5
+#!/usr/bin/python3
 #
 # Copyright 2011 Emilie Gillet.
 #
@@ -58,9 +58,9 @@ import waveforms
 create_specialized_manager = True
 
 resources = [
-  ('dummy', 'string', 'STR_RES', 'prog_char', str, False),
+  ('dummy', 'string', 'STR_RES', 'char', str, False),
   (lookup_tables.lookup_tables,
-   'lookup_table', 'LUT_RES', 'prog_uint16_t', int, False),
+   'lookup_table', 'LUT_RES', 'uint16_t', int, False),
   (waveforms.waveforms,
-   'waveform', 'WAV_RES', 'prog_uint8_t', int, True),
+   'waveform', 'WAV_RES', 'uint8_t', int, True),
 ]

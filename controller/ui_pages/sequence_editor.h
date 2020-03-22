@@ -40,7 +40,7 @@ class SequenceEditor : public UiPage {
   
   static void UpdateScreen();
   
-  static const prog_EventHandlers event_handlers_;
+  static const EventHandlers event_handlers_;
   
  private:
   static uint8_t actual_step(uint8_t index, uint8_t sequence);

@@ -69,10 +69,10 @@ class VoicecardProtocolRx {
     if (rx_led_counter_) {
       --rx_led_counter_;
       if (!lights_out_) {
-        rx_led.High();
+        RxLed::high();
       }
     } else {
-      rx_led.Low();
+      RxLed::low();
     }
   }
   
@@ -84,7 +84,7 @@ class VoicecardProtocolRx {
             arguments_[2],
             command_ & 1);
         if (!lights_out_) {
-          note_led.High();
+          NoteLed::high();
         }
         break;
       case COMMAND_WRITE_PATCH_DATA:
@@ -108,11 +108,11 @@ class VoicecardProtocolRx {
     switch (command_) {
       case COMMAND_RELEASE:
         voice.Release();
-        note_led.Low();
+        NoteLed::low();
         break;
       case COMMAND_KILL:
         voice.Kill();
-        note_led.Low();
+        NoteLed::low();
         break;
       case COMMAND_RETRIGGER_ENVELOPE:
       case COMMAND_RETRIGGER_ENVELOPE + 1:
@@ -124,19 +124,19 @@ class VoicecardProtocolRx {
         break;
       case COMMAND_RESET:
         voice.Init();
-        note_led.Low();
+        NoteLed::low();
         break;
       case COMMAND_LIGHTS_OUT:
         lights_out_ = 1;
-        rx_led.Low();
-        note_led.Low();
+        RxLed::low();
+        NoteLed::low();
         break;
       case COMMAND_BULK_SEND:
         {
           // Stop doing anything else
           Timer<2>::Stop();
           uint8_t size = spi_.Read();
-          uint8_t* data = data_ptr_ = voice.mutable_patch_data();
+          uint8_t* data = data_ptr_ = voice.patch().data.bytes;
           while (size--) {
             *data++ = spi_.Read();
           }

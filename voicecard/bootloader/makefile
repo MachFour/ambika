@@ -15,8 +15,11 @@ VERSION        = 0.1
 MCU_NAME       = 328
 TARGET         = ambika_voicecard_boot
 PACKAGES       = avrlib voicecard/bootloader
-EXTRA_DEFINES  = -funsigned-char -fno-inline-small-functions
+EXTRA_DEFINES  = -funsigned-char
 EXTRA_LD_FLAGS = ,--section-start=.text=0x7e00,--relax -nostartfiles
+
+# bootloader code must be under 512 bytes/256 words!
+# otherwise change --section-start=.text=0x7c00, HFUSE = dc for 1024 bytes/512 words
 
 LFUSE          = ff
 HFUSE          = de

@@ -39,7 +39,7 @@ EditMode UiPage::edit_mode_;
 PageInfo* UiPage::info_;
 
 /* static */
-const prog_EventHandlers UiPage::event_handlers_ PROGMEM = {
+const EventHandlers UiPage::event_handlers_ PROGMEM = {
   OnInit,
   SetActiveControl,
   OnIncrement,

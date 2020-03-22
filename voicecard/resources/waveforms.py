@@ -1,4 +1,4 @@
-#!/usr/bin/python2.5
+#!/usr/bin/python3
 #
 # Copyright 2011 Emilie Gillet.
 #
@@ -63,13 +63,13 @@ JUNINESS = 1.0
 
 
 def Dither(x, order=0, type=numpy.uint8):
-  for i in xrange(order):
+  for i in range(order):
     x = numpy.hstack((numpy.zeros(1,), numpy.cumsum(x)))
   x = numpy.round(x)
-  for i in xrange(order):
+  for i in range(order):
     x = numpy.diff(x)
   if any(x < numpy.iinfo(type).min) or any(x > numpy.iinfo(type).max):
-    print 'Clipping occurred!'
+    print('Clipping occurred!')
   x[x < numpy.iinfo(type).min] = numpy.iinfo(type).min
   x[x > numpy.iinfo(type).max] = numpy.iinfo(type).max
   return x.astype(type)
@@ -135,7 +135,7 @@ for zone in range(num_zones):
 
 # Save some bytes by using a slightly aliased triangle in the mid-octaves.
 triangle_lowest_octave = bl_tri_tables[0]
-for i in xrange(1, 3):
+for i in range(1, 3):
  bl_tri_tables[i] = triangle_lowest_octave
 
 
@@ -146,8 +146,8 @@ def LoadWavetable(x):
   num_cycles = len(array) / cycle
   assert num_cycles == 16
   wavetable = numpy.zeros((num_cycles, cycle + 1))
-  for i in xrange(num_cycles):
-    for j in xrange(cycle):
+  for i in range(num_cycles):
+    for j in range(cycle):
       wavetable[i, j] = array[i * cycle + j]
     wavetable[i, cycle] = wavetable[i, 0]
   

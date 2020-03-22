@@ -31,7 +31,7 @@
 namespace ambika {
 
 /* static */
-const prog_EventHandlers VersionManager::event_handlers_ PROGMEM = {
+const EventHandlers VersionManager::event_handlers_ PROGMEM = {
   OnInit,
   SetActiveControl,
   OnIncrement,

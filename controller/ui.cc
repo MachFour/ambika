@@ -41,7 +41,7 @@
 
 namespace ambika {
   
-const prog_PageInfo page_registry[] PROGMEM = {
+const PageInfo page_registry[] PROGMEM = {
   { PAGE_OSCILLATORS,
     &ParameterEditor::event_handlers_,
     { 0, 1, 2, 3, 4, 5, 6, 7 },
@@ -145,7 +145,7 @@ const prog_PageInfo page_registry[] PROGMEM = {
   },
 };
 
-static const prog_uint8_t default_most_recent_page_in_group[9] PROGMEM = {
+static const uint8_t default_most_recent_page_in_group[9] PROGMEM = {
   PAGE_OSCILLATORS,
   PAGE_FILTER,
   PAGE_ENV_LFO,
@@ -292,7 +292,7 @@ void Ui::ShowPageRelative(int8_t increment) {
   }
 }
 
-const prog_uint8_t part_leds_remap[] PROGMEM = { 0, 3, 1, 4, 2, 5 };
+const uint8_t part_leds_remap[] PROGMEM = { 0, 3, 1, 4, 2, 5 };
 
 /* static */
 void Ui::DoEvents() {

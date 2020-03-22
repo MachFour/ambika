@@ -171,8 +171,6 @@ struct PartData {
   }
 };
 
-typedef PartData PROGMEM prog_PartData;
-
 enum PartParameter {
   PRM_PART_VOLUME = sizeof(Patch),
   PRM_PART_OCTAVE,
@@ -222,8 +220,7 @@ class Part {
   void SetValue(uint8_t address, uint8_t value, uint8_t user_initiated);
   
   inline uint8_t GetValue(uint8_t address) const {
-    const uint8_t* bytes;
-    bytes = static_cast<const uint8_t*>(static_cast<const void*>(&patch_));
+    auto bytes = reinterpret_cast<const uint8_t*>(&patch_);
     return bytes[address];
   }
 
@@ -231,23 +228,23 @@ class Part {
   const PartData& data() const { return data_; }
   
   const uint8_t* raw_sequence_data() const { 
-    return static_cast<const uint8_t*>(static_cast<const void*>(&data_)) + 8;
+    return reinterpret_cast<const uint8_t*>(&data_) + 8;
   }
   const uint8_t* raw_data() const { 
-    return static_cast<const uint8_t*>(static_cast<const void*>(&data_));
+    return reinterpret_cast<const uint8_t*>(&data_);
   }
   const uint8_t* raw_patch_data() const { 
-    return static_cast<const uint8_t*>(static_cast<const void*>(&patch_));
+    return reinterpret_cast<const uint8_t*>(&patch_);
   }
   
   uint8_t* mutable_raw_sequence_data() {
-    return static_cast<uint8_t*>(static_cast<void*>(&data_)) + 8;
+    return reinterpret_cast<uint8_t*>(&data_) + 8;
   }
   uint8_t* mutable_raw_data() {
-    return static_cast<uint8_t*>(static_cast<void*>(&data_));
+    return reinterpret_cast<uint8_t*>(&data_);
   }
   uint8_t* mutable_raw_patch_data() {
-    return static_cast<uint8_t*>(static_cast<void*>(&patch_));
+    return reinterpret_cast<uint8_t*>(&patch_);
   }
   
   uint8_t lfo_value(uint8_t index) const { return lfo_previous_values_[index]; }

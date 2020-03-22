@@ -29,7 +29,7 @@
 namespace ambika {
 
 /* static */
-const prog_EventHandlers PerformancePage::event_handlers_ PROGMEM = {
+const EventHandlers PerformancePage::event_handlers_ PROGMEM = {
   ParameterEditor::OnInit,
   ParameterEditor::SetActiveControl,
   OnIncrement,
@@ -60,6 +60,8 @@ uint8_t PerformancePage::OnIncrement(int8_t increment) {
     }
     return 1;
   }
+  // TODO what to return?
+  return 0;
 }
 
 /* static */

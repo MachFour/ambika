@@ -46,8 +46,6 @@ struct SystemSettingsData {
   uint8_t checksum;
 };
 
-typedef SystemSettingsData PROGMEM prog_SystemSettingsData;
-
 class SystemSettings {
  public:
   SystemSettings() { }

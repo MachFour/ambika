@@ -101,7 +101,7 @@ class Storage {
     ForEachObject(location, &SysExSendObject);
   }
   
-  static FilesystemStatus Snapshot(const StorageLocation& location);
+  static void Snapshot(const StorageLocation& location);
   static FilesystemStatus PreviousVersion(const StorageLocation& location);
   static FilesystemStatus NextVersion(const StorageLocation& location);
   
@@ -144,14 +144,14 @@ class Storage {
     return fs_.GetFreeSpace();
   }
   
-  static uint8_t FileExists(const prog_char* name) {
+  static uint8_t FileExists(const char* name) {
     return FileExists(name, 0);
   }
-  static uint8_t FileExists(const prog_char* name, char variable);
+  static uint8_t FileExists(const char* name, char variable);
 
   static FilesystemStatus SpiCopy(
       uint8_t voice_id,
-      const prog_char* name,
+      const char* name,
       char variable,
       uint8_t page_size_nibbles);
   
@@ -177,7 +177,7 @@ class Storage {
  private:
   static void InvalidatePendingSysExTransfer();
   
-  static void Expand(const prog_char* name, char variable);
+  static void Expand(const char* name, char variable);
   
   static FilesystemStatus Save(
       StorageDir type,

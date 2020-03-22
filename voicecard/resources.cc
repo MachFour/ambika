@@ -25,14 +25,14 @@
 
 namespace ambika {
 
-static const prog_char str_res_dummy[] PROGMEM = "dummy";
+static const char str_res_dummy[] PROGMEM = "dummy";
 
 
-PROGMEM const prog_char* const string_table[] = {
+PROGMEM const char* const string_table[] = {
   str_res_dummy,
 };
 
-const prog_uint16_t lut_res_lfo_increments[] PROGMEM = {
+const uint16_t lut_res_lfo_increments[] PROGMEM = {
        4,      4,      4,      4,      5,      5,      5,      6,
        6,      7,      7,      7,      8,      8,      9,      9,
       10,     11,     11,     12,     13,     14,     14,     15,
@@ -50,7 +50,7 @@ const prog_uint16_t lut_res_lfo_increments[] PROGMEM = {
     2796,   2963,   3141,   3329,   3528,   3739,   3962,   4199,
     4451,   4717,   4999,   5298,   5615,   5951,   6307,   6684,
 };
-const prog_uint16_t lut_res_env_portamento_increments[] PROGMEM = {
+const uint16_t lut_res_env_portamento_increments[] PROGMEM = {
    65535,  18904,  16417,  14306,  12507,  10968,   9647,   8509,
     7525,   6672,   5931,   5285,   4719,   4224,   3788,   3405,
     3066,   2766,   2500,   2264,   2053,   1865,   1697,   1546,
@@ -68,7 +68,7 @@ const prog_uint16_t lut_res_env_portamento_increments[] PROGMEM = {
        9,      9,      8,      7,      7,      6,      6,      5,
        5,      4,      4,      3,      3,      2,      2,      1,
 };
-const prog_uint16_t lut_res_oscillator_increments[] PROGMEM = {
+const uint16_t lut_res_oscillator_increments[] PROGMEM = {
    11104,  11114,  11124,  11134,  11144,  11154,  11165,  11175,
    11185,  11195,  11205,  11215,  11225,  11235,  11245,  11256,
    11266,  11276,  11286,  11296,  11306,  11317,  11327,  11337,
@@ -166,13 +166,13 @@ const prog_uint16_t lut_res_oscillator_increments[] PROGMEM = {
    21890,  21910,  21930,  21950,  21970,  21990,  22009,  22029,
    22049,  22069,  22089,  22109,  22129,  22149,  22169,  22189,
 };
-const prog_uint16_t lut_res_fm_frequency_ratios[] PROGMEM = {
+const uint16_t lut_res_fm_frequency_ratios[] PROGMEM = {
       32,     64,    128,    129,    181,    201,    256,    257,
      362,    402,    448,    512,    514,    576,    704,    724,
      768,    804,    886,   1024,   1086,   1206,   1280,   1448,
     2048,
 };
-const prog_uint16_t lut_res_vca_linearization[] PROGMEM = {
+const uint16_t lut_res_vca_linearization[] PROGMEM = {
     3371,   2001,   1754,   1609,   1505,   1425,   1359,   1304,
     1255,   1213,   1175,   1141,   1109,   1080,   1053,   1028,
     1005,    983,    963,    943,    925,    907,    890,    874,
@@ -206,12 +206,12 @@ const prog_uint16_t lut_res_vca_linearization[] PROGMEM = {
       26,     24,     23,     21,     20,     18,     17,     15,
       14,     12,     11,      9,      8,      6,      5,      4,
 };
-const prog_uint16_t lut_res_cz_phase_reset[] PROGMEM = {
+const uint16_t lut_res_cz_phase_reset[] PROGMEM = {
        0,  32768,  16384,  32768,
 };
 
 
-PROGMEM const prog_uint16_t* const lookup_table_table[] = {
+const uint16_t* const lookup_table_table[] PROGMEM = {
   lut_res_lfo_increments,
   lut_res_env_portamento_increments,
   lut_res_oscillator_increments,
@@ -220,7 +220,7 @@ PROGMEM const prog_uint16_t* const lookup_table_table[] = {
   lut_res_cz_phase_reset,
 };
 
-const prog_uint8_t wav_res_formant_sine[] PROGMEM = {
+const uint8_t wav_res_formant_sine[] PROGMEM = {
        0,      0,      0,      0,      0,      0,      0,      0,
        0,      0,      0,      0,      0,      0,      0,      0,
        0,      2,      2,      3,      3,      4,      5,      6,
@@ -254,7 +254,7 @@ const prog_uint8_t wav_res_formant_sine[] PROGMEM = {
        0,     -2,     -2,     -3,     -3,     -4,     -5,     -6,
       -7,     -8,    -10,    -12,    -14,    -17,    -20,    -24,
 };
-const prog_uint8_t wav_res_formant_square[] PROGMEM = {
+const uint8_t wav_res_formant_square[] PROGMEM = {
        0,      1,      1,      2,      2,      3,      3,      4,
        4,      5,      6,      8,      9,     11,     13,     16,
        0,      1,      1,      2,      2,      3,      3,      4,
@@ -288,7 +288,7 @@ const prog_uint8_t wav_res_formant_square[] PROGMEM = {
        0,     -1,     -1,     -2,     -2,     -3,     -3,     -4,
       -4,     -5,     -6,     -8,     -9,    -11,    -13,    -16,
 };
-const prog_uint8_t wav_res_sine[] PROGMEM = {
+const uint8_t wav_res_sine[] PROGMEM = {
        2,      2,      2,      3,      2,      3,      3,      4,
        5,      4,      7,      5,      9,      7,     10,     11,
       11,     13,     13,     17,     16,     18,     21,     21,
@@ -323,7 +323,7 @@ const prog_uint8_t wav_res_sine[] PROGMEM = {
        4,      5,      2,      4,      2,      2,      2,      3,
        1,
 };
-const prog_uint8_t wav_res_bandlimited_square_0[] PROGMEM = {
+const uint8_t wav_res_bandlimited_square_0[] PROGMEM = {
       29,     29,     31,     29,     31,     31,     31,     32,
       32,     32,     34,     32,     35,     33,     35,     35,
       35,     35,     36,     37,     37,     36,     38,     39,
@@ -358,7 +358,7 @@ const prog_uint8_t wav_res_bandlimited_square_0[] PROGMEM = {
       26,     27,     26,     27,     28,     28,     27,     30,
       28,
 };
-const prog_uint8_t wav_res_bandlimited_square_1[] PROGMEM = {
+const uint8_t wav_res_bandlimited_square_1[] PROGMEM = {
       32,     33,     32,     33,     34,     34,     35,     33,
       36,     36,     35,     36,     37,     37,     37,     38,
       38,     38,     39,     40,     39,     39,     42,     40,
@@ -393,7 +393,7 @@ const prog_uint8_t wav_res_bandlimited_square_1[] PROGMEM = {
       28,     30,     30,     29,     32,     30,     32,     31,
       32,
 };
-const prog_uint8_t wav_res_bandlimited_square_2[] PROGMEM = {
+const uint8_t wav_res_bandlimited_square_2[] PROGMEM = {
       31,     30,     32,     31,     33,     31,     35,     31,
       35,     33,     36,     33,     36,     35,     36,     36,
       38,     35,     39,     37,     39,     37,     40,     40,
@@ -428,7 +428,7 @@ const prog_uint8_t wav_res_bandlimited_square_2[] PROGMEM = {
       27,     28,     27,     30,     28,     31,     28,     31,
       31,
 };
-const prog_uint8_t wav_res_bandlimited_square_3[] PROGMEM = {
+const uint8_t wav_res_bandlimited_square_3[] PROGMEM = {
       41,     40,     39,     40,     43,     43,     41,     41,
       43,     43,     45,     43,     43,     44,     46,     45,
       46,     44,     46,     48,     47,     46,     47,     48,
@@ -463,7 +463,7 @@ const prog_uint8_t wav_res_bandlimited_square_3[] PROGMEM = {
       35,     38,     38,     39,     39,     37,     40,     39,
       42,
 };
-const prog_uint8_t wav_res_bandlimited_square_4[] PROGMEM = {
+const uint8_t wav_res_bandlimited_square_4[] PROGMEM = {
       36,     37,     38,     41,     42,     42,     44,     42,
       41,     41,     40,     39,     40,     42,     43,     46,
       46,     47,     47,     47,     45,     43,     44,     44,
@@ -498,7 +498,7 @@ const prog_uint8_t wav_res_bandlimited_square_4[] PROGMEM = {
       38,     37,     40,     39,     37,     37,     36,     36,
       35,
 };
-const prog_uint8_t wav_res_bandlimited_square_5[] PROGMEM = {
+const uint8_t wav_res_bandlimited_square_5[] PROGMEM = {
       43,     44,     43,     43,     42,     41,     40,     39,
       38,     38,     35,     35,     35,     33,     35,     33,
       34,     36,     35,     38,     38,     40,     43,     45,
@@ -533,7 +533,7 @@ const prog_uint8_t wav_res_bandlimited_square_5[] PROGMEM = {
       34,     36,     38,     39,     40,     42,     42,     43,
       43,
 };
-const prog_uint8_t wav_res_bandlimited_saw_0[] PROGMEM = {
+const uint8_t wav_res_bandlimited_saw_0[] PROGMEM = {
       77,     78,     78,     81,     80,     82,     84,     83,
       86,     86,     86,     89,     89,     90,     92,     91,
       94,     93,     96,     96,     97,     98,     99,    100,
@@ -568,7 +568,7 @@ const prog_uint8_t wav_res_bandlimited_saw_0[] PROGMEM = {
       67,     70,     71,     71,     72,     75,     73,     77,
       76,
 };
-const prog_uint8_t wav_res_bandlimited_saw_1[] PROGMEM = {
+const uint8_t wav_res_bandlimited_saw_1[] PROGMEM = {
       78,     80,     81,     81,     82,     84,     85,     85,
       86,     89,     87,     90,     90,     92,     92,     94,
       94,     94,     98,     96,     99,     98,    101,    100,
@@ -603,7 +603,7 @@ const prog_uint8_t wav_res_bandlimited_saw_1[] PROGMEM = {
       70,     71,     73,     73,     74,     76,     77,     77,
       78,
 };
-const prog_uint8_t wav_res_bandlimited_saw_2[] PROGMEM = {
+const uint8_t wav_res_bandlimited_saw_2[] PROGMEM = {
       77,     80,     79,     82,     81,     83,     84,     85,
       86,     86,     89,     89,     90,     90,     93,     92,
       94,     95,     95,     98,     97,     99,     99,    101,
@@ -638,7 +638,7 @@ const prog_uint8_t wav_res_bandlimited_saw_2[] PROGMEM = {
       69,     71,     70,     75,     72,     75,     76,     77,
       78,
 };
-const prog_uint8_t wav_res_bandlimited_saw_3[] PROGMEM = {
+const uint8_t wav_res_bandlimited_saw_3[] PROGMEM = {
       83,     82,     84,     86,     87,     87,     87,     89,
       90,     91,     93,     90,     94,     95,     96,     96,
       96,     98,     99,    100,    101,    100,    102,    104,
@@ -673,7 +673,7 @@ const prog_uint8_t wav_res_bandlimited_saw_3[] PROGMEM = {
       74,     77,     77,     78,     78,     80,     80,     83,
       83,
 };
-const prog_uint8_t wav_res_bandlimited_saw_4[] PROGMEM = {
+const uint8_t wav_res_bandlimited_saw_4[] PROGMEM = {
       79,     80,     80,     84,     83,     88,     88,     89,
       90,     90,     91,     90,     90,     92,     92,     94,
       97,     96,    101,     99,    101,    102,    101,    100,
@@ -708,7 +708,7 @@ const prog_uint8_t wav_res_bandlimited_saw_4[] PROGMEM = {
       73,     75,     76,     79,     79,     79,     79,     78,
       80,
 };
-const prog_uint8_t wav_res_bandlimited_saw_5[] PROGMEM = {
+const uint8_t wav_res_bandlimited_saw_5[] PROGMEM = {
       81,     80,     81,     80,     81,     80,     80,     82,
       80,     81,     83,     83,     84,     86,     88,     88,
       91,     94,     93,     98,     98,    101,    102,    104,
@@ -743,7 +743,7 @@ const prog_uint8_t wav_res_bandlimited_saw_5[] PROGMEM = {
       72,     75,     76,     78,     78,     79,     81,     79,
       82,
 };
-const prog_uint8_t wav_res_bandlimited_triangle_0[] PROGMEM = {
+const uint8_t wav_res_bandlimited_triangle_0[] PROGMEM = {
        3,      5,      6,      9,     11,     12,     15,     16,
       18,     21,     23,     23,     27,     28,     30,     32,
       34,     36,     38,     40,     42,     43,     46,     48,
@@ -778,7 +778,7 @@ const prog_uint8_t wav_res_bandlimited_triangle_0[] PROGMEM = {
       19,     16,     15,     13,     11,      8,      7,      4,
        4,
 };
-const prog_uint8_t wav_res_bandlimited_triangle_3[] PROGMEM = {
+const uint8_t wav_res_bandlimited_triangle_3[] PROGMEM = {
        2,      4,      5,      7,     10,     11,     14,     14,
       19,     18,     22,     23,     25,     27,     30,     30,
       34,     35,     36,     40,     41,     43,     44,     48,
@@ -813,7 +813,7 @@ const prog_uint8_t wav_res_bandlimited_triangle_3[] PROGMEM = {
       16,     16,     13,     12,      9,      8,      5,      3,
        2,
 };
-const prog_uint8_t wav_res_bandlimited_triangle_4[] PROGMEM = {
+const uint8_t wav_res_bandlimited_triangle_4[] PROGMEM = {
        2,      3,      3,      5,      7,     10,     11,     14,
       16,     19,     20,     22,     24,     25,     29,     28,
       33,     33,     36,     38,     40,     42,     44,     46,
@@ -848,7 +848,7 @@ const prog_uint8_t wav_res_bandlimited_triangle_4[] PROGMEM = {
       17,     13,     12,      9,      7,      6,      3,      2,
        3,
 };
-const prog_uint8_t wav_res_bandlimited_triangle_5[] PROGMEM = {
+const uint8_t wav_res_bandlimited_triangle_5[] PROGMEM = {
        2,      2,      3,      3,      4,      5,      7,      8,
       10,     11,     14,     16,     18,     21,     22,     26,
       28,     30,     32,     36,     37,     40,     42,     44,
@@ -883,7 +883,7 @@ const prog_uint8_t wav_res_bandlimited_triangle_5[] PROGMEM = {
        9,      9,      6,      6,      3,      4,      2,      3,
        1,
 };
-const prog_uint8_t wav_res_vowel_data[] PROGMEM = {
+const uint8_t wav_res_vowel_data[] PROGMEM = {
       27,     40,     89,     15,     13,      1,      0,     18,
       51,     62,     13,     12,      6,      0,     15,     69,
       93,     14,     12,      7,      0,     10,     84,    110,
@@ -893,7 +893,7 @@ const prog_uint8_t wav_res_vowel_data[] PROGMEM = {
        0,      9,     51,     95,     15,      3,      0,      3,
        6,     73,     99,      7,      3,     14,      9,
 };
-const prog_uint8_t wav_res_distortion[] PROGMEM = {
+const uint8_t wav_res_distortion[] PROGMEM = {
        2,      2,      2,      2,      2,      2,      2,      2,
        2,      2,      2,      2,      2,      2,      2,      2,
        2,      2,      2,      2,      2,      2,      2,      2,
@@ -927,10 +927,10 @@ const prog_uint8_t wav_res_distortion[] PROGMEM = {
      254,    254,    254,    254,    254,    254,    254,    254,
      254,    254,    254,    254,    254,    254,    254,    254,
 };
-const prog_uint8_t wav_res_lfo_waveforms[] PROGMEM = {
+const uint8_t wav_res_lfo_waveforms[] PROGMEM = {
        1,    254,
 };
-const prog_uint8_t wav_res_env_expo[] PROGMEM = {
+const uint8_t wav_res_env_expo[] PROGMEM = {
        0,      4,      7,     11,     15,     19,     23,     26,
       30,     34,     37,     41,     44,     47,     51,     54,
       57,     60,     63,     66,     69,     72,     75,     78,
@@ -965,7 +965,7 @@ const prog_uint8_t wav_res_env_expo[] PROGMEM = {
      254,    254,    254,    254,    254,    254,    254,    255,
      255,
 };
-const prog_uint8_t wav_res_waves[] PROGMEM = {
+const uint8_t wav_res_waves[] PROGMEM = {
        2,      2,      2,      2,      2,      2,      2,      2,
        2,      2,      2,      2,      2,      2,      2,      2,
        2,      2,      2,      2,      2,      2,      2,      2,
@@ -2257,7 +2257,7 @@ const prog_uint8_t wav_res_waves[] PROGMEM = {
       66,     63,     65,     69,     77,     86,     95,    106,
      112,    115,    115,    116,    116,    117,    121,    130,
 };
-const prog_uint8_t wav_res_wavetables[] PROGMEM = {
+const uint8_t wav_res_wavetables[] PROGMEM = {
       16,     57,     52,     59,     53,     54,     55,     56,
       57,     58,     62,     69,     59,     61,     60,     61,
       62,     62,     16,     59,     52,     59,     71,     52,
@@ -2297,7 +2297,7 @@ const prog_uint8_t wav_res_wavetables[] PROGMEM = {
 };
 
 
-const prog_uint8_t* const waveform_table[] = {
+const uint8_t* const waveform_table[] = {
   wav_res_formant_sine,
   wav_res_formant_square,
   wav_res_sine,

@@ -24,11 +24,34 @@
 
 namespace ambika {
 
+
 struct OscillatorSettings {
-  uint8_t shape;
-  uint8_t parameter;
-  int8_t range;
-  int8_t detune;
+  struct Parameters {
+    uint8_t shape;
+    uint8_t parameter;
+    int8_t range;
+    int8_t detune;
+  };
+
+  union Data {
+    Parameters params;
+    uint8_t bytes[sizeof(Parameters)];
+  };
+
+  Data data;
+
+  inline uint8_t& shape() {
+      return data.params.shape;
+  }
+  inline uint8_t& parameter() {
+      return data.params.parameter;
+  }
+  inline int8_t& range() {
+      return data.params.range;
+  }
+  inline int8_t& detune() {
+      return data.params.detune;
+  }
 };
 
 struct FilterSettings {
@@ -234,52 +257,105 @@ enum FilterMode {
   FILTER_MODE_NOTCH,
 };
 
-static const uint8_t kNumSyncedLfoRates = 15;
-static const uint8_t kNumEnvelopes = 3;
-static const uint8_t kNumLfos = kNumEnvelopes;
-static const uint8_t kNumModulations = 14;
-static const uint8_t kNumModifiers = 4;
-static const uint8_t kNumOscillators = 2;
-static const uint8_t kNumModulationSources = MOD_SRC_LAST;
-static const uint8_t kNumModulationDestinations = MOD_DST_LAST;
+static constexpr uint8_t kNumSyncedLfoRates = 15;
+static constexpr uint8_t kNumEnvelopes = 3;
+static constexpr uint8_t kNumLfos = kNumEnvelopes;
+static constexpr uint8_t kNumModulations = 14;
+static constexpr uint8_t kNumModifiers = 4;
+static constexpr uint8_t kNumOscillators = 2;
+static constexpr uint8_t kNumModulationSources = MOD_SRC_LAST;
+static constexpr uint8_t kNumModulationDestinations = MOD_DST_LAST;
 
 struct Patch {
-  // Offset: 0-8
-  OscillatorSettings osc[kNumOscillators];
-  
-  // Offset: 8-16
-  uint8_t mix_balance;
-  uint8_t mix_op;
-  uint8_t mix_parameter;
-  uint8_t mix_sub_osc_shape;
-  uint8_t mix_sub_osc;
-  uint8_t mix_noise;
-  uint8_t mix_fuzz;
-  uint8_t mix_crush;
+  struct Parameters {
+    // Offset: 0-8
+    OscillatorSettings osc[kNumOscillators];
+    // Offset: 8-16
+    uint8_t mix_balance;
+    uint8_t mix_op;
+    uint8_t mix_parameter;
+    uint8_t mix_sub_osc_shape;
+    uint8_t mix_sub_osc;
+    uint8_t mix_noise;
+    uint8_t mix_fuzz;
+    uint8_t mix_crush;
+    // Offset: 16-24
+    FilterSettings filter[2];
+    int8_t filter_env;
+    int8_t filter_lfo;
+    // Offset: 24-48
+    EnvelopeLfoSettings env_lfo[kNumEnvelopes];
+    // Offset: 48-50
+    uint8_t voice_lfo_shape;
+    uint8_t voice_lfo_rate;
+    // Offset: 50-92
+    Modulation modulation[kNumModulations];
+    // Offset: 92-104
+    Modifier modifier[kNumModifiers];
+    // Offset: 104-112
+    uint8_t padding[8];
+  };
 
-  // Offset: 16-24
-  FilterSettings filter[2];
-  int8_t filter_env;
-  int8_t filter_lfo;
-  
-  // Offset: 24-48
-  EnvelopeLfoSettings env_lfo[kNumEnvelopes];
+  union Data {
+    Parameters params;
+    uint8_t bytes[sizeof(Parameters)];
+  };
 
-  // Offset: 48-50
-  uint8_t voice_lfo_shape;
-  uint8_t voice_lfo_rate;
+  Data data;
 
-  // Offset: 50-92
-  Modulation modulation[kNumModulations];
-  
-  // Offset: 92-104
-  Modifier modifier[kNumModifiers];
-  
-  // Offset: 104-112
-  uint8_t padding[8];
+  inline OscillatorSettings& osc(uint8_t index) {
+      return data.params.osc[index];
+  }
+  inline uint8_t& mix_balance() {
+      return data.params.mix_balance;
+  }
+  inline uint8_t& mix_op() {
+      return data.params.mix_op;
+  }
+  inline uint8_t& mix_parameter() {
+      return data.params.mix_parameter;
+  }
+  inline uint8_t& mix_sub_osc_shape() {
+      return data.params.mix_sub_osc_shape;
+  }
+  inline uint8_t& mix_sub_osc() {
+      return data.params.mix_sub_osc;
+  }
+  inline uint8_t& mix_noise() {
+      return data.params.mix_noise;
+  }
+  inline uint8_t& mix_fuzz() {
+      return data.params.mix_fuzz;
+  }
+  inline uint8_t& mix_crush() {
+      return data.params.mix_crush;
+  }
+  inline FilterSettings& filter(uint8_t index) {
+      return data.params.filter[index];
+  }
+  inline int8_t& filter_env() {
+      return data.params.filter_env;
+  };
+  inline int8_t& filter_lfo() {
+      return data.params.filter_lfo;
+  }
+  inline EnvelopeLfoSettings& env_lfo(uint8_t index) {
+      return data.params.env_lfo[index];
+  }
+  inline uint8_t& voice_lfo_shape() {
+      return data.params.voice_lfo_shape;
+  }
+  inline uint8_t& voice_lfo_rate() {
+      return data.params.voice_lfo_rate;
+  }
+  inline Modulation& modulation(uint8_t index) {
+      return data.params.modulation[index];
+  }
+  inline Modifier& modifier(uint8_t index) {
+      return data.params.modifier[index];
+  }
+  // no need to access padding
 };
-
-typedef Patch PROGMEM prog_Patch;
 
 enum PatchParameter {
   PRM_PATCH_OSC1_SHAPE,

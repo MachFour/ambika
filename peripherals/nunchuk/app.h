@@ -38,7 +38,7 @@ struct AppInfo {
   void (*PlayLogotone)();
 };
 
-typedef AppInfo PROGMEM prog_AppInfo;
+typedef AppInfo PROGMEM AppInfo;
 
 class App {
  public:

@@ -30,7 +30,7 @@ namespace ambika {
 uint8_t DialogBox::choice_;
 
 /* static */
-const prog_EventHandlers DialogBox::event_handlers_ PROGMEM = {
+const EventHandlers DialogBox::event_handlers_ PROGMEM = {
   OnInit,
   SetActiveControl,
   OnIncrement,

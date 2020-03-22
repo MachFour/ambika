@@ -36,7 +36,7 @@ class CycloSequencer {
   static void UpdateAccelerometer(uint8_t x, uint8_t y, uint8_t z);
   static void PlayLogotone();
 
-  static const prog_AppInfo app_info_;
+  static const AppInfo app_info_;
   
  private:
   static void SetActiveStep(uint8_t step);

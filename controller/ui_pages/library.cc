@@ -28,10 +28,10 @@
 
 namespace ambika {
 
-const prog_char blank_patch_name[] PROGMEM = "(empty)       \0";
+const char blank_patch_name[] PROGMEM = "(empty)       \0";
 
 /* static */
-const prog_EventHandlers Library::event_handlers_ PROGMEM = {
+const EventHandlers Library::event_handlers_ PROGMEM = {
   OnInit,
   UiPage::SetActiveControl,
   OnIncrement,
@@ -389,6 +389,12 @@ void Library::OnDialogClosed(uint8_t dialog_id, uint8_t return_value) {
             case STORAGE_OBJECT_PROGRAM:
               multi.mutable_part(location_.part)->InitSettings(mode);
               break;
+
+            case STORAGE_OBJECT_MULTI:
+            case STORAGE_OBJECT_PART:
+              // TODO?
+              break;
+
           }
         }
       }

@@ -34,7 +34,7 @@ class PerformancePage : public UiPage {
   
   static void UpdateLeds();
   
-  static const prog_EventHandlers event_handlers_;
+  static const EventHandlers event_handlers_;
   
  private:
   static uint8_t note_;

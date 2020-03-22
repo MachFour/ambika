@@ -47,7 +47,7 @@ class ParameterEditor : public UiPage {
   static uint8_t part_index(uint8_t control_id);
   static uint8_t instance_index(uint8_t control_id);
   
-  static const prog_EventHandlers event_handlers_;
+  static const EventHandlers event_handlers_;
   
  private:
   static SnapMask snapped_;

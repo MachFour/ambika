@@ -32,7 +32,7 @@
 namespace ambika {
 
 /* static */
-const prog_EventHandlers OsInfoPage::event_handlers_ PROGMEM = {
+const EventHandlers OsInfoPage::event_handlers_ PROGMEM = {
   OnInit,
   SetActiveControl,
   OnIncrement,
@@ -69,8 +69,10 @@ void OsInfoPage::FindFirmwareFiles() {
 
 /* static */
 uint8_t OsInfoPage::OnIncrement(int8_t increment) {
-  active_control_ = Clip(active_control_ + increment, 0, kNumVoices);
+  active_control_ = Clip(active_control_ + increment, 0_u8, kNumVoices);
   FindFirmwareFiles();
+  // TODO figure out what the return value does
+  return 1;
 }
 
 /* static */

@@ -36,7 +36,7 @@ class CardInfoPage : public UiPage {
 
   static void OnDialogClosed(uint8_t dialog_id, uint8_t return_value);
 
-  static const prog_EventHandlers event_handlers_;
+  static const EventHandlers event_handlers_;
 
  private:
   static uint32_t free_space_;

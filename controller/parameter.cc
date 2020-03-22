@@ -31,7 +31,7 @@
 
 namespace ambika {
 
-static const prog_uint16_t units_definitions[UNIT_LAST] PROGMEM = {
+static const uint16_t units_definitions[UNIT_LAST] PROGMEM = {
   0,                  // UNIT_RAW_UINT8
   0,                  // UNIT_UINT8
   0,                  // UNIT_INDEX
@@ -59,8 +59,8 @@ static const prog_uint16_t units_definitions[UNIT_LAST] PROGMEM = {
   STR_RES_THRU,       // UNIT_MIDI_OUT_MODE
 };
 
-static const prog_char note_names[] PROGMEM = " CC# DD# E FF# GG# AA# B";
-static const prog_char octaves[] PROGMEM = "-0123456789";
+static const char note_names[] PROGMEM = " CC# DD# E FF# GG# AA# B";
+static const char octaves[] PROGMEM = "-0123456789";
 
 
 uint8_t Parameter::Scale(uint8_t value_7bits) const {
@@ -272,7 +272,7 @@ void Parameter::Print(
 }
 
 
-static const prog_char midi_cc_map[128] PROGMEM = {
+static const char midi_cc_map[128] PROGMEM = {
    // 0-15
    255, 255, 255,  22, 255,  48, 255,  42,
    255,  23, 255, 255,  14,  15,   2,   3,
@@ -299,7 +299,7 @@ static const prog_char midi_cc_map[128] PROGMEM = {
    255, 255, 255, 255, 255, 255, 255, 255
 };
 
-static const prog_char midi_nrpn_map[256] PROGMEM = {
+static const char midi_nrpn_map[256] PROGMEM = {
    // 0-15
      0,   1,   2,   3,   4,   5,   6,   7,
      8,   9,  10,  11,  12,  13,  14,  15,
@@ -349,7 +349,7 @@ static const prog_char midi_nrpn_map[256] PROGMEM = {
 
 
 
-static const prog_Parameter parameters[kNumParameters] PROGMEM = {
+static const Parameter parameters[kNumParameters] PROGMEM = {
   // Parameters for patch editor.
   
   // Oscillators
@@ -921,12 +921,10 @@ void ParameterManager::SetValue(
   } else if (parameter.level == PARAMETER_LEVEL_MULTI) {
     multi.SetValue(address, value);
   } else if (parameter.level == PARAMETER_LEVEL_SYSTEM) {
-    uint8_t* bytes = static_cast<uint8_t*>(
-        static_cast<void*>(system_settings.mutable_data()));
+    auto bytes = reinterpret_cast<uint8_t*>(system_settings.mutable_data());
     bytes[address] = value;
   } else {
-    uint8_t* bytes = static_cast<uint8_t*>(
-        static_cast<void*>(ui.mutable_state()));
+    auto bytes = reinterpret_cast<uint8_t*>(ui.mutable_state());
     bytes[address] = value;
   }
 }
@@ -943,8 +941,7 @@ uint8_t ParameterManager::GetValue(
   } else if (parameter.level == PARAMETER_LEVEL_MULTI) {
     value = multi.GetValue(address);
   } else if (parameter.level == PARAMETER_LEVEL_SYSTEM) {
-    uint8_t* bytes = static_cast<uint8_t*>(
-        static_cast<void*>(system_settings.mutable_data()));
+    auto bytes = reinterpret_cast<uint8_t*>(system_settings.mutable_data());
     value = bytes[address];
   } else {
     return ui.GetValue(address);

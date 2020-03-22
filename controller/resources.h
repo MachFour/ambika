@@ -36,54 +36,54 @@ namespace ambika {
 
 typedef uint16_t ResourceId;
 
-extern const prog_char* const string_table[];
+extern const char* const string_table[];
 
-extern const prog_uint16_t* const lookup_table_table[];
+extern const uint16_t* const lookup_table_table[];
 
-extern const prog_uint8_t* const character_table[];
+extern const uint8_t* const character_table[];
 
-extern const prog_uint8_t* const waveform_table[];
+extern const uint8_t* const waveform_table[];
 
-extern const prog_uint16_t lut_res_lfo_increments[] PROGMEM;
-extern const prog_uint16_t lut_res_scale_just[] PROGMEM;
-extern const prog_uint16_t lut_res_scale_pythagorean[] PROGMEM;
-extern const prog_uint16_t lut_res_scale_1_4_eb[] PROGMEM;
-extern const prog_uint16_t lut_res_scale_1_4_e[] PROGMEM;
-extern const prog_uint16_t lut_res_scale_1_4_ea[] PROGMEM;
-extern const prog_uint16_t lut_res_scale_bhairav[] PROGMEM;
-extern const prog_uint16_t lut_res_scale_gunakri[] PROGMEM;
-extern const prog_uint16_t lut_res_scale_marwa[] PROGMEM;
-extern const prog_uint16_t lut_res_scale_shree[] PROGMEM;
-extern const prog_uint16_t lut_res_scale_purvi[] PROGMEM;
-extern const prog_uint16_t lut_res_scale_bilawal[] PROGMEM;
-extern const prog_uint16_t lut_res_scale_yaman[] PROGMEM;
-extern const prog_uint16_t lut_res_scale_kafi[] PROGMEM;
-extern const prog_uint16_t lut_res_scale_bhimpalasree[] PROGMEM;
-extern const prog_uint16_t lut_res_scale_darbari[] PROGMEM;
-extern const prog_uint16_t lut_res_scale_rageshree[] PROGMEM;
-extern const prog_uint16_t lut_res_scale_khamaj[] PROGMEM;
-extern const prog_uint16_t lut_res_scale_mimal[] PROGMEM;
-extern const prog_uint16_t lut_res_scale_parameshwari[] PROGMEM;
-extern const prog_uint16_t lut_res_scale_rangeshwari[] PROGMEM;
-extern const prog_uint16_t lut_res_scale_gangeshwari[] PROGMEM;
-extern const prog_uint16_t lut_res_scale_kameshwari[] PROGMEM;
-extern const prog_uint16_t lut_res_scale_pa__kafi[] PROGMEM;
-extern const prog_uint16_t lut_res_scale_natbhairav[] PROGMEM;
-extern const prog_uint16_t lut_res_scale_m_kauns[] PROGMEM;
-extern const prog_uint16_t lut_res_scale_bairagi[] PROGMEM;
-extern const prog_uint16_t lut_res_scale_b_todi[] PROGMEM;
-extern const prog_uint16_t lut_res_scale_chandradeep[] PROGMEM;
-extern const prog_uint16_t lut_res_scale_kaushik_todi[] PROGMEM;
-extern const prog_uint16_t lut_res_scale_jogeshwari[] PROGMEM;
-extern const prog_uint16_t lut_res_arpeggiator_patterns[] PROGMEM;
-extern const prog_uint16_t lut_res_groove_swing[] PROGMEM;
-extern const prog_uint16_t lut_res_groove_shuffle[] PROGMEM;
-extern const prog_uint16_t lut_res_groove_push[] PROGMEM;
-extern const prog_uint16_t lut_res_groove_lag[] PROGMEM;
-extern const prog_uint16_t lut_res_groove_human[] PROGMEM;
-extern const prog_uint16_t lut_res_groove_monkey[] PROGMEM;
-extern const prog_uint8_t chr_res_special_characters[] PROGMEM;
-extern const prog_uint8_t wav_res_lfo_waveforms[] PROGMEM;
+extern const uint16_t lut_res_lfo_increments[] PROGMEM;
+extern const uint16_t lut_res_scale_just[] PROGMEM;
+extern const uint16_t lut_res_scale_pythagorean[] PROGMEM;
+extern const uint16_t lut_res_scale_1_4_eb[] PROGMEM;
+extern const uint16_t lut_res_scale_1_4_e[] PROGMEM;
+extern const uint16_t lut_res_scale_1_4_ea[] PROGMEM;
+extern const uint16_t lut_res_scale_bhairav[] PROGMEM;
+extern const uint16_t lut_res_scale_gunakri[] PROGMEM;
+extern const uint16_t lut_res_scale_marwa[] PROGMEM;
+extern const uint16_t lut_res_scale_shree[] PROGMEM;
+extern const uint16_t lut_res_scale_purvi[] PROGMEM;
+extern const uint16_t lut_res_scale_bilawal[] PROGMEM;
+extern const uint16_t lut_res_scale_yaman[] PROGMEM;
+extern const uint16_t lut_res_scale_kafi[] PROGMEM;
+extern const uint16_t lut_res_scale_bhimpalasree[] PROGMEM;
+extern const uint16_t lut_res_scale_darbari[] PROGMEM;
+extern const uint16_t lut_res_scale_rageshree[] PROGMEM;
+extern const uint16_t lut_res_scale_khamaj[] PROGMEM;
+extern const uint16_t lut_res_scale_mimal[] PROGMEM;
+extern const uint16_t lut_res_scale_parameshwari[] PROGMEM;
+extern const uint16_t lut_res_scale_rangeshwari[] PROGMEM;
+extern const uint16_t lut_res_scale_gangeshwari[] PROGMEM;
+extern const uint16_t lut_res_scale_kameshwari[] PROGMEM;
+extern const uint16_t lut_res_scale_pa__kafi[] PROGMEM;
+extern const uint16_t lut_res_scale_natbhairav[] PROGMEM;
+extern const uint16_t lut_res_scale_m_kauns[] PROGMEM;
+extern const uint16_t lut_res_scale_bairagi[] PROGMEM;
+extern const uint16_t lut_res_scale_b_todi[] PROGMEM;
+extern const uint16_t lut_res_scale_chandradeep[] PROGMEM;
+extern const uint16_t lut_res_scale_kaushik_todi[] PROGMEM;
+extern const uint16_t lut_res_scale_jogeshwari[] PROGMEM;
+extern const uint16_t lut_res_arpeggiator_patterns[] PROGMEM;
+extern const uint16_t lut_res_groove_swing[] PROGMEM;
+extern const uint16_t lut_res_groove_shuffle[] PROGMEM;
+extern const uint16_t lut_res_groove_push[] PROGMEM;
+extern const uint16_t lut_res_groove_lag[] PROGMEM;
+extern const uint16_t lut_res_groove_human[] PROGMEM;
+extern const uint16_t lut_res_groove_monkey[] PROGMEM;
+extern const uint8_t chr_res_special_characters[] PROGMEM;
+extern const uint8_t wav_res_lfo_waveforms[] PROGMEM;
 #define STR_RES_WAVEFORM 0  // waveform
 #define STR_RES_PARAMETER 1  // parameter
 #define STR_RES_RANGE 2  // range
@@ -542,11 +542,9 @@ extern const prog_uint8_t wav_res_lfo_waveforms[] PROGMEM;
 #define CHR_RES_SPECIAL_CHARACTERS_SIZE 56
 #define WAV_RES_LFO_WAVEFORMS 0
 #define WAV_RES_LFO_WAVEFORMS_SIZE 4112
-typedef avrlib::ResourcesManager<
-    ResourceId,
-    avrlib::ResourcesTables<
-        string_table,
-        lookup_table_table> > ResourcesManager; 
+
+using ResourcesManager = avrlib::ResourcesManager<ResourceId,
+    avrlib::ResourcesTables<string_table, lookup_table_table>>;
 
 }  // namespace ambika
 

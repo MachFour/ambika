@@ -68,10 +68,10 @@ void Oscillator::RenderBandlimitedPwm(uint8_t* buffer) {
   uint8_t gain_1 = ~gain_2;
 
   uint8_t wave_index = balance_index & 0xf;
-  const prog_uint8_t* wave_1 = waveform_table[
+  const uint8_t* wave_1 = waveform_table[
       WAV_RES_BANDLIMITED_SAW_1 + wave_index];
   wave_index = U8AddClip(wave_index, 1, kNumZonesHalfSampleRate);
-  const prog_uint8_t* wave_2 = waveform_table[
+  const uint8_t* wave_2 = waveform_table[
       WAV_RES_BANDLIMITED_SAW_1 + wave_index];
   
   uint16_t shift = static_cast<uint16_t>(parameter_ + 128) << 8;
@@ -128,8 +128,8 @@ void Oscillator::RenderSimpleWavetable(uint8_t* buffer) {
     wave_1_index = WAV_RES_SINE;
     wave_2_index = WAV_RES_SINE;
   }
-  const prog_uint8_t* wave_1 = waveform_table[wave_1_index];
-  const prog_uint8_t* wave_2 = waveform_table[wave_2_index];
+  const uint8_t* wave_1 = waveform_table[wave_1_index];
+  const uint8_t* wave_2 = waveform_table[wave_2_index];
 
   if (shape_ != WAVEFORM_TRIANGLE) {
     BEGIN_SAMPLE_LOOP
@@ -307,7 +307,6 @@ void Oscillator::RenderVowel(uint8_t* buffer) {
     }
     
     // Interpolate formant amplitudes.
-    // formant_amplitude[3] is an alias of noise_modulation
     for (uint8_t i = 0; i < 4; ++i) {
       uint8_t amplitude_a = ResourcesManager::Lookup<uint8_t, uint8_t>(
           wav_res_vowel_data,
@@ -320,8 +319,8 @@ void Oscillator::RenderVowel(uint8_t* buffer) {
           amplitude_b, balance);
     }
   }
-  
-  int16_t phase_noise = S8S8Mul(Random::state_msb(), data_.vw.noise_modulation);
+  // formant_amplitude[3] is noise_modulation
+  int16_t phase_noise = S8S8Mul(Random::state_msb(), data_.vw.formant_amplitude[3]);
   BEGIN_SAMPLE_LOOP
     int8_t result = 0;
     uint8_t phaselet;
@@ -425,7 +424,7 @@ void Oscillator::RenderFilteredNoise(uint8_t* buffer) {
 // The position is freely determined by the parameter
 void Oscillator::RenderInterpolatedWavetable(uint8_t* buffer) {
   // Which wavetable should we play?.
-  const prog_uint8_t* wavetable_definition = 
+  const uint8_t* wavetable_definition =
       wav_res_wavetables + U8U8Mul(
           shape_ - WAVEFORM_WAVETABLE_1,
           18);
@@ -442,10 +441,10 @@ void Oscillator::RenderInterpolatedWavetable(uint8_t* buffer) {
       wavetable_definition,
       2 + (pointer >> 8));
   uint8_t gain = pointer & 0xff;
-  const prog_uint8_t* wave_1 = wav_res_waves + U8U8Mul(
+  const uint8_t* wave_1 = wav_res_waves + U8U8Mul(
       wave_index_1,
       129);
-  const prog_uint8_t* wave_2 = wav_res_waves + U8U8Mul(
+  const uint8_t* wave_2 = wav_res_waves + U8U8Mul(
       wave_index_2,
       129);
   BEGIN_SAMPLE_LOOP
@@ -461,7 +460,7 @@ void Oscillator::RenderInterpolatedWavetable(uint8_t* buffer) {
 
 // The position is freely determined by the parameter
 void Oscillator::RenderWavequence(uint8_t* buffer) {
-  const prog_uint8_t* wave = wav_res_waves + U8U8Mul(
+  const uint8_t* wave = wav_res_waves + U8U8Mul(
       parameter_,
       129);
   BEGIN_SAMPLE_LOOP

@@ -92,10 +92,10 @@ inline void Init() {
   
   dac_interface.Init();
 
-  rx_led.set_mode(DIGITAL_OUTPUT);
-  note_led.set_mode(DIGITAL_OUTPUT);
-  rx_led.Low();
-  note_led.Low();
+  RxLed::outputMode();
+  NoteLed::outputMode();
+  RxLed::low();
+  NoteLed::low();
   
   vcf_cutoff_out.Init();
   vcf_resonance_out.Init();
@@ -140,7 +140,7 @@ int main(void) {
       voice.ProcessBlock();
       vcf_cutoff_out.Write(voice.cutoff());
       vcf_resonance_out.Write(voice.resonance());
-      vcf_mode.Write(filter_mode_bytes[voice.patch().filter[0].mode]);
+      vcf_mode.Write(filter_mode_bytes[voice.patch().filter(0).mode]);
       update_vca = 1;
     }
     voicecard_rx.Process();

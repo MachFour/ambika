@@ -34,7 +34,7 @@ class VersionManager : public UiPage {
   static void UpdateScreen();
   static void UpdateLeds();
 
-  static const prog_EventHandlers event_handlers_;
+  static const EventHandlers event_handlers_;
 
  private:
   DISALLOW_COPY_AND_ASSIGN(VersionManager);

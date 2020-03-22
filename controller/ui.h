@@ -120,8 +120,6 @@ struct EventHandlers {
   void (*OnDialogClosed)(uint8_t, uint8_t);
 };
 
-typedef EventHandlers PROGMEM prog_EventHandlers;
-
 enum DialogType {
   DIALOG_ERROR,
   DIALOG_INFO,
@@ -133,14 +131,14 @@ struct Dialog {
   DialogType dialog_type;
   uint8_t num_choices;
   ResourceId first_choice;
-  const prog_char* text;
+  const char* text;
   char* user_text;
 };
 
 struct PageInfo {
   uint8_t index;
   
-  const prog_EventHandlers* event_handlers;
+  const EventHandlers* event_handlers;
   // For a standard parameter editing page, indices of the parameters to edit ;
   // or 0xf0 -- x0f7 for the 8 assignable knobs.
   union {
@@ -152,8 +150,6 @@ struct PageInfo {
   uint8_t group;
   uint8_t led_pattern;
 };
-
-typedef PageInfo PROGMEM prog_PageInfo;
 
 class Ui {
  public:
@@ -186,8 +182,8 @@ class Ui {
   static const UiState& state() { return state_; }
   
   static uint8_t GetValue(uint8_t address) {
-    return static_cast<uint8_t*>(
-        static_cast<void*>(&state_))[address];
+      // TODO this may be a problem
+    return reinterpret_cast<uint8_t*>(&state_)[address];
   }
   
   static uint8_t OnNote(uint8_t note, uint8_t velocity) {

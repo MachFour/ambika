@@ -40,7 +40,7 @@ static const uint32_t kObjectTag = FourCC<'o', 'b', 'j', ' '>::value;
 
 using namespace avrlib;
 
-static const prog_char sysex_header[] PROGMEM = {
+static const char sysex_header[] PROGMEM = {
   0xf0,  // <SysEx>
   0x00, 0x21, 0x02,  // Mutable instruments manufacturer id.
   0x00, 0x04,  // Product ID for Ambika-6.
@@ -84,7 +84,7 @@ void Storage::Init() {
 /* static */
 uint8_t Storage::Checksum(const void* data, uint8_t size) {
   uint8_t s = 0;
-  const uint8_t* d = static_cast<const uint8_t*>(data);
+  auto d = static_cast<const uint8_t*>(data);
   while (size--) {
     s += *d++;
   }
@@ -95,14 +95,8 @@ uint8_t Storage::Checksum(const void* data, uint8_t size) {
 void Storage::WriteMultiToEeprom() {
   uint16_t address = 0;
   for (uint8_t i = 0; i < kNumParts; ++i) {
-    EepromWrite(
-        multi.part(i).raw_data(),
-        sizeof(PartData),
-        &address);
-    EepromWrite(
-        multi.part(i).raw_patch_data(),
-        sizeof(Patch),
-        &address);
+    EepromWrite(multi.part(i).raw_data(), sizeof(PartData), &address);
+    EepromWrite(multi.part(i).raw_patch_data(), sizeof(Patch), &address);
   }
   EepromWrite(multi.raw_data(), sizeof(MultiData), &address);
 }
@@ -113,38 +107,29 @@ uint8_t Storage::LoadMultiFromEeprom() {
   uint8_t success = 1;
   for (uint8_t i = 0; i < kNumParts; ++i) {
     success = success && Storage::EepromRead(
-        multi.mutable_part(i)->mutable_raw_data(),
-        sizeof(PartData),
-        &address);
+        multi.mutable_part(i)->mutable_raw_data(), sizeof(PartData), &address);
     success = success && Storage::EepromRead(
-        multi.mutable_part(i)->mutable_raw_patch_data(),
-        sizeof(Patch),
-        &address);
+        multi.mutable_part(i)->mutable_raw_patch_data(), sizeof(Patch), &address);
   }
   success = success && Storage::EepromRead(
-      multi.mutable_raw_data(),
-      sizeof(MultiData),
-      &address);
+      multi.mutable_raw_data(), sizeof(MultiData), &address);
   return success;
 }
 
 
 /* static */
 void Storage::EepromWrite(const void* data, uint8_t size, uint16_t* offset) {
-  eeprom_write_block(const_cast<void*>(data), (void*)(*offset), size);
+  eeprom_write_block(data, reinterpret_cast<void*>(*offset), size);
   *offset += size;
-  eeprom_write_byte((uint8_t*)(*offset), Storage::Checksum(data, size));
+  eeprom_write_byte(reinterpret_cast<uint8_t*>(*offset), Storage::Checksum(data, size));
   *offset += 1;
 }
 
 /* static */
-uint8_t Storage::EepromRead(
-    void* data,
-    uint8_t size,
-    uint16_t* offset) {
-  eeprom_read_block(data, (void*)(*offset), size);
+uint8_t Storage::EepromRead(void* data, uint8_t size, uint16_t* offset) {
+  eeprom_read_block(data, reinterpret_cast<void*>(*offset), size);
   *offset += size;
-  uint8_t expected_checksum = eeprom_read_byte((uint8_t*)(*offset));
+  uint8_t expected_checksum = eeprom_read_byte(reinterpret_cast<uint8_t*>(*offset));
   *offset += 1;
   return Storage::Checksum(data, size) == expected_checksum;
 }
@@ -163,8 +148,11 @@ uint8_t Storage::object_size(const StorageLocation& location) {
       
     case STORAGE_OBJECT_MULTI:
       return sizeof(MultiData);
+
+    case STORAGE_OBJECT_PROGRAM:
+    default:
+      return 0;
   }
-  return 0;
 }
 
 /* static */
@@ -229,7 +217,7 @@ uint8_t Storage::has_user_changes(const StorageLocation& location) {
 }
 
 /* static */
-FilesystemStatus Storage::Snapshot(const StorageLocation& location) {
+void Storage::Snapshot(const StorageLocation& location) {
   StorageLocation l = location;
   uint8_t version = version_[location.index()];
   l.slot = version;
@@ -361,7 +349,7 @@ void Storage::SysExSendRaw(
   uint8_t checksum = 0;
   if (send_address) {
     Word address;
-    address.value = (uint16_t)(void*)(data);
+    address.value = reinterpret_cast<uint16_t>(data);
     checksum += address.bytes[0];
     checksum += address.bytes[1];
     midi_dispatcher.SendBlocking(U8ShiftRight4(address.bytes[0]));
@@ -594,7 +582,7 @@ char* Storage::GetFileName(StorageDir type, const StorageLocation& location) {
 }
 
 /* static */
-void Storage::Expand(const prog_char* name, char variable) {
+void Storage::Expand(const char* name, char variable) {
   strcpy_P(tmp_buffer_, name);
   for (uint8_t i = 0; i < sizeof(tmp_buffer_); ++i) {
     if (tmp_buffer_[i] == '$') {
@@ -606,7 +594,7 @@ void Storage::Expand(const prog_char* name, char variable) {
 /* static */
 FilesystemStatus Storage::SpiCopy(
     uint8_t voice_id,
-    const prog_char* name,
+    const char* name,
     char variable,
     uint8_t page_size_nibbles) {
   scoped_resource<SdCardSession> session;
@@ -650,7 +638,7 @@ FilesystemStatus Storage::SpiCopy(
 }
 
 /* static */
-uint8_t Storage::FileExists(const prog_char* name, char variable) {
+uint8_t Storage::FileExists(const char* name, char variable) {
   scoped_resource<SdCardSession> session;
 
   file_.Close();

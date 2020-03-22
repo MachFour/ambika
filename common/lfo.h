@@ -34,7 +34,7 @@ using avrlib::Random;
 
 namespace ambika {
 
-extern const prog_uint8_t wav_res_lfo_waveforms[] PROGMEM;
+extern const uint8_t wav_res_lfo_waveforms[] PROGMEM;
 
 class Lfo {
  public:

@@ -118,7 +118,6 @@ struct Parameter {
 };
 
 const uint8_t kNumParameters = 73;
-typedef Parameter PROGMEM prog_Parameter;
 
 // The parameter manager is the class who knows how to apply a parameter change
 // for each specific object type.

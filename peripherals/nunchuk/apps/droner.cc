@@ -48,7 +48,7 @@ uint8_t Droner::note_changed_;
 uint8_t Droner::inhibit_;
 
 /* static */
-const prog_AppInfo Droner::app_info_ PROGMEM = {
+const AppInfo Droner::app_info_ PROGMEM = {
   &OnInit, // void (*OnInit)();
   &OnPress, // void (*OnPress)();
   &OnRelease, // void (*OnRelease)();

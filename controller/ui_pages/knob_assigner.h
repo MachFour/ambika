@@ -34,7 +34,7 @@ class KnobAssigner : public UiPage {
 
   static void UpdateScreen();
   
-  static const prog_EventHandlers event_handlers_;
+  static const EventHandlers event_handlers_;
   
  private:
   static uint8_t active_knob_;

@@ -30,7 +30,7 @@
 namespace ambika {
 
 /* static */
-const prog_EventHandlers ParameterEditor::event_handlers_ PROGMEM = {
+const EventHandlers ParameterEditor::event_handlers_ PROGMEM = {
   OnInit,
   SetActiveControl,
   OnIncrement,
@@ -78,8 +78,8 @@ uint8_t ParameterEditor::instance_index(uint8_t control_id) {
     } else {
       const Parameter& parameter = parameter_manager.parameter(parameter_id);
       if (parameter.indexed_by != 0xff) {
-        return static_cast<uint8_t*>(
-            static_cast<void*>(ui.mutable_state()))[parameter.indexed_by];
+        // TODO this may be a problem
+        return reinterpret_cast<uint8_t*>(ui.mutable_state())[parameter.indexed_by];
       } else {
         return 0;
       }

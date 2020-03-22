@@ -41,7 +41,7 @@ uint8_t KnobAssigner::active_knob_;
 uint8_t KnobAssigner::num_parameters_;
 
 /* static */
-const prog_EventHandlers KnobAssigner::event_handlers_ PROGMEM = {
+const EventHandlers KnobAssigner::event_handlers_ PROGMEM = {
   OnInit,
   SetActiveControl,
   OnIncrement,

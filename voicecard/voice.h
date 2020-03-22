@@ -80,18 +80,15 @@ class Voice {
   static inline void set_modulation_source(uint8_t i, uint8_t value) {
     modulation_sources_[i] = value;
   }
-  
+
   static void set_patch_data(uint8_t address, uint8_t value) {
-    patch_data_[address] = value;
+    patch_.data.bytes[address] = value;
   }
   static void set_part_data(uint8_t address, uint8_t value) {
     part_data_[address] = value;
   }
-  static uint8_t* mutable_patch_data() {
-    return patch_data_;
-  }
-  
-  static const Patch& patch() { return patch_; }
+
+  static Patch& patch() { return patch_; }
 
   static Envelope* mutable_envelope(uint8_t i) { return &envelope_[i]; }
   static void TriggerEnvelope(uint8_t stage);
@@ -105,7 +102,6 @@ class Voice {
   static inline void UpdateDestinations() __attribute__((always_inline));
   static inline void RenderOscillators() __attribute__((always_inline));
 
-  static uint8_t *patch_data_;
   static Patch patch_;
   static uint8_t *part_data_;
   static Part part_;

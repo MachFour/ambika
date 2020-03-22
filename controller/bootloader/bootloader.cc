@@ -17,7 +17,7 @@
 
 #include <avr/boot.h>
 #include <avr/pgmspace.h>
-#include <avr/delay.h>
+#include <util/delay.h>
 
 #include "avrlib/devices/sd_card.h"
 #include "avrlib/devices/shift_register.h"
@@ -240,4 +240,5 @@ int main(void) {
     MidiUpdater();
   }
   main_entry_point();
+  return 0;
 }

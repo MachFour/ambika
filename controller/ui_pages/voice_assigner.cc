@@ -28,7 +28,7 @@
 namespace ambika {
 
 /* static */
-const prog_EventHandlers VoiceAssigner::event_handlers_ PROGMEM = {
+const EventHandlers VoiceAssigner::event_handlers_ PROGMEM = {
   OnInit,
   SetActiveControl,
   OnIncrement,

@@ -53,7 +53,7 @@ uint8_t CycloSequencer::retrigger_;
 uint8_t CycloSequencer::center_cut_enabled_;
 
 /* static */
-const prog_AppInfo CycloSequencer::app_info_ PROGMEM = {
+const AppInfo CycloSequencer::app_info_ PROGMEM = {
   &OnInit, // void (*OnInit)();
   &OnPress, // void (*OnPress)();
   &OnRelease, // void (*OnRelease)();

@@ -39,7 +39,7 @@ uint16_t Multi::tick_duration_table_[kNumStepsInGroovePattern];
 uint8_t Multi::flags_;
 /* </static> */
 
-static const prog_MultiData init_settings PROGMEM = {
+static const MultiData init_settings PROGMEM = {
   // Parts mappings.
   1, 0, 127, 0x15,
   2, 0, 127, 0x2a,
@@ -125,7 +125,7 @@ const int32_t kTempoFactor = (4 * kSampleRateNum * 60L / 24L / kSampleRateDen);
 
 /* static */
 void Multi::ComputeInternalClockOverflowsTable() {
-  STATIC_ASSERT(kTempoFactor == 392156L);
+  static_assert(kTempoFactor == 392156L);
 
   int32_t rounding = 2 * static_cast<int32_t>(data_.clock_bpm);
   int32_t denominator = 4 * static_cast<int32_t>(data_.clock_bpm);
@@ -225,7 +225,7 @@ void Multi::UpdateClocks() {
 
 /* static */
 void Multi::SetValue(uint8_t address, uint8_t value) {
-  uint8_t* bytes = static_cast<uint8_t*>(static_cast<void*>(&data_));
+  auto bytes = reinterpret_cast<uint8_t*>(&data_);
   if (bytes[address] != value) {
     bytes[address] = value;
     flags_ |= FLAG_HAS_USER_CHANGE;

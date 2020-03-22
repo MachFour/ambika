@@ -35,7 +35,7 @@ class OsInfoPage : public UiPage {
   static void UpdateScreen();
   static void UpdateLeds();
 
-  static const prog_EventHandlers event_handlers_;
+  static const EventHandlers event_handlers_;
 
  private:
   static void PrintVersionNumber(char* buffer, uint8_t number);

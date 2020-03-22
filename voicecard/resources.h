@@ -36,43 +36,43 @@ namespace ambika {
 
 typedef uint8_t ResourceId;
 
-extern const prog_char* const string_table[];
+extern const char* const string_table[];
 
-extern const prog_uint16_t* const lookup_table_table[];
+extern const uint16_t* const lookup_table_table[];
 
-extern const prog_uint8_t* const waveform_table[];
+extern const uint8_t* const waveform_table[];
 
-extern const prog_uint16_t lut_res_lfo_increments[] PROGMEM;
-extern const prog_uint16_t lut_res_env_portamento_increments[] PROGMEM;
-extern const prog_uint16_t lut_res_oscillator_increments[] PROGMEM;
-extern const prog_uint16_t lut_res_fm_frequency_ratios[] PROGMEM;
-extern const prog_uint16_t lut_res_vca_linearization[] PROGMEM;
-extern const prog_uint16_t lut_res_cz_phase_reset[] PROGMEM;
-extern const prog_uint8_t wav_res_formant_sine[] PROGMEM;
-extern const prog_uint8_t wav_res_formant_square[] PROGMEM;
-extern const prog_uint8_t wav_res_sine[] PROGMEM;
-extern const prog_uint8_t wav_res_bandlimited_square_0[] PROGMEM;
-extern const prog_uint8_t wav_res_bandlimited_square_1[] PROGMEM;
-extern const prog_uint8_t wav_res_bandlimited_square_2[] PROGMEM;
-extern const prog_uint8_t wav_res_bandlimited_square_3[] PROGMEM;
-extern const prog_uint8_t wav_res_bandlimited_square_4[] PROGMEM;
-extern const prog_uint8_t wav_res_bandlimited_square_5[] PROGMEM;
-extern const prog_uint8_t wav_res_bandlimited_saw_0[] PROGMEM;
-extern const prog_uint8_t wav_res_bandlimited_saw_1[] PROGMEM;
-extern const prog_uint8_t wav_res_bandlimited_saw_2[] PROGMEM;
-extern const prog_uint8_t wav_res_bandlimited_saw_3[] PROGMEM;
-extern const prog_uint8_t wav_res_bandlimited_saw_4[] PROGMEM;
-extern const prog_uint8_t wav_res_bandlimited_saw_5[] PROGMEM;
-extern const prog_uint8_t wav_res_bandlimited_triangle_0[] PROGMEM;
-extern const prog_uint8_t wav_res_bandlimited_triangle_3[] PROGMEM;
-extern const prog_uint8_t wav_res_bandlimited_triangle_4[] PROGMEM;
-extern const prog_uint8_t wav_res_bandlimited_triangle_5[] PROGMEM;
-extern const prog_uint8_t wav_res_vowel_data[] PROGMEM;
-extern const prog_uint8_t wav_res_distortion[] PROGMEM;
-extern const prog_uint8_t wav_res_lfo_waveforms[] PROGMEM;
-extern const prog_uint8_t wav_res_env_expo[] PROGMEM;
-extern const prog_uint8_t wav_res_waves[] PROGMEM;
-extern const prog_uint8_t wav_res_wavetables[] PROGMEM;
+extern const uint16_t lut_res_lfo_increments[] PROGMEM;
+extern const uint16_t lut_res_env_portamento_increments[] PROGMEM;
+extern const uint16_t lut_res_oscillator_increments[] PROGMEM;
+extern const uint16_t lut_res_fm_frequency_ratios[] PROGMEM;
+extern const uint16_t lut_res_vca_linearization[] PROGMEM;
+extern const uint16_t lut_res_cz_phase_reset[] PROGMEM;
+extern const uint8_t wav_res_formant_sine[] PROGMEM;
+extern const uint8_t wav_res_formant_square[] PROGMEM;
+extern const uint8_t wav_res_sine[] PROGMEM;
+extern const uint8_t wav_res_bandlimited_square_0[] PROGMEM;
+extern const uint8_t wav_res_bandlimited_square_1[] PROGMEM;
+extern const uint8_t wav_res_bandlimited_square_2[] PROGMEM;
+extern const uint8_t wav_res_bandlimited_square_3[] PROGMEM;
+extern const uint8_t wav_res_bandlimited_square_4[] PROGMEM;
+extern const uint8_t wav_res_bandlimited_square_5[] PROGMEM;
+extern const uint8_t wav_res_bandlimited_saw_0[] PROGMEM;
+extern const uint8_t wav_res_bandlimited_saw_1[] PROGMEM;
+extern const uint8_t wav_res_bandlimited_saw_2[] PROGMEM;
+extern const uint8_t wav_res_bandlimited_saw_3[] PROGMEM;
+extern const uint8_t wav_res_bandlimited_saw_4[] PROGMEM;
+extern const uint8_t wav_res_bandlimited_saw_5[] PROGMEM;
+extern const uint8_t wav_res_bandlimited_triangle_0[] PROGMEM;
+extern const uint8_t wav_res_bandlimited_triangle_3[] PROGMEM;
+extern const uint8_t wav_res_bandlimited_triangle_4[] PROGMEM;
+extern const uint8_t wav_res_bandlimited_triangle_5[] PROGMEM;
+extern const uint8_t wav_res_vowel_data[] PROGMEM;
+extern const uint8_t wav_res_distortion[] PROGMEM;
+extern const uint8_t wav_res_lfo_waveforms[] PROGMEM;
+extern const uint8_t wav_res_env_expo[] PROGMEM;
+extern const uint8_t wav_res_waves[] PROGMEM;
+extern const uint8_t wav_res_wavetables[] PROGMEM;
 #define STR_RES_DUMMY 0  // dummy
 #define LUT_RES_LFO_INCREMENTS 0
 #define LUT_RES_LFO_INCREMENTS_SIZE 128
@@ -146,11 +146,9 @@ extern const prog_uint8_t wav_res_wavetables[] PROGMEM;
 #define WAV_RES_WAVES_SIZE 10320
 #define WAV_RES_WAVETABLES 29
 #define WAV_RES_WAVETABLES_SIZE 288
-typedef avrlib::ResourcesManager<
-    ResourceId,
-    avrlib::ResourcesTables<
-        string_table,
-        lookup_table_table> > ResourcesManager; 
+
+using ResourcesManager = avrlib::ResourcesManager<ResourceId,
+    avrlib::ResourcesTables<string_table, lookup_table_table> >;
 
 }  // namespace ambika
 

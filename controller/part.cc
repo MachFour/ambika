@@ -27,20 +27,22 @@ using namespace avrlib;
 
 namespace ambika {
 
-static const prog_uint8_t midi_clock_tick_per_step[15] PROGMEM = {
+static const uint8_t midi_clock_tick_per_step[15] PROGMEM = {
   96, 72, 64, 48, 36, 32, 24, 16, 12, 8, 6, 4, 3, 2, 1
 };
 
-static const prog_uint16_t lfo_phase_increment_per_clock_tick[15] PROGMEM = {
+static const uint16_t lfo_phase_increment_per_clock_tick[15] PROGMEM = {
   683, 910, 1024, 1365, 1820, 2048, 2731,
   4096, 5461, 8192, 10923, 16384, 21845, 32768, 65536
 };
 
-static const prog_Patch init_patch PROGMEM = {
+static const Patch init_patch PROGMEM = { .data.params = {
   // Oscillators
-  WAVEFORM_SAW, 0, 0, 0,
-  WAVEFORM_SQUARE, 32, -12, 12,
-  
+  .osc = {
+    {WAVEFORM_SAW, 0, 0, 0},
+    {WAVEFORM_SQUARE, 32, -12, 12}
+  },
+
   // Mixer
   32, OP_SUM, 31, WAVEFORM_SUB_OSC_SQUARE_1, 0, 0, 0, 0, 
 
@@ -78,9 +80,9 @@ static const prog_Patch init_patch PROGMEM = {
   
   // Padding
   0, 0, 0, 0, 0, 0, 0, 0,
-};
+}};
 
-static const prog_PartData init_part PROGMEM = {
+static const PartData init_part PROGMEM = {
   // Volume
   120,
   
@@ -199,7 +201,8 @@ void Part::InitSequence(InitializationMode mode) {
   if (mode == INITIALIZATION_DEFAULT) {
     memcpy_P(
         mutable_raw_sequence_data(),
-        (prog_char*)(&init_part) + 8,
+        // TODO is reinterpret_cast appropriate here?
+        reinterpret_cast<const char*>(&init_part) + 8,
         72);
   } else {
     RandomizeRange(PRM_PART_VOLUME + 8, 72);
@@ -261,12 +264,12 @@ void Part::InitializeAllocators() {
 
 void Part::TouchLfos() {
   for (uint8_t i = 0; i < kNumLfos; ++i) {
-    if (patch_.env_lfo[i].rate < kNumSyncedLfoRates) {
+    if (patch_.env_lfo(i).rate < kNumSyncedLfoRates) {
       lfo_cycle_length_[i] = ResourcesManager::Lookup<uint8_t, uint8_t>(
-          midi_clock_tick_per_step, patch_.env_lfo[i].rate);
+          midi_clock_tick_per_step, patch_.env_lfo(i).rate);
     } else {
       lfo_[i].set_phase_increment(ResourcesManager::Lookup<uint16_t, uint8_t>(
-          lut_res_lfo_increments, patch_.env_lfo[i].rate - kNumSyncedLfoRates));
+          lut_res_lfo_increments, patch_.env_lfo(i).rate - kNumSyncedLfoRates));
     }
   }
 }
@@ -596,13 +599,13 @@ void Part::Clock() {
   }
   
   for (uint8_t i = 0; i < kNumLfos; ++i) {
-    if (patch_.env_lfo[i].rate < kNumSyncedLfoRates) {
+    if (patch_.env_lfo(i).rate < kNumSyncedLfoRates) {
       ++lfo_step_[i];
       if (lfo_step_[i] >= lfo_cycle_length_[i]) {
         lfo_step_[i] = 0;
       }
       uint16_t increment = ResourcesManager::Lookup<uint16_t, uint8_t>(
-          lfo_phase_increment_per_clock_tick, patch_.env_lfo[i].rate);
+          lfo_phase_increment_per_clock_tick, patch_.env_lfo(i).rate);
       uint16_t lfo_phase = increment * lfo_step_[i];
       // Force the phase of the LFO to match the MIDI clock.
       lfo_[i].set_phase(lfo_phase);

@@ -51,8 +51,8 @@ int main(void) {
   cli();
   SP = RAMEND;
   asm volatile ("clr __zero_reg__");
-  rx_led.set_mode(DIGITAL_OUTPUT);
-  note_led.set_mode(DIGITAL_OUTPUT);
+  RxLed::outputMode();
+  NoteLed::outputMode();
   
   uint8_t update_flag = eeprom_read_byte(kFirmwareUpdateFlagPtr);
   if (update_flag == 0xff) {
@@ -62,7 +62,7 @@ int main(void) {
   // Flash LED to indicate boot error.
   if (update_flag >= FIRMWARE_UPDATE_PROBING_BOOT) {
     for (uint8_t i = 0; i < 10; ++i) {
-      rx_led.Toggle();
+      RxLed::toggle();
       ConstantDelay(200);
     }
   }
@@ -77,12 +77,12 @@ int main(void) {
     // Sync phase: wait for a sequence of at least 240 reset commands.
     uint8_t reset_command_counter = 0;
     while (1) {
-      note_led.Low();
-      rx_led.Low();
+      NoteLed::low();
+      RxLed::low();
       spi.Reply(SPM_PAGESIZE >> 4);
       uint8_t byte = spi.Read();
-      note_led.High();
-      rx_led.High();
+      NoteLed::high();
+      RxLed::high();
       
       if (byte == COMMAND_FIRMWARE_UPDATE_MODE) {
         ++reset_command_counter;
@@ -104,12 +104,12 @@ int main(void) {
     uint16_t read = 1;
     uint8_t done = 0;
     uint16_t page = 0;
-    note_led.High();
+    NoteLed::high();
     while (!done) {
       // Blink the LED.
-      rx_led.Low();
+      RxLed::low();
       uint8_t byte = spi.Read();
-      rx_led.High();
+      RxLed::high();
       
       // Oops, we have found a stop byte.
       if (byte == COMMAND_FIRMWARE_UPDATE_MODE) {
@@ -123,9 +123,9 @@ int main(void) {
         rx_buffer[read] = byte & 0x0f;
         ++total_read;
         spi.Reply(total_read);
-        rx_led.Low();
+        RxLed::low();
         rx_buffer[read++] |= U8Swap4(spi.Read() & 0x0f);
-        rx_led.High();
+        RxLed::high();
       }
       // A page is full (or has been padded).
       if (read == SPM_PAGESIZE) {
@@ -151,11 +151,11 @@ int main(void) {
         read = 0;
       }
     }
-    rx_led.Low();
+    RxLed::low();
     // A little dance to say that we are good.
     for (uint8_t i = 0; i < 16; ++i) {
-      note_led.Toggle();
-      rx_led.Toggle();
+      NoteLed::toggle();
+      RxLed::toggle();
       ConstantDelay(75);
     }
   }
@@ -166,4 +166,5 @@ int main(void) {
   eeprom_write_byte(kFirmwareUpdateFlagPtr, new_update_flag);
   void (*main_entry_point)(void) = 0x0000;
   main_entry_point();
+  return 0;
 }

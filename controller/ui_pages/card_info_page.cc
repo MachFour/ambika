@@ -39,7 +39,7 @@ uint8_t CardInfoPage::card_type_;
 uint8_t CardInfoPage::fs_type_;
 
 /* static */
-const prog_EventHandlers CardInfoPage::event_handlers_ PROGMEM = {
+const EventHandlers CardInfoPage::event_handlers_ PROGMEM = {
   OnInit,
   SetActiveControl,
   OnIncrement,
@@ -83,7 +83,7 @@ uint8_t CardInfoPage::OnKey(uint8_t key) {
   return 1;
 }
 
-static const prog_char si_prefix[] PROGMEM = " kMGT";
+static const char si_prefix[] PROGMEM = " kMGT";
 
 /* static */
 void CardInfoPage::UpdateScreen() {

@@ -78,8 +78,6 @@ struct MultiData {
   uint8_t padding2[4];
 };
 
-typedef MultiData PROGMEM prog_MultiData;
-
 enum MultiParameter {
   PRM_MULTI_MIDI_CHANNEL,
   PRM_MULTI_KEYRANGE_LOW,
@@ -239,7 +237,8 @@ class Multi {
   
   static void SetValue(uint8_t address, uint8_t value);
   static inline uint8_t GetValue(uint8_t address) {
-    uint8_t* bytes = static_cast<uint8_t*>(static_cast<void*>(&data_));
+    // TODO this may be a problem
+    auto bytes = reinterpret_cast<uint8_t*>(&data_);
     return bytes[address];
   }
   
@@ -251,12 +250,14 @@ class Multi {
   static MultiData* mutable_data() { return &data_; }
   static const MultiData& data() { return data_; }
   static const uint8_t* raw_data() {
-    return static_cast<const uint8_t*>(static_cast<const void*>(&data_));
+    // TODO this may be a problem
+    return reinterpret_cast<const uint8_t*>(&data_);
   }
-  static uint8_t* mutable_raw_data() { 
-    return static_cast<uint8_t*>(static_cast<void*>(&data_));
+  static uint8_t* mutable_raw_data() {
+    // TODO this may be a problem
+    return reinterpret_cast<uint8_t*>(&data_);
   }
-  
+
   static uint8_t internal_clock() { return data_.clock_bpm >= 40; }
 
   static uint8_t SolveAllocationConflicts(uint8_t constraint);

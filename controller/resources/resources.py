@@ -62,9 +62,9 @@ import waveforms
 
 resources = [
   (strings.strings + lookup_tables.strings,
-   'string', 'STR_RES', 'prog_char', str, False),
+   'string', 'STR_RES', 'char', str, False),
   (lookup_tables.lookup_tables,
-   'lookup_table', 'LUT_RES', 'prog_uint16_t', int, False),
-  (characters.characters, 'character', 'CHR_RES', 'prog_uint8_t', int, True),
-  (waveforms.waveforms, 'waveform', 'WAV_RES', 'prog_uint8_t', int, True),
+   'lookup_table', 'LUT_RES', 'uint16_t', int, False),
+  (characters.characters, 'character', 'CHR_RES', 'uint8_t', int, True),
+  (waveforms.waveforms, 'waveform', 'WAV_RES', 'uint8_t', int, True),
 ]

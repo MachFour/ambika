@@ -34,7 +34,7 @@ uint8_t SequenceEditor::step_ = 0;
 
 
 /* static */
-const prog_EventHandlers SequenceEditor::event_handlers_ PROGMEM = {
+const EventHandlers SequenceEditor::event_handlers_ PROGMEM = {
   OnInit,
   SetActiveControl,
   OnIncrement,

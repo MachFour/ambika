@@ -33,16 +33,16 @@ using namespace avrlib;
 namespace ambika {
 
 static inline uint8_t ReadSample(
-    const prog_uint8_t* table,
+    const uint8_t* table,
     uint16_t phase) __attribute__((always_inline));
 static inline uint8_t ReadSample(
-    const prog_uint8_t* table,
+    const uint8_t* table,
     uint16_t phase) {
   return ResourcesManager::Lookup<uint8_t, uint8_t>(table, phase >> 8);
 }
 
 static inline uint8_t InterpolateTwoTables(
-    const prog_uint8_t* table_a, const prog_uint8_t* table_b,
+    const uint8_t* table_a, const uint8_t* table_b,
     uint16_t phase, uint8_t gain_a, uint8_t gain_b) {
   return U8Mix(
       InterpolateSample(table_a, phase),
@@ -56,8 +56,8 @@ static const uint8_t kNumZonesHalfSampleRate = 5;
 struct VowelSynthesizerState {
   uint16_t formant_increment[3];
   uint16_t formant_phase[3];
-  uint8_t formant_amplitude[3];
-  uint8_t noise_modulation;
+  uint8_t formant_amplitude[4]; // last entry represents noise_modulation
+  //uint8_t noise_modulation;
   uint8_t update;  // Update only every kVowelControlRateDecimation-th call.
 };
 

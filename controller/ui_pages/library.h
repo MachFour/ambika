@@ -45,7 +45,7 @@ class Library : public UiPage {
   static void UpdateScreen();
   static void UpdateLeds();
   
-  static const prog_EventHandlers event_handlers_;
+  static const EventHandlers event_handlers_;
   
   static void OnDialogClosed(uint8_t dialog_id, uint8_t return_value);
   static void SaveLocation() {
