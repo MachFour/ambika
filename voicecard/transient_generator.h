@@ -27,11 +27,11 @@
 
 namespace ambika {
 
-typedef uint8_t (*RenderFn)(void);
+using RenderFn = uint8_t (*)();
 
 class TransientGenerator {
  public:
-  TransientGenerator() { }
+  TransientGenerator() = default;
 
   static inline void Render(uint8_t shape, uint8_t* buffer, uint8_t amount) {
     if (shape < WAVEFORM_SUB_OSC_CLICK)  {
@@ -73,14 +73,14 @@ class TransientGenerator {
       rng_state_ = rng_state_ * 73 + counter_;
       if (decimate_ == 0) {
         --counter_;
-        gain_ = (counter_ & 0x80) ? ~counter_ : counter_;
+        gain_ = (counter_ & 0x80u) ? ~counter_ : counter_;
       }
     }
     return rng_state_;
   }
   static uint8_t RenderMetallic() {
     --counter_;
-    gain_ = counter_ >= 64 ? 255 : counter_ << 2;
+    gain_ = counter_ >= 64 ? 255 : counter_ << 2u;
     return counter_ * 57;
   }
   static uint8_t RenderPop() {

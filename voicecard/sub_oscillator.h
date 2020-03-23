@@ -28,7 +28,7 @@ namespace ambika {
 
 class SubOscillator {
  public:
-  SubOscillator() { }
+  SubOscillator() = default;
 
   static inline void set_increment(uint24_t increment) {
     phase_increment_ = increment;

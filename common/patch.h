@@ -82,7 +82,7 @@ struct Modifier {
   uint8_t op;
 };
 
-enum OscillatorAlgorithm {
+enum OscillatorAlgorithm : uint8_t {
   WAVEFORM_NONE,
   WAVEFORM_SAW,
   WAVEFORM_SQUARE,
@@ -294,15 +294,38 @@ struct Patch {
     Modifier modifier[kNumModifiers];
     // Offset: 104-112
     uint8_t padding[8];
+
   };
 
   union Data {
     Parameters params;
     uint8_t bytes[sizeof(Parameters)];
+
+    explicit Data(Parameters p) : params(p) {};
+    explicit Data() = default;
   };
 
   Data data;
 
+public:
+  explicit Patch(Parameters p) : data(p) {};
+  explicit Patch() = default;
+
+  inline void setData(uint8_t address, uint8_t value) {
+    data.bytes[address] = value;
+  }
+  inline uint8_t getData(uint8_t address) const {
+    return data.bytes[address];
+  }
+  // raw underlying data
+  inline uint8_t* bytes() {
+    return data.bytes;
+  }
+  inline const uint8_t* bytes_readonly() const {
+    return data.bytes;
+  }
+
+  // Parameters accessors/mutators
   inline OscillatorSettings& osc(uint8_t index) {
       return data.params.osc[index];
   }
@@ -357,7 +380,7 @@ struct Patch {
   // no need to access padding
 };
 
-enum PatchParameter {
+enum PatchParameter : uint8_t {
   PRM_PATCH_OSC1_SHAPE,
   PRM_PATCH_OSC1_PWM,
   PRM_PATCH_OSC1_RANGE,

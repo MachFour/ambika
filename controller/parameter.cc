@@ -917,7 +917,7 @@ void ParameterManager::SetValue(
     uint8_t user_initiated) {
   uint8_t address = parameter.offset + parameter.stride * instance_index;
   if (parameter.level <= PARAMETER_LEVEL_PART) {
-    multi.mutable_part(part)->SetValue(address, value, user_initiated);
+    multi.mutable_part(part).SetValue(address, value, user_initiated);
   } else if (parameter.level == PARAMETER_LEVEL_MULTI) {
     multi.SetValue(address, value);
   } else if (parameter.level == PARAMETER_LEVEL_SYSTEM) {

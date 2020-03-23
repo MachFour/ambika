@@ -16,8 +16,8 @@
 #ifndef VOICECARD_VOICECARD_RX_H_
 #define VOICECARD_VOICECARD_RX_H_
 
-#include <avr/eeprom.h>
 
+#include "avrlib/bitops.h"
 #include "avrlib/ring_buffer.h"
 #include "avrlib/spi.h"
 #include "avrlib/timer.h"
@@ -29,11 +29,13 @@
 #include "voicecard/voicecard.h"
 #include "voicecard/leds.h"
 
+#include <avr/eeprom.h>
+
 namespace ambika {
 
 using avrlib::RingBuffer;
 
-enum State {
+enum State : uint8_t {
   EXPECTING_COMMAND,
   EXPECTING_ARGUMENTS,
 };
@@ -48,7 +50,7 @@ struct InputBufferSpecs {
 
 class VoicecardProtocolRx {
  public:
-  VoicecardProtocolRx() { }
+  VoicecardProtocolRx() = default;
   
   static void Init() {
     spi_.Init();
@@ -77,29 +79,24 @@ class VoicecardProtocolRx {
   }
   
   static void DoLongCommand() {
-    switch (command_ & 0xf0) {
+    switch (command_ & 0xf0u) {
       case COMMAND_NOTE_ON:
-        voice.Trigger(
-            (arguments_[0] << 8) | arguments_[1],
-            arguments_[2],
-            command_ & 1);
+        voice.Trigger(word(arguments_[0], arguments_[1]), arguments_[2], command_ & 1u);
         if (!lights_out_) {
           NoteLed::high();
         }
         break;
       case COMMAND_WRITE_PATCH_DATA:
-        voice.set_patch_data(arguments_[0], arguments_[1]);
+        voice.patch().setData(arguments_[0], arguments_[1]);
         break;
       case COMMAND_WRITE_PART_DATA:
-        voice.set_part_data(arguments_[0], arguments_[1]);
+        voice.part().setData(arguments_[0], arguments_[1]);
         break;
       case COMMAND_WRITE_MOD_MATRIX:
         voice.set_modulation_source(arguments_[0], arguments_[1]);
         break;
       case COMMAND_WRITE_LFO:
-        voice.set_modulation_source(
-            MOD_SRC_LFO_1 + (command_ & 0x0f),
-            arguments_[0]);
+        voice.set_modulation_source(MOD_SRC_LFO_1 + (command_ & 0x0fu), arguments_[0]);
         break;
     }
   }
@@ -117,7 +114,7 @@ class VoicecardProtocolRx {
       case COMMAND_RETRIGGER_ENVELOPE:
       case COMMAND_RETRIGGER_ENVELOPE + 1:
       case COMMAND_RETRIGGER_ENVELOPE + 2:
-        voice.TriggerEnvelope(command_ & 0x0f, ATTACK);
+        voice.TriggerEnvelope(command_ & 0x0fu, ATTACK);
         break;
       case COMMAND_RESET_ALL_CONTROLLERS:
         voice.ResetAllControllers();
@@ -136,7 +133,7 @@ class VoicecardProtocolRx {
           // Stop doing anything else
           Timer<2>::Stop();
           uint8_t size = spi_.Read();
-          uint8_t* data = data_ptr_ = voice.patch().data.bytes;
+          uint8_t* data = data_ptr_ = voice.patch().bytes();
           while (size--) {
             *data++ = spi_.Read();
           }
@@ -171,7 +168,7 @@ class VoicecardProtocolRx {
         } else if (command_ >= COMMAND_WRITE_PATCH_DATA
                    && command_ < COMMAND_WRITE_LFO) {
           data_size_ = 2;
-        } else if ((command_ & 0xf0) == COMMAND_WRITE_LFO) {
+        } else if ((command_ & 0xf0u) == COMMAND_WRITE_LFO) {
           data_size_ = 1;
         } else {
           DoShortCommand();

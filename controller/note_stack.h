@@ -164,7 +164,9 @@ class NoteStack {
   const NoteEntry& note(uint8_t index) const { return pool_[index]; }
   NoteEntry* mutable_note(uint8_t index) { return &pool_[index]; }
   const NoteEntry& dummy() const { return pool_[0]; }
-  uint8_t* bytes() { return (uint8_t*)(void*)(&pool_[0]); }
+
+  // TODO wow
+  uint8_t* bytes() { return reinterpret_cast<uint8_t*>(&pool_[0]); }
 
  private:
   uint8_t size_;

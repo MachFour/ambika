@@ -93,23 +93,23 @@ uint8_t Storage::Checksum(const void* data, uint8_t size) {
 
 /* static */
 void Storage::WriteMultiToEeprom() {
-  uint16_t address = 0;
+  uint8_t* address = 0;
   for (uint8_t i = 0; i < kNumParts; ++i) {
-    EepromWrite(multi.part(i).raw_data(), sizeof(PartData), &address);
-    EepromWrite(multi.part(i).raw_patch_data(), sizeof(Patch), &address);
+    EepromWrite(multi.part(i).raw_data_readonly(), sizeof(PartData), &address);
+    EepromWrite(multi.part(i).raw_patch_data_readonly(), sizeof(Patch), &address);
   }
   EepromWrite(multi.raw_data(), sizeof(MultiData), &address);
 }
 
 /* static */
 uint8_t Storage::LoadMultiFromEeprom() {
-  uint16_t address = 0;
+  uint8_t* address = 0;
   uint8_t success = 1;
   for (uint8_t i = 0; i < kNumParts; ++i) {
     success = success && Storage::EepromRead(
-        multi.mutable_part(i)->mutable_raw_data(), sizeof(PartData), &address);
+        multi.mutable_part(i).raw_data(), sizeof(PartData), &address);
     success = success && Storage::EepromRead(
-        multi.mutable_part(i)->mutable_raw_patch_data(), sizeof(Patch), &address);
+        multi.mutable_part(i).raw_patch_data(), sizeof(Patch), &address);
   }
   success = success && Storage::EepromRead(
       multi.mutable_raw_data(), sizeof(MultiData), &address);
@@ -118,19 +118,19 @@ uint8_t Storage::LoadMultiFromEeprom() {
 
 
 /* static */
-void Storage::EepromWrite(const void* data, uint8_t size, uint16_t* offset) {
-  eeprom_write_block(data, reinterpret_cast<void*>(*offset), size);
-  *offset += size;
-  eeprom_write_byte(reinterpret_cast<uint8_t*>(*offset), Storage::Checksum(data, size));
-  *offset += 1;
+void Storage::EepromWrite(const void* data, uint8_t size, uint8_t** offset_ptr) {
+  eeprom_write_block(data, static_cast<void*>(*offset_ptr), size);
+  *offset_ptr += size;
+  eeprom_write_byte(*offset_ptr, Storage::Checksum(data, size));
+  *offset_ptr += 1;
 }
 
 /* static */
-uint8_t Storage::EepromRead(void* data, uint8_t size, uint16_t* offset) {
-  eeprom_read_block(data, reinterpret_cast<void*>(*offset), size);
-  *offset += size;
-  uint8_t expected_checksum = eeprom_read_byte(reinterpret_cast<uint8_t*>(*offset));
-  *offset += 1;
+uint8_t Storage::EepromRead(void* data, uint8_t size, uint8_t** offset_ptr) {
+  eeprom_read_block(data, static_cast<void*>(*offset_ptr), size);
+  *offset_ptr += size;
+  uint8_t expected_checksum = eeprom_read_byte(*offset_ptr);
+  *offset_ptr += 1;
   return Storage::Checksum(data, size) == expected_checksum;
 }
 
@@ -175,36 +175,28 @@ uint16_t Storage::riff_size(const StorageLocation& location) {
 const uint8_t* Storage::object_data(const StorageLocation& location) {
   switch (location.object) {
     case STORAGE_OBJECT_PATCH:
-      return multi.part(location.part).raw_patch_data();
-      
+      return multi.part(location.part).raw_patch_data_readonly();
     case STORAGE_OBJECT_SEQUENCE:
-      return multi.part(location.part).raw_sequence_data();
-      
+      return multi.part(location.part).raw_sequence_data_readonly();
     case STORAGE_OBJECT_PART:
-      return multi.part(location.part).raw_data();
-      
+      return multi.part(location.part).raw_data_readonly();
     case STORAGE_OBJECT_MULTI:
       return multi.raw_data();
   }
-  return NULL;
 }
 
 /* static */
 uint8_t* Storage::mutable_object_data(const StorageLocation& location) {
   switch (location.object) {
     case STORAGE_OBJECT_PATCH:
-      return multi.mutable_part(location.part)->mutable_raw_patch_data();
-      
+      return multi.mutable_part(location.part).raw_patch_data();
     case STORAGE_OBJECT_SEQUENCE:
-      return multi.mutable_part(location.part)->mutable_raw_sequence_data();
-      
+      return multi.mutable_part(location.part).raw_sequence_data();
     case STORAGE_OBJECT_PART:
-      return multi.mutable_part(location.part)->mutable_raw_data();
-      
+      return multi.mutable_part(location.part).raw_data();
     case STORAGE_OBJECT_MULTI:
       return multi.mutable_raw_data();
   }
-  return NULL;
 }
 
 /* static */
@@ -308,12 +300,12 @@ void Storage::TouchObject(const StorageLocation& location) {
   // object is freshly loaded and has received no user changes.
   switch (location.object) {
     case STORAGE_OBJECT_PATCH:
-      multi.mutable_part(location.part)->TouchPatch();
+      multi.mutable_part(location.part).TouchPatch();
       break;
 
     case STORAGE_OBJECT_PART:
     case STORAGE_OBJECT_SEQUENCE:
-      multi.mutable_part(location.part)->Touch();
+      multi.mutable_part(location.part).Touch();
       break;
     
     case STORAGE_OBJECT_MULTI:
@@ -323,22 +315,12 @@ void Storage::TouchObject(const StorageLocation& location) {
 }
 
 /* static */
-void Storage::SysExSendObject(const StorageLocation& location) {
-  SysExSendRaw(
-      location.object + 1,
-      location.alias,
-      object_data(location),
-      object_size(location),
-      false);
+void Storage::SysExSendObject(const StorageLocation& l) {
+  SysExSendRaw(l.object + 1, l.alias, object_data(l), object_size(l), false);
 }
 
 /* static */
-void Storage::SysExSendRaw(
-    uint8_t command,
-    uint8_t argument,
-    const uint8_t* data,
-    uint8_t size,
-    bool send_address) {
+void Storage::SysExSendRaw(uint8_t command, uint8_t argument, const uint8_t* data, uint8_t size, bool send_address) {
   midi_dispatcher.Flush();
   for (uint8_t i = 0; i < sizeof(sysex_header); ++i) {
     midi_dispatcher.SendBlocking(pgm_read_byte(sysex_header + i));

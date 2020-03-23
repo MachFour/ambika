@@ -244,7 +244,7 @@ class Multi {
   
   static void UpdateClocks();
   
-  static Part* mutable_part(uint8_t i) { return &parts_[i]; }
+  static Part& mutable_part(uint8_t i) { return parts_[i]; }
   static const Part& part(uint8_t i) { return parts_[i]; }
   
   static MultiData* mutable_data() { return &data_; }

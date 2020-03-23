@@ -148,7 +148,7 @@ extern const uint8_t wav_res_wavetables[] PROGMEM;
 #define WAV_RES_WAVETABLES_SIZE 288
 
 using ResourcesManager = avrlib::ResourcesManager<ResourceId,
-    avrlib::ResourcesTables<string_table, lookup_table_table> >;
+    avrlib::ResourcesTables<string_table, lookup_table_table>>;
 
 }  // namespace ambika
 

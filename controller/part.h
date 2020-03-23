@@ -33,12 +33,12 @@
 
 namespace ambika {
   
-enum InitializationMode {
+enum InitializationMode : uint8_t {
   INITIALIZATION_DEFAULT,
   INITIALIZATION_RANDOM
 };
 
-enum ArpeggiatorDirection {
+enum ArpeggiatorDirection : uint8_t {
   ARPEGGIO_DIRECTION_UP = 0,
   ARPEGGIO_DIRECTION_DOWN,
   ARPEGGIO_DIRECTION_UP_DOWN,
@@ -48,14 +48,14 @@ enum ArpeggiatorDirection {
   ARPEGGIO_DIRECTION_LAST
 };
 
-enum ArpSequencerMode {
+enum ArpSequencerMode : uint8_t {
   ARP_SEQUENCER_MODE_STEP,
   ARP_SEQUENCER_MODE_ARPEGGIATOR,
   ARP_SEQUENCER_MODE_NOTE,
   ARP_SEQUENCER_MODE_LAST
 };
 
-enum PolyphonyMode {
+enum PolyphonyMode : uint8_t {
   MONO,
   POLY,
   UNISON_2X,
@@ -64,7 +64,7 @@ enum PolyphonyMode {
   POLYPHONY_MODE_LAST
 };
 
-enum PartFlags {
+enum PartFlags : uint8_t {
   FLAG_HAS_CHANGE = 1,
   FLAG_HAS_USER_CHANGE = 2,
 };
@@ -79,64 +79,162 @@ struct NoteStep {
 };
 
 struct PartData {
-  // Offset: 0
-  uint8_t volume;
+  struct Parameters {
+    // Offset: 0
+    uint8_t volume;
 
-  // Offset: 1-5
-  int8_t octave;
-  int8_t tuning;
-  uint8_t spread;
-  uint8_t raga;
+    // Offset: 1-5
+    int8_t octave;
+    int8_t tuning;
+    uint8_t spread;
+    uint8_t raga;
 
-  // Offset: 5-8
-  uint8_t legato;
-  uint8_t portamento_time;
-  uint8_t arp_sequencer_mode;
+    // Offset: 5-8
+    uint8_t legato;
+    uint8_t portamento_time;
+    uint8_t arp_sequencer_mode;
 
-  // Offset: 8-12
-  uint8_t arp_direction;
-  uint8_t arp_octave;
-  uint8_t arp_pattern;
-  uint8_t arp_divider;
+    // Offset: 8-12
+    uint8_t arp_direction;
+    uint8_t arp_octave;
+    uint8_t arp_pattern;
+    uint8_t arp_divider;
 
-  // Offset: 12..16
-  uint8_t sequence_length[kNumSequences];
-  uint8_t polyphony_mode;
+    // Offset: 12..16
+    uint8_t sequence_length[kNumSequences];
+    uint8_t polyphony_mode;
 
-  // Offset: 16-80
-  //  0..15: step sequence 1
-  // 16..31: step sequence 2
-  // 32..63: (note value | 0x80 if gate), (note velocity | 0x80 if legato)
-  uint8_t sequence_data[64];
-  
-  // Offset: 80-84
-  uint8_t padding[4];
-  
+    // Offset: 16-80
+    //  0..15: step sequence 1
+    // 16..31: step sequence 2
+    // 32..63: (note value | 0x80 if gate), (note velocity | 0x80 if legato)
+    uint8_t sequence_data[64];
+
+    // Offset: 80-84
+    uint8_t padding[4];
+  };
+
+  // also refers to metadata before it
+  static constexpr uint8_t sequence_data_size = 8 + 64;
+
+private:
+  union Data {
+    Parameters params;
+    uint8_t bytes[sizeof(Parameters)];
+
+    explicit Data(Parameters p) : params(p) {};
+    explicit Data() : params() {};
+  };
+
+  Data data;
+  Parameters& p = data.params;
+
+public:
+  explicit PartData(Parameters params) : data(params) {};
+  explicit PartData() : data() {};
+
+  inline void setData(uint8_t address, uint8_t value) {
+    data.bytes[address] = value;
+  }
+  inline uint8_t getData(uint8_t address) const {
+    return data.bytes[address];
+  }
+
+  // raw access to underlying bytes
+  inline uint8_t* bytes() {
+    return data.bytes;
+  }
+  inline const uint8_t* bytes_readonly() const {
+    return data.bytes;
+  }
+
+  // accessor/mutator functions for the parameters
+  inline uint8_t* pure_sequence_data() {
+    return p.sequence_data;
+  }
+
+  // actually contains sequence data and metadata,
+  // corresponds to raw_sequence_data in past code
+  // contains 72 bytes
+  inline uint8_t* sequence_data() {
+    // start at arp_direction
+    return data.bytes + 8;
+  }
+  inline const uint8_t* sequence_data_readonly() const {
+    // start at arp_direction
+    return data.bytes + 8;
+  }
+
+  inline uint8_t& volume() {
+    return p.volume;
+  }
+  inline int8_t& octave() {
+    return p.octave;
+  }
+  inline int8_t& tuning() {
+    return p.tuning;
+  }
+  inline uint8_t& spread() {
+    return p.spread;
+  }
+  inline uint8_t& raga() {
+    return p.raga;
+  }
+  inline uint8_t& legato() {
+    return p.legato;
+  }
+  inline uint8_t& portamento_time() {
+    return p.portamento_time;
+  }
+  inline uint8_t& arp_sequencer_mode() {
+    return p.arp_sequencer_mode;
+  }
+  inline uint8_t& arp_direction() {
+    return p.arp_direction;
+  }
+  inline uint8_t& arp_octave() {
+    return p.arp_octave;
+  }
+  inline uint8_t& arp_pattern() {
+    return p.arp_pattern;
+  }
+  inline uint8_t& arp_divider() {
+    return p.arp_divider;
+  }
+  inline uint8_t& sequence_length(uint8_t index) {
+    return p.sequence_length[index];
+  }
+  inline uint8_t& polyphony_mode() {
+    return p.polyphony_mode;
+  }
+
+  // more functions
+
   uint8_t step_value(uint8_t sequence, uint8_t step) const {
-    return sequence_data[(step + (sequence << 4)) & 0x1f];
+    return p.sequence_data[(step + (sequence << 4)) & 0x1f];
   }
   
   void set_step_value(uint8_t sequence, uint8_t step, uint8_t value) {
-    sequence_data[(step + (sequence << 4)) & 0x1f] = value;
+    p.sequence_data[(step + (sequence << 4)) & 0x1f] = value;
   }
   
   uint8_t note(uint8_t step) const {
     uint8_t offset = (32 + (step << 1)) & 0x3f;
-    return sequence_data[offset] & 0x7f;
+    return p.sequence_data[offset] & 0x7f;
   }
   
   void set_note(uint8_t step, uint8_t note) {
     uint8_t offset = (32 + (step << 1)) & 0x3f;
-    sequence_data[offset] &= 0x80;
-    sequence_data[offset] |= note;
+    p.sequence_data[offset] &= 0x80;
+    p.sequence_data[offset] |= note;
   }
   
   uint16_t ordered_gate_velocity(uint8_t step) const {
     uint8_t offset = (32 + (step << 1)) & 0x3f;
-    if (!(sequence_data[offset] & 0x80)) {
+    if (!(p.sequence_data[offset] & 0x80)) {
       return 0;
     } else {
-      uint8_t o = sequence_data[offset + 1] + 128;
+      uint8_t o = p.sequence_data[offset + 1] + 128;
       return static_cast<uint16_t>(o) + 1;
     }
   }
@@ -144,25 +242,25 @@ struct PartData {
   void set_ordered_gate_velocity(uint8_t step, uint16_t value) {
     uint8_t offset = (32 + (step << 1)) & 0x3f;
     if (!value) {
-      sequence_data[offset] &= 0x7f;
-      sequence_data[offset + 1] = 0;
+      p.sequence_data[offset] &= 0x7f;
+      p.sequence_data[offset + 1] = 0;
     } else {
-      sequence_data[offset] |= 0x80;
-      sequence_data[offset + 1] = (value - 1) + 128;
+      p.sequence_data[offset] |= 0x80;
+      p.sequence_data[offset + 1] = (value - 1) + 128;
     }
   }
   
   void set_velocity(uint8_t step, uint8_t velocity) {
     uint8_t offset = (32 + (step << 1)) & 0x3f;
-    sequence_data[offset + 1] &= 0x80;
-    sequence_data[offset + 1] |= velocity;
+    p.sequence_data[offset + 1] &= 0x80;
+    p.sequence_data[offset + 1] |= velocity;
   }
   
   NoteStep note_step(uint8_t step) const {
     NoteStep n;
     uint8_t offset = (32 + (step << 1)) & 0x3f;
-    n.note = sequence_data[offset];
-    n.velocity = sequence_data[offset + 1];
+    n.note = p.sequence_data[offset];
+    n.velocity = p.sequence_data[offset + 1];
     n.gate = n.note & 0x80;
     n.legato = n.velocity & 0x80;
     n.note &= 0x7f;
@@ -172,7 +270,7 @@ struct PartData {
 };
 
 enum PartParameter {
-  PRM_PART_VOLUME = sizeof(Patch),
+  PRM_PART_VOLUME = sizeof(Patch), // TODO move these into the actual classes
   PRM_PART_OCTAVE,
   PRM_PART_TUNING,
   PRM_PART_TUNING_SPREAD,
@@ -192,7 +290,7 @@ enum PartParameter {
 
 class Part {
  public:
-  Part() { }
+  Part() : data_() { }
   void Init();
 
   void InitPatch(InitializationMode mode);
@@ -217,36 +315,37 @@ class Part {
   
   uint8_t num_pressed_keys() const { return pressed_keys_.size(); }
   
-  void SetValue(uint8_t address, uint8_t value, uint8_t user_initiated);
+  inline void SetValue(uint8_t address, uint8_t value, uint8_t user_initiated);
   
   inline uint8_t GetValue(uint8_t address) const {
-    auto bytes = reinterpret_cast<const uint8_t*>(&patch_);
-    return bytes[address];
+    return patch_.getData(address);
   }
 
-  PartData* mutable_data() { return &data_; }
-  const PartData& data() const { return data_; }
-  
-  const uint8_t* raw_sequence_data() const { 
-    return reinterpret_cast<const uint8_t*>(&data_) + 8;
+  inline PartData& data() { return data_; }
+
+  inline uint8_t* raw_sequence_data() {
+    return data_.sequence_data();
   }
-  const uint8_t* raw_data() const { 
-    return reinterpret_cast<const uint8_t*>(&data_);
+  inline const uint8_t* raw_sequence_data_readonly() const {
+    return data_.sequence_data_readonly();
   }
-  const uint8_t* raw_patch_data() const { 
-    return reinterpret_cast<const uint8_t*>(&patch_);
+
+  inline uint8_t* raw_data() {
+    return data_.bytes();
   }
-  
-  uint8_t* mutable_raw_sequence_data() {
-    return reinterpret_cast<uint8_t*>(&data_) + 8;
+
+  inline const uint8_t* raw_data_readonly() const {
+    return data_.bytes_readonly();
   }
-  uint8_t* mutable_raw_data() {
-    return reinterpret_cast<uint8_t*>(&data_);
+
+  inline uint8_t* raw_patch_data() {
+    return patch_.bytes();
   }
-  uint8_t* mutable_raw_patch_data() {
-    return reinterpret_cast<uint8_t*>(&patch_);
+
+  inline const uint8_t* raw_patch_data_readonly() const {
+    return patch_.bytes_readonly();
   }
-  
+
   uint8_t lfo_value(uint8_t index) const { return lfo_previous_values_[index]; }
   uint8_t step(uint8_t index) const { return sequencer_step_[index]; }
 
@@ -281,8 +380,8 @@ class Part {
   // Check whether a note should be played by this part. A note can be rejected
   // if it is outside of the split region, or if it is outside of the selected
   // scale/raga.
-  uint8_t AcceptNote(uint8_t note) const;
-  uint16_t TuneNote(uint8_t midi_note) const;
+  uint8_t AcceptNote(uint8_t note); // const
+  uint16_t TuneNote(uint8_t midi_note); // const
 
   void InternalNoteOn(uint8_t note, uint8_t velocity);
   void InternalNoteOff(uint8_t note);

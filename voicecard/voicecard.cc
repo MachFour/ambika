@@ -108,8 +108,8 @@ inline void Init() {
   log_vca.set_mode(DIGITAL_INPUT);
   log_vca.High();
   dac_interface.Strobe();
-  dac_interface.Overwrite(0x10 | 0x0f);
-  dac_interface.Overwrite(0xff);
+  dac_interface.Overwrite(0x10u | 0x0fu);
+  dac_interface.Overwrite(0xffu);
   
   // Successful boot!
   if (eeprom_read_byte(kFirmwareUpdateFlagPtr) != FIRMWARE_UPDATE_DONE) {
@@ -127,12 +127,12 @@ inline void Init() {
 }
 
 static uint8_t filter_mode_bytes[] = { 0, 1, 2, 3 };
-static uint8_t leds_timeout = 0;
+//static uint8_t leds_timeout = 0;
 
-int main(void) {
+int main() {
   Init();
   // For testing only...
-  // voice.Trigger(60 * 128, 100, 0);
+  //voice.Trigger(60 * 128, 100, 0);
   while (1) {
     // Check if there's a block of samples to fill.
     if (audio_buffer.writable() >= kAudioBlockSize) {

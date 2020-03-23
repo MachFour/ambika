@@ -32,22 +32,17 @@ using namespace avrlib;
 
 namespace ambika {
 
-static inline uint8_t ReadSample(
-    const uint8_t* table,
-    uint16_t phase) __attribute__((always_inline));
-static inline uint8_t ReadSample(
-    const uint8_t* table,
-    uint16_t phase) {
+__attribute__((always_inline))
+static inline uint8_t ReadSample(const uint8_t* table, uint16_t phase) {
   return ResourcesManager::Lookup<uint8_t, uint8_t>(table, phase >> 8);
 }
 
 static inline uint8_t InterpolateTwoTables(
     const uint8_t* table_a, const uint8_t* table_b,
     uint16_t phase, uint8_t gain_a, uint8_t gain_b) {
-  return U8Mix(
-      InterpolateSample(table_a, phase),
-      InterpolateSample(table_b, phase),
-      gain_a, gain_b);
+  auto a = InterpolateSample(table_a, phase);
+  auto b = InterpolateSample(table_b, phase);
+  return U8Mix(a, b, gain_a, gain_b);
 }
 
 static const uint8_t kNumZonesFullSampleRate = 6;
@@ -78,26 +73,21 @@ union OscillatorState {
   uint16_t secondary_phase;
 };
 
-typedef void (*OscRenderFn)(uint8_t* buffer);
+//typedef void (*OscRenderFn)(uint8_t* buffer);
 
 class Oscillator {
  public:
-  typedef void (Oscillator::*RenderFn)(uint8_t*);
+  using RenderFn = void (Oscillator::*)(uint8_t*);
    
-  Oscillator() { }
-  ~Oscillator() { }
+  Oscillator() = default;
+  //Oscillator() { }
 
   inline void Reset() {
     data_.no.rng_reset_value = Random::GetByte() + 1;
   }
 
-  inline void Render(
-      uint8_t shape,
-      uint8_t note,
-      uint24_t increment,
-      uint8_t* sync_input,
-      uint8_t* sync_output,
-      uint8_t* buffer) {
+  inline void Render(uint8_t shape, uint8_t note, uint24_t increment,
+      uint8_t* sync_input, uint8_t* sync_output, uint8_t* buffer) {
     shape_ = shape;
     note_ = note;
     phase_increment_ = increment;
@@ -111,11 +101,8 @@ class Oscillator {
         RenderBandlimitedPwm(buffer);
       }
     } else {
+      uint8_t index = shape_ >= WAVEFORM_WAVETABLE_1 ? U8(WAVEFORM_WAVETABLE_1) : shape_;
       RenderFn fn;
-      
-      uint8_t index = shape_ >= WAVEFORM_WAVETABLE_1
-          ? WAVEFORM_WAVETABLE_1
-          : shape_;
       ResourcesManager::Load(fn_table_, index, &fn);
       if (shape_ == WAVEFORM_WAVEQUENCE) {
         fn = &Oscillator::RenderWavequence;

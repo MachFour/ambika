@@ -194,7 +194,7 @@ class Storage {
   static uint8_t object_size(const StorageLocation& location);
   static const uint8_t* object_data(const StorageLocation& location);
   static uint8_t* mutable_object_data(const StorageLocation& location);
-  
+
   static void ForEachObject(const StorageLocation& source, ObjectFn object_fn);
   
   static void ReadObject(const StorageLocation& location);
@@ -206,8 +206,8 @@ class Storage {
   static void SysExParseCommand();
   static void SysExAcceptCommand();
   
-  static void EepromWrite(const void* data, uint8_t size, uint16_t* offset);
-  static uint8_t EepromRead(void* data, uint8_t size, uint16_t* offset);
+  static void EepromWrite(const void* data, uint8_t size, uint8_t** offset_ptr);
+  static uint8_t EepromRead(void* data, uint8_t size, uint8_t** offset_ptr);
   
   static uint8_t* buffer_;
   

@@ -34,16 +34,47 @@ static const int16_t kOctave = 12 * 128;
 static const int16_t kPitchTableStart = 116 * 128;
 
 // This mirrors the beginning of the Part data structure in the controller.
-struct Part {
-  uint8_t volume;
-  uint8_t padding[4];
-  uint8_t legato;
-  uint8_t portamento_time;
+// Has only the bits of PartData that the voice needs to care about.
+struct VoicePart {
+  struct Parameters {
+    uint8_t volume;
+    uint8_t padding[4]; // to match Part bytes
+    uint8_t legato;
+    uint8_t portamento_time;
+  };
+
+private:
+  union Data {
+    Parameters params;
+    uint8_t bytes[sizeof(Parameters)];
+  };
+
+  Data data;
+  Parameters& p = data.params;
+
+public:
+  inline uint8_t& volume() {
+    return p.volume;
+  }
+  inline uint8_t& legato() {
+    return p.legato;
+  }
+  inline uint8_t& portamento_time() {
+    return p.portamento_time;
+  }
+  inline uint8_t* bytes() {
+    return data.bytes;
+  }
+  inline void setData(uint8_t address, uint8_t value) {
+    data.bytes[address] = value;
+  }
+
 };
 
 class Voice {
  public:
-  Voice() { }
+  Voice() = default;
+
   static void Init();
 
   // Called whenever a new note is played, manually or through the arpeggiator.
@@ -81,16 +112,9 @@ class Voice {
     modulation_sources_[i] = value;
   }
 
-  static void set_patch_data(uint8_t address, uint8_t value) {
-    patch_.data.bytes[address] = value;
-  }
-  static void set_part_data(uint8_t address, uint8_t value) {
-    part_data_[address] = value;
-  }
-
   static Patch& patch() { return patch_; }
+  static VoicePart& part() { return part_; }
 
-  static Envelope* mutable_envelope(uint8_t i) { return &envelope_[i]; }
   static void TriggerEnvelope(uint8_t stage);
   static void TriggerEnvelope(uint8_t index, uint8_t stage);
   
@@ -103,8 +127,7 @@ class Voice {
   static inline void RenderOscillators() __attribute__((always_inline));
 
   static Patch patch_;
-  static uint8_t *part_data_;
-  static Part part_;
+  static VoicePart part_;
   
   // Envelope generators.
   static Envelope envelope_[kNumEnvelopes];
