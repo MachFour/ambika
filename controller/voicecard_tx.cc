@@ -47,10 +47,7 @@ void VoicecardProtocolTx::PrepareForBlockWrite(uint8_t voice_id) {
 }
 
 /* static */
-void VoicecardProtocolTx::WriteBlock(
-    uint8_t voice_id,
-    const uint8_t* data,
-    uint8_t size) {
+void VoicecardProtocolTx::WriteBlock(uint8_t voice_id, const uint8_t* data, uint8_t size) {
   FlushBuffers();
   voicecard_address_.Write(voice_id);
   spi_.Write(size);
@@ -83,34 +80,23 @@ void VoicecardProtocolTx::Sync(uint8_t voice_id) {
 }
 
 /* static */
-void VoicecardProtocolTx::Trigger(
-    uint8_t voice_id,
-    uint16_t note,
-    uint8_t velocity,
-    uint8_t legato) {
+void VoicecardProtocolTx::Trigger(uint8_t voice_id, uint16_t note, uint8_t velocity, uint8_t legato) {
   voice_status_[voice_id] = velocity;
   Write(voice_id, COMMAND_NOTE_ON + legato);
-  Write(voice_id, note >> 8);
-  Write(voice_id, note & 0xff);
-  Write(voice_id, velocity << 1);
+  Write(voice_id, note >> 8u);
+  Write(voice_id, note & 0xffu);
+  Write(voice_id, velocity << 1u);
 }
 
 /* static */
-void VoicecardProtocolTx::WriteData(
-    uint8_t voice_id,
-    uint8_t data_type,
-    uint8_t address,
-    uint8_t value) {
+void VoicecardProtocolTx::WriteData(uint8_t voice_id, uint8_t data_type, uint8_t address, uint8_t value) {
   Write(voice_id, data_type);
   Write(voice_id, address);
   Write(voice_id, value);
 }
     
 /* static */
-void VoicecardProtocolTx::WriteLfo(
-    uint8_t voice_id,
-    uint8_t address,
-    uint8_t value) {
+void VoicecardProtocolTx::WriteLfo(uint8_t voice_id, uint8_t address, uint8_t value) {
   Write(voice_id, COMMAND_WRITE_LFO | address);
   Write(voice_id, value);
 }
@@ -157,7 +143,7 @@ void VoicecardProtocolTx::Write(uint8_t voice_id, uint8_t value) {
   Word w;
   w.bytes[0] = voice_id;
   w.bytes[1] = value;
-  if (voice_id & 1) {
+  if (voice_id & 1u) {
     odd_buffer_.Write(w.value);
   } else {
     even_buffer_.Write(w.value);

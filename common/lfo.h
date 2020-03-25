@@ -38,17 +38,17 @@ extern const uint8_t wav_res_lfo_waveforms[] PROGMEM;
 
 class Lfo {
  public:
-  Lfo() { }
+  Lfo() = default;
 
   uint8_t Render(uint8_t shape) {
     phase_ += phase_increment_;
     looped_ = phase_ < phase_increment_;
     
     // Compute the LFO value.
-    uint8_t value;
+    uint8_t value = 0;
     switch (shape) {
       case LFO_WAVEFORM_RAMP:
-        value = phase_ >> 8;
+        value = phase_ >> 8u;
         break;
         
       case LFO_WAVEFORM_S_H:
@@ -59,25 +59,26 @@ class Lfo {
         break;
 
       case LFO_WAVEFORM_TRIANGLE:
-        value = (phase_ & 0x8000) ?
-            phase_ >> 7 :
-            ~static_cast<uint8_t>(phase_ >> 7);
+        value = (phase_ & 0x8000u) ? phase_ >> 7u : ~U8(phase_ >> 7u);
         break;
 
       case LFO_WAVEFORM_SQUARE:
-        value = (phase_ & 0x8000) ? 255 : 0;
+        value = (phase_ & 0x8000u) ? 255 : 0;
         break;
 
-#ifndef DISABLE_WAVETABLE_LFOS
       default:
         {
+#ifndef DISABLE_WAVETABLE_LFOS
           uint8_t shape_offset = shape - LFO_WAVEFORM_WAVE_1;
-          uint16_t offset = static_cast<uint16_t>(shape_offset) << 8;
+          uint16_t offset = U16(shape_offset) << 8u;
           offset += shape_offset;
           value = InterpolateSample(wav_res_lfo_waveforms + offset, phase_);
+#else
+          value = 0;
+#endif  // DISABLE_WAVETABLE_LFOS
         }
         break;
-#endif  // DISABLE_WAVETABLE_LFOS
+
     }
     return value;
   }

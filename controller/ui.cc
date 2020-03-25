@@ -370,8 +370,7 @@ void Ui::DoEvents() {
   for (uint8_t i = 0; i < kNumVoices; ++i) {
     uint8_t led_index = pgm_read_byte(part_leds_remap + i);
     uint8_t velocity = voicecard_tx.voice_status(i) >> 3;
-    leds.set_pixel(
-        LED_PART_1 + led_index,
+    leds.set_pixel(LED_PART_1 + led_index,
         velocity | leds.pixel(LED_PART_1 + led_index));
   }
   (*event_handlers_.UpdateLeds)();

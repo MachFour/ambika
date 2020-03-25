@@ -48,10 +48,10 @@ class SubOscillator {
       phase_ = U24Add(phase_, increment);
       uint8_t v;
       if (shape != 1) {
-        v = static_cast<uint8_t>(phase_.integral >> 8) < pulse_width ? 0 : 255;
+        v = U8(phase_.integral >> 8u) < pulse_width ? 0 : 255;
       } else {
-        uint8_t tri = phase_.integral >> 7;
-        v = phase_.integral & 0x8000 ? tri : ~tri;
+        uint8_t tri = phase_.integral >> 7u;
+        v = phase_.integral & 0x8000u ? tri : ~tri;
       }
       *buffer = U8Mix(*buffer, v, mix_gain, sub_gain);
       ++buffer;

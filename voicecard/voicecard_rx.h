@@ -133,7 +133,8 @@ class VoicecardProtocolRx {
           // Stop doing anything else
           Timer<2>::Stop();
           uint8_t size = spi_.Read();
-          uint8_t* data = data_ptr_ = voice.patch().bytes();
+          data_ptr_ = voice.patch().bytes();
+          auto data = data_ptr_;
           while (size--) {
             *data++ = spi_.Read();
           }
@@ -162,11 +163,9 @@ class VoicecardProtocolRx {
         command_ = byte;
         data_ptr_ = arguments_;
         state_ = EXPECTING_ARGUMENTS;
-        if (command_ >= COMMAND_NOTE_ON &&
-            command_ < COMMAND_WRITE_PATCH_DATA) {
+        if (command_ >= COMMAND_NOTE_ON && command_ < COMMAND_WRITE_PATCH_DATA) {
           data_size_ = 3;
-        } else if (command_ >= COMMAND_WRITE_PATCH_DATA
-                   && command_ < COMMAND_WRITE_LFO) {
+        } else if (command_ >= COMMAND_WRITE_PATCH_DATA && command_ < COMMAND_WRITE_LFO) {
           data_size_ = 2;
         } else if ((command_ & 0xf0u) == COMMAND_WRITE_LFO) {
           data_size_ = 1;

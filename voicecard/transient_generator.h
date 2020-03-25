@@ -27,9 +27,10 @@
 
 namespace ambika {
 
-using RenderFn = uint8_t (*)();
 
 class TransientGenerator {
+ using RenderFn = uint8_t (*)();
+
  public:
   TransientGenerator() = default;
 
@@ -88,30 +89,29 @@ class TransientGenerator {
     gain_ = counter_ > 0 ? 255 : 0;
     return 0;
   }
-   
+
+  DISALLOW_COPY_AND_ASSIGN(TransientGenerator);
+
+public:
   static uint8_t rng_state_;
   static uint8_t decimate_;
   static uint8_t gain_;
   static uint8_t counter_;
-  static RenderFn fn_table_[];
-  
-  DISALLOW_COPY_AND_ASSIGN(TransientGenerator);
+  static constexpr RenderFn fn_table_[] = {
+      RenderClick,
+      RenderGlitch,
+      RenderBlow,
+      RenderMetallic,
+      RenderPop,
+  };
 };
 
-/* <static> */
-RenderFn TransientGenerator::fn_table_[] = {
-  &TransientGenerator::RenderClick,
-  &TransientGenerator::RenderGlitch,
-  &TransientGenerator::RenderBlow,
-  &TransientGenerator::RenderMetallic,
-  &TransientGenerator::RenderPop,
-};
-
-uint8_t TransientGenerator::counter_;
+/* </static> */
 uint8_t TransientGenerator::rng_state_;
 uint8_t TransientGenerator::decimate_;
 uint8_t TransientGenerator::gain_;
-/* </static> */
+uint8_t TransientGenerator::counter_;
+const TransientGenerator::RenderFn TransientGenerator::fn_table_[];
 
 }  // namespace ambika
 

@@ -32,9 +32,9 @@
 using namespace avrlib;
 using namespace ambika;
 
-static const uint8_t kPinVcaOut = 3;
-static const uint8_t kPinVcfResonanceOut = 5;
-static const uint8_t kPinVcfCutoffOut = 6;
+static constexpr uint8_t kPinVcaOut = 3;
+static constexpr uint8_t kPinVcfResonanceOut = 5;
+static constexpr uint8_t kPinVcfCutoffOut = 6;
 
 PwmOutput<kPinVcfCutoffOut> vcf_cutoff_out;
 PwmOutput<kPinVcfResonanceOut> vcf_resonance_out;
@@ -47,7 +47,7 @@ Gpio<PortB, 0> log_vca;
 UartSpiMaster<UartSpiPort0, Gpio<PortD, 2>, 2> dac_interface;
 
 static uint8_t update_vca;
-static const uint8_t dac_scale = 16;
+static constexpr uint8_t dac_scale = 16;
 
 ISR(TIMER2_OVF_vect) {
   static uint8_t sample_counter = 0;
@@ -62,20 +62,18 @@ ISR(TIMER2_OVF_vect) {
     uint16_t next_vca_value;
     if (log_vca.is_low()) {
       next_vca_value = ambika::ResourcesManager::Lookup<uint16_t, uint8_t>(
-          lut_res_vca_linearization,
-          voice.vca());
+          lut_res_vca_linearization, voice.vca());
     } else {
       next_vca_value = voice.vca() * dac_scale;
     }
-    vca_12bits.value = next_vca_value | 0x1000;
+    vca_12bits.value = next_vca_value | 0x1000u;
   }
   
   uint8_t sample = audio_buffer.ImmediateRead();
   if (++sample_counter >= voice.crush()) {
     dac_interface.Strobe();
     sample_counter = 0;
-    Word sample_12bits;
-    sample_12bits.value = (sample * dac_scale) | 0x9000;
+    Word sample_12bits {U16(U16(sample * dac_scale) | 0x9000u)};
     dac_interface.Overwrite(sample_12bits.bytes[1]);
     dac_interface.Overwrite(sample_12bits.bytes[0]);
   }

@@ -54,24 +54,14 @@ struct EvenOutputBufferSpecs {
 
 class VoicecardProtocolTx {
  public:
-  VoicecardProtocolTx() { }
-  static void Init();
-  static void Trigger(
-      uint8_t voice_id,
-      uint16_t note,
-      uint8_t velocity,
-      uint8_t legato);
-      
-  static void WriteData(
-      uint8_t voice_id,
-      uint8_t data_type,
-      uint8_t address,
-      uint8_t value);
+  VoicecardProtocolTx() = default;
 
-  static void WriteLfo(
-      uint8_t voice_id,
-      uint8_t address,
-      uint8_t value);
+  static void Init();
+  static void Trigger(uint8_t voice_id, uint16_t note, uint8_t velocity, uint8_t legato);
+      
+  static void WriteData(uint8_t voice_id, uint8_t data_type, uint8_t address, uint8_t value);
+
+  static void WriteLfo(uint8_t voice_id, uint8_t address, uint8_t value);
 
   static void Sync(uint8_t voice_id);
   static void SyncAllVoices();

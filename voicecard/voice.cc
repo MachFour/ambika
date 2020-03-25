@@ -183,7 +183,8 @@ void Voice::Trigger(uint16_t note, uint8_t velocity, uint8_t legato) {
   int32_t increment = ResourcesManager::Lookup<uint16_t, uint8_t>(
       lut_res_env_portamento_increments,
       part_.portamento_time());
-  pitch_increment_ = S32(delta * increment) >> 16u;
+  // TODO check if S32 was really needed here
+  pitch_increment_ = U32(delta * increment) >> 16u;
   if (pitch_increment_ == 0) {
     if (delta < 0) {
       pitch_increment_ = -1;
@@ -312,9 +313,7 @@ inline void Voice::ProcessModulationMatrix() {
       if (amount != 63) {
         source_value = U8Mix(255, source_value, amount << 2u);
       }
-      modulation_destinations_[MOD_DST_VCA] = U8U8MulShift8(
-            modulation_destinations_[MOD_DST_VCA],
-            source_value);
+      modulation_destinations_[MOD_DST_VCA] = U8U8MulShift8(modulation_destinations_[MOD_DST_VCA], source_value);
     }
   }
 }
@@ -326,17 +325,13 @@ inline void Voice::UpdateDestinations() {
   // transistors are thermically coupled. You can disable tracking by applying
   // a negative modulation from NOTE to CUTOFF.
   uint16_t cutoff = dst_[MOD_DST_FILTER_CUTOFF];
-  cutoff = S16ClipU14(cutoff + S8U8Mul(patch_.filter_env(),
-      modulation_sources_[MOD_SRC_ENV_2]));
-  cutoff = S16ClipU14(cutoff + S8S8Mul(patch_.filter_lfo(),
-      modulation_sources_[MOD_SRC_LFO_2] + 128));
+  cutoff = S16ClipU14(cutoff + S8U8Mul(patch_.filter_env(), modulation_sources_[MOD_SRC_ENV_2]));
+  cutoff = S16ClipU14(cutoff + S8S8Mul(patch_.filter_lfo(), modulation_sources_[MOD_SRC_LFO_2] + 128));
   
   // Store in memory all the updated parameters.
   modulation_destinations_[MOD_DST_FILTER_CUTOFF] = U14ShiftRight6(cutoff);
-  modulation_destinations_[MOD_DST_FILTER_RESONANCE] = U14ShiftRight6(
-      dst_[MOD_DST_FILTER_RESONANCE]);
-  modulation_destinations_[MOD_DST_MIX_CRUSH] = (
-      dst_[MOD_DST_MIX_CRUSH] >> 8) + 1;
+  modulation_destinations_[MOD_DST_FILTER_RESONANCE] = U14ShiftRight6(dst_[MOD_DST_FILTER_RESONANCE]);
+  modulation_destinations_[MOD_DST_MIX_CRUSH] = (dst_[MOD_DST_MIX_CRUSH] >> 8u) + 1;
 
   osc_1.set_parameter(U15ShiftRight7(dst_[MOD_DST_PARAMETER_1]));
   osc_1.set_fm_parameter(patch_.osc(0).range() + 36);
@@ -356,8 +351,7 @@ inline void Voice::UpdateDestinations() {
     envelope_[i].Update(new_attack, new_decay, patch_.env_lfo(i).sustain, new_release);
   }
   
-  voice_lfo_.set_phase_increment(
-      ResourcesManager::Lookup<uint16_t, uint8_t>(
+  voice_lfo_.set_phase_increment(ResourcesManager::Lookup<uint16_t, uint8_t>(
           lut_res_lfo_increments, U14ShiftRight6(dst_[MOD_DST_LFO_4]) >> 1u));
 }
 
@@ -398,10 +392,9 @@ inline void Voice::RenderOscillators() {
       ref_pitch += kOctave;
       ++num_shifts;
     }
-    uint24_t increment {
-      ResourcesManager::Lookup<uint16_t, uint16_t>(
+    uint24_t increment {ResourcesManager::Lookup<uint16_t, uint16_t>(
             lut_res_oscillator_increments, ref_pitch >> 1u),
-      0};
+            0};
     // Divide the pitch increment by the number of octaves we had to transpose
     // to get a value in the lookup table.
     while (num_shifts--) {
@@ -449,24 +442,14 @@ void Voice::ProcessBlock() {
   switch (op) {
     case OP_RING_MOD:
       for (uint8_t i = 0; i < kAudioBlockSize; ++i) {
-        uint8_t mix = U8Mix(
-            buffer_[i],
-            osc2_buffer_[i],
-            osc_1_gain,
-            osc_2_gain);
-        uint8_t ring = S8S8MulShift8(
-            buffer_[i] + 128,
-            osc2_buffer_[i] + 128) + 128;
+        uint8_t mix = U8Mix(buffer_[i], osc2_buffer_[i], osc_1_gain, osc_2_gain);
+        uint8_t ring = S8S8MulShift8(buffer_[i] + 128, osc2_buffer_[i] + 128) + 128;
         buffer_[i] = U8Mix(mix, ring, dry_gain, wet_gain);
       }
       break;
     case OP_XOR:
       for (uint8_t i = 0; i < kAudioBlockSize; ++i) {
-        uint8_t mix = U8Mix(
-            buffer_[i],
-            osc2_buffer_[i],
-            osc_1_gain,
-            osc_2_gain);
+        uint8_t mix = U8Mix(buffer_[i], osc2_buffer_[i], osc_1_gain, osc_2_gain);
         uint8_t xord = buffer_[i] ^ osc2_buffer_[i];
         buffer_[i] = U8Mix(mix, xord, dry_gain, wet_gain);
       }
@@ -514,15 +497,15 @@ void Voice::ProcessBlock() {
     uint8_t signal_noise_a, signal_noise_b;
     noise = (noise * 73) + 1;
     signal_noise_a = U8Mix(buffer_[i++], noise, signal_gain, noise_gain);
-    uint8_t a = U8Mix(
-        signal_noise_a,
-        ResourcesManager::Lookup<uint8_t, uint8_t>(
-            wav_res_distortion, signal_noise_a), dry_gain, wet_gain);
+    uint8_t a = U8Mix(signal_noise_a,
+        ResourcesManager::Lookup<uint8_t, uint8_t>(wav_res_distortion, signal_noise_a),
+            dry_gain, wet_gain);
 
     noise = (noise * 73) + 1;
     signal_noise_b = U8Mix(buffer_[i++], noise, signal_gain, noise_gain);
-    uint8_t b = U8Mix(signal_noise_b, ResourcesManager::Lookup<uint8_t, uint8_t>(
-              wav_res_distortion, signal_noise_b), dry_gain, wet_gain);
+    uint8_t b = U8Mix(signal_noise_b,
+        ResourcesManager::Lookup<uint8_t, uint8_t>(wav_res_distortion, signal_noise_b),
+            dry_gain, wet_gain);
     audio_buffer.Overwrite2(a, b);
   }
 }

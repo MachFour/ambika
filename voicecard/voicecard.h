@@ -34,7 +34,7 @@ static const uint8_t kAudioBlockSize = kControlRate;
 
 const uint8_t kSystemVersion = 0x10;
 
-static uint8_t* kFirmwareUpdateFlagPtr = (uint8_t*)(E2END);
+static const auto kFirmwareUpdateFlagPtr = reinterpret_cast<uint8_t*>(E2END);
 
 enum VoicecardFirmwareUpdateStatus {
   FIRMWARE_UPDATE_DONE = 0,

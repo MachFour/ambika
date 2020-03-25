@@ -40,7 +40,7 @@ enum EnvelopeStage {
 
 class Envelope {
  public:
-  Envelope() { }
+  Envelope() = default;
 
   void Init() {
     stage_target_[ATTACK] = 255;
@@ -56,7 +56,7 @@ class Envelope {
     if (stage == DEAD) {
       value_ = 0;
     }
-    a_ = value_ >> 8;
+    a_ = value_ >> 8u;
     b_ = stage_target_[stage];
     stage_ = stage;
     phase_ = 0;
@@ -64,12 +64,11 @@ class Envelope {
   }
   
   inline void Update(uint8_t attack, uint8_t decay, uint8_t sustain, uint8_t release) {
-    stage_phase_increment_[ATTACK] = ResourcesManager::Lookup<
-        uint16_t, uint8_t>(lut_res_env_portamento_increments, attack);
-    stage_phase_increment_[DECAY] = ResourcesManager::Lookup<
-        uint16_t, uint8_t>(lut_res_env_portamento_increments, decay);
-    stage_phase_increment_[RELEASE] = ResourcesManager::Lookup<
-        uint16_t, uint8_t>(lut_res_env_portamento_increments, release);
+    using rm = ResourcesManager;
+    auto portamento_increments = lut_res_env_portamento_increments;
+    stage_phase_increment_[ATTACK] = rm::Lookup<uint16_t, uint8_t>(portamento_increments, attack);
+    stage_phase_increment_[DECAY] = rm::Lookup<uint16_t, uint8_t>(portamento_increments, decay);
+    stage_phase_increment_[RELEASE] = rm::Lookup<uint16_t, uint8_t>(portamento_increments, release);
     stage_target_[DECAY] = sustain << 1u;
     stage_target_[SUSTAIN] = stage_target_[DECAY];
   }
@@ -78,7 +77,8 @@ class Envelope {
     phase_ += phase_increment_;
     if (phase_ < phase_increment_) {
       value_ = U8MixU16(a_, b_, 255);
-      Trigger(++stage_);
+      stage_++;
+      Trigger(stage_);
     }
     if (phase_increment_) {
       uint8_t step = InterpolateSample(wav_res_env_expo, phase_);
