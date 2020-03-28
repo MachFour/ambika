@@ -28,18 +28,18 @@ using namespace avrlib;
 
 namespace ambika {
 
-enum EnvelopeStage {
-  ATTACK = 0,
-  DECAY = 1,
-  SUSTAIN = 2,
-  RELEASE = 3,
-  DEAD = 4,
-  NUM_SEGMENTS,
-};
 
 
 class Envelope {
  public:
+  enum Stage : uint8_t {
+    ATTACK = 0,
+    DECAY = 1,
+    SUSTAIN = 2,
+    RELEASE = 3,
+    DEAD = 4,
+    NUM_STAGES,
+  };
   Envelope() = default;
 
   void Init() {
@@ -52,24 +52,24 @@ class Envelope {
 
   uint8_t stage() { return stage_; }
 
-  void Trigger(uint8_t stage) {
-    if (stage == DEAD) {
+  void Trigger(Stage s) {
+    if (s == DEAD) {
       value_ = 0;
     }
-    a_ = value_ >> 8u;
-    b_ = stage_target_[stage];
-    stage_ = stage;
+    a_ = highByte(value_);
+    b_ = stage_target_[s];
+    stage_ = s;
     phase_ = 0;
-    phase_increment_ = stage_phase_increment_[stage];
+    phase_increment_ = stage_phase_increment_[s];
   }
   
   inline void Update(uint8_t attack, uint8_t decay, uint8_t sustain, uint8_t release) {
     using rm = ResourcesManager;
-    auto portamento_increments = lut_res_env_portamento_increments;
-    stage_phase_increment_[ATTACK] = rm::Lookup<uint16_t, uint8_t>(portamento_increments, attack);
-    stage_phase_increment_[DECAY] = rm::Lookup<uint16_t, uint8_t>(portamento_increments, decay);
-    stage_phase_increment_[RELEASE] = rm::Lookup<uint16_t, uint8_t>(portamento_increments, release);
-    stage_target_[DECAY] = sustain << 1u;
+    auto portamento_incr = lut_res_env_portamento_increments;
+    stage_phase_increment_[ATTACK] = rm::Lookup<uint16_t, uint8_t>(portamento_incr, attack);
+    stage_phase_increment_[DECAY] = rm::Lookup<uint16_t, uint8_t>(portamento_incr, decay);
+    stage_phase_increment_[RELEASE] = rm::Lookup<uint16_t, uint8_t>(portamento_incr, release);
+    stage_target_[DECAY] = sustain * 2;
     stage_target_[SUSTAIN] = stage_target_[DECAY];
   }
 
@@ -77,7 +77,7 @@ class Envelope {
     phase_ += phase_increment_;
     if (phase_ < phase_increment_) {
       value_ = U8MixU16(a_, b_, 255);
-      stage_++;
+      stage_ = Stage(stage_ + 1);
       Trigger(stage_);
     }
     if (phase_increment_) {
@@ -89,11 +89,11 @@ class Envelope {
 
  private:
   // Phase increments for each stage.
-  uint16_t stage_phase_increment_[NUM_SEGMENTS];
+  uint16_t stage_phase_increment_[NUM_STAGES];
   // Value that needs to be reached at the end of each stage.
-  uint8_t stage_target_[NUM_SEGMENTS];
+  uint8_t stage_target_[NUM_STAGES];
   // Current stage.
-  uint8_t stage_;
+  Stage stage_;
 
   // Start and end value of the current segment.
   uint8_t a_;

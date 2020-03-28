@@ -172,9 +172,7 @@ void Parameter::PrintNote(uint8_t note, char* buffer) {
 }
 
 void Parameter::PrintValue(uint8_t value, char* buffer, uint8_t width) const {
-  ResourceId text = ResourcesManager::Lookup<uint16_t, uint8_t>(
-      units_definitions,
-      unit);
+  ResourceId text = ResourcesManager::Lookup<uint16_t, uint8_t>(units_definitions, unit);
   switch (unit) {
     case UNIT_INDEX:
       ++value;
@@ -560,7 +558,7 @@ static const Parameter parameters[kNumParameters] PROGMEM = {
   // 29
   { PARAMETER_LEVEL_PATCH,
     PRM_PATCH_LFO_SYNC,
-    UNIT_LFO_SYNC_MODE, 0, LFO_SYNC_MODE_LAST - 1,
+    UNIT_LFO_SYNC_MODE, 0, LFO_SYNC_MODE_COUNT - 1,
     3, 8, PRM_UI_ACTIVE_ENV_LFO, 44,
     STR_RES_TRIGGER, STR_RES_TRIGGER, STR_RES_LFO },
   
@@ -574,7 +572,7 @@ static const Parameter parameters[kNumParameters] PROGMEM = {
   // 31
   { PARAMETER_LEVEL_PATCH,
     PRM_PATCH_LFO_SHAPE,
-    UNIT_LFO_SHAPE, 0, LFO_WAVEFORM_LAST - 1,
+    UNIT_LFO_SHAPE, 0, LFO_WAVEFORM_COUNT - 1,
     3, 8, PRM_UI_ACTIVE_ENV_LFO, 46,
     STR_RES_WAVEFORM, STR_RES_WAVEFORM, STR_RES_LFO },
   
@@ -609,7 +607,7 @@ static const Parameter parameters[kNumParameters] PROGMEM = {
   // 36
   { PARAMETER_LEVEL_PATCH,
     PRM_PATCH_MOD_DESTINATION,
-    UNIT_MODULATION_DESTINATION, 0, MOD_DST_LAST - 1,
+    UNIT_MODULATION_DESTINATION, 0, MOD_DST_COUNT - 1,
     14, 3, PRM_UI_ACTIVE_MODULATION, 0xff,
     STR_RES_DESTINATION, STR_RES_DESTINATION, STR_RES_MODULATION },
   
@@ -630,21 +628,21 @@ static const Parameter parameters[kNumParameters] PROGMEM = {
   // 39
   { PARAMETER_LEVEL_PATCH,
     PRM_PATCH_MOD_OPERAND1,
-    UNIT_MODULATION_SOURCE, 0, MOD_SRC_LAST - 1,
+    UNIT_MODULATION_SOURCE, 0, MOD_SRC_COUNT - 1,
     4, 3, PRM_UI_ACTIVE_MODIFIER, 0xff,
     STR_RES_IN1, STR_RES_IN1, STR_RES_MODIFIER },
 
   // 40
   { PARAMETER_LEVEL_PATCH,
     PRM_PATCH_MOD_OPERAND2,
-    UNIT_MODULATION_SOURCE, 0, MOD_SRC_LAST - 1,
+    UNIT_MODULATION_SOURCE, 0, MOD_SRC_COUNT - 1,
     4, 3, PRM_UI_ACTIVE_MODIFIER, 0xff,
     STR_RES_IN2, STR_RES_IN2, STR_RES_MODIFIER },
   
   // 41
   { PARAMETER_LEVEL_PATCH,
     PRM_PATCH_MOD_OPERATOR,
-    UNIT_MODIFIER, 0, MODIFIER_LAST - 1,
+    UNIT_MODIFIER, 0, MODIFIER_COUNT - 1,
     4, 3, PRM_UI_ACTIVE_MODIFIER, 0xff,
     STR_RES_OPERATOR, STR_RES_OPERATOR, STR_RES_MODIFIER },
   

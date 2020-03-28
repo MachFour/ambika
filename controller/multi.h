@@ -95,7 +95,7 @@ static const uint8_t kNumTicksPerStep = 6;
 
 class Multi {
  public:
-  Multi() { }
+  Multi() = default;
   static void Init(bool force_reset);
   
   static void InitSettings(InitializationMode mode);
@@ -134,10 +134,7 @@ class Multi {
       }
     }
   }
-  static void ControlChange(
-      uint8_t channel,
-      uint8_t controller,
-      uint8_t value) {
+  static void ControlChange(uint8_t channel, uint8_t controller, uint8_t value) {
     for (uint8_t i = 0; i < kNumParts; ++i) {
       if (data_.part_mapping_[i].receive_channel(channel)) {
         parts_[i].ControlChange(controller, value);

@@ -22,6 +22,7 @@
 namespace ambika {
 
 /* extern */
-avrlib::RingBuffer<AudioBufferSpecs> audio_buffer;
+avrlib::RingBuffer2<audio_data_type, audio_buffer_size> audio_buffer;
+//avrlib::RingBuffer<AudioBufferSpecs> audio_buffer;
 
 }  // namespace ambika

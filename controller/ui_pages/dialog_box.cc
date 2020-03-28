@@ -61,7 +61,7 @@ uint8_t DialogBox::OnIncrement(int8_t increment) {
 /* static */
 uint8_t DialogBox::OnPot(uint8_t index, uint8_t value) {
   if (info_->dialog.dialog_type == DIALOG_SELECT) {
-    choice_ = U8U8MulShift8(info_->dialog.num_choices, value << 1);
+    choice_ = U8U8MulShift8(info_->dialog.num_choices, value << 1u);
   }
 }
 

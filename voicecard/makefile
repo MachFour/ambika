@@ -16,7 +16,9 @@ MCU_NAME       = 328
 TARGET         = ambika_voicecard
 PACKAGES       = avrlib avrlib/devices common voicecard
 EXTRA_DEFINES  = -DDISABLE_DEFAULT_UART_RX_ISR -DDISABLE_WAVETABLE_LFOS
+#EXTRA_FLAGS    = -mno-call-prologues
 RESOURCES      = voicecard/resources
+OPTIMISATION_LEVEL = -O2
 
 LFUSE          = ff
 HFUSE          = de

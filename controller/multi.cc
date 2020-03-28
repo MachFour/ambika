@@ -127,15 +127,15 @@ const int32_t kTempoFactor = (4 * kSampleRateNum * 60L / 24L / kSampleRateDen);
 void Multi::ComputeInternalClockOverflowsTable() {
   static_assert(kTempoFactor == 392156L);
 
-  int32_t rounding = 2 * static_cast<int32_t>(data_.clock_bpm);
-  int32_t denominator = 4 * static_cast<int32_t>(data_.clock_bpm);
+  int32_t rounding = 2 * data_.clock_bpm;
+  int32_t denominator = 4 * data_.clock_bpm;
   int16_t base_tick_duration = (kTempoFactor + rounding) / denominator;
   for (uint8_t i = 0; i < kNumStepsInGroovePattern; ++i) {
     int32_t swing_direction = ResourcesManager::Lookup<int16_t, uint8_t>(
         LUT_RES_GROOVE_SWING + data_.clock_groove_template, i);
     swing_direction *= base_tick_duration;
     swing_direction *= data_.clock_groove_amount;
-    int16_t swing = swing_direction >> 16;
+    int16_t swing = highWord(swing_direction);
     tick_duration_table_[i] = base_tick_duration + swing;
   }
   tick_duration_ = tick_duration_table_[0];
@@ -225,6 +225,7 @@ void Multi::UpdateClocks() {
 
 /* static */
 void Multi::SetValue(uint8_t address, uint8_t value) {
+  // TODO fix this
   auto bytes = reinterpret_cast<uint8_t*>(&data_);
   if (bytes[address] != value) {
     bytes[address] = value;

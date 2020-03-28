@@ -36,7 +36,6 @@ Oscillator osc_2;
 SubOscillator sub_osc;
 TransientGenerator transient_generator;
 
-
 /* <static> */
 
 Patch Voice::patch_;
@@ -126,7 +125,11 @@ void Voice::Init() {
   for (uint8_t i = 0; i < kNumEnvelopes; ++i) {
     envelope_[i].Init();
   }
-  memset(no_sync_, 0, kAudioBlockSize);
+  for (uint8_t i = 0; i < kAudioBlockSize; ++i) {
+    no_sync_[i] = 0;
+    sync_state_[i] = 0;
+    dummy_sync_state_[i] = 0;
+  }
   Patch::Parameters p;
   ResourcesManager::Load(&init_patch_params, 0, &p);
   patch_ = Patch(p);
@@ -154,14 +157,14 @@ void Voice::ResetAllControllers() {
 }
 
 /* static */
-void Voice::TriggerEnvelope(uint8_t stage) {
+void Voice::TriggerEnvelope(Envelope::Stage stage) {
   for (uint8_t i = 0; i < kNumEnvelopes; ++i) {
     TriggerEnvelope(i, stage);
   }
 }
 
 /* static */
-void Voice::TriggerEnvelope(uint8_t index, uint8_t stage) {
+void Voice::TriggerEnvelope(uint8_t index, Envelope::Stage stage) {
   envelope_[index].Trigger(stage);
 }
 
@@ -170,7 +173,7 @@ void Voice::Trigger(uint16_t note, uint8_t velocity, uint8_t legato) {
   pitch_target_ = note;
   if (!part_.legato() || !legato) {
     gate_ = 255;
-    TriggerEnvelope(ATTACK);
+    TriggerEnvelope(Envelope::Stage::ATTACK);
     transient_generator.Trigger();
     modulation_sources_[MOD_SRC_VELOCITY] = velocity;
     modulation_sources_[MOD_SRC_RANDOM] = Random::state_msb();
@@ -178,18 +181,21 @@ void Voice::Trigger(uint16_t note, uint8_t velocity, uint8_t legato) {
   }
   if (pitch_value_ == 0 || (part_.legato() && !legato)) {
     pitch_value_ = pitch_target_;
-  }
-  int16_t delta = pitch_target_ - pitch_value_;
-  int32_t increment = ResourcesManager::Lookup<uint16_t, uint8_t>(
-      lut_res_env_portamento_increments,
-      part_.portamento_time());
-  // TODO check if S32 was really needed here
-  pitch_increment_ = U32(delta * increment) >> 16u;
-  if (pitch_increment_ == 0) {
-    if (delta < 0) {
-      pitch_increment_ = -1;
-    } else {
-      pitch_increment_ = 1;
+    // don't bother calculating delta or looking up the portamento
+    // TODO should this be zero?
+    pitch_increment_ = 1;
+  } else {
+    int16_t delta = pitch_target_ - pitch_value_;
+    int32_t increment = ResourcesManager::Lookup<uint16_t, uint8_t>(
+        lut_res_env_portamento_increments, part_.portamento_time());
+    // TODO WHY does this not work if increment is uint16_t??
+    pitch_increment_ = highWord(S32(delta*increment));
+    if (pitch_increment_ == 0) {
+      if (delta < 0) {
+        pitch_increment_ = -1;
+      } else {
+        pitch_increment_ = 1;
+      }
     }
   }
 }
@@ -197,13 +203,11 @@ void Voice::Trigger(uint16_t note, uint8_t velocity, uint8_t legato) {
 /* static */
 void Voice::Release() {
   gate_ = 0;
-  TriggerEnvelope(RELEASE);
+  TriggerEnvelope(Envelope::Stage::RELEASE);
 }
 
 /* static */
 inline void Voice::LoadSources() {
-  static uint8_t ops[9];
-  
   // Rescale the value of each modulation sources. Envelopes are in the
   // 0-16383 range ; just like pitch. All are scaled to 0-255.
   modulation_sources_[MOD_SRC_NOISE] = Random::GetByte();
@@ -215,45 +219,49 @@ inline void Voice::LoadSources() {
   modulation_sources_[MOD_SRC_LFO_4] = voice_lfo_.Render(patch_.voice_lfo_shape());
 
   // Apply the modulation operators
+  uint8_t ops[9] {0};
   for (uint8_t i = 0; i < kNumModifiers; ++i) {
     if (!patch_.modifier(i).op) {
       continue;
     }
-    uint8_t x = patch_.modifier(i).operands[0];
-    uint8_t y = patch_.modifier(i).operands[1];
-    x = modulation_sources_[x];
-    y = modulation_sources_[y];
+    const Modifier& mod = patch_.modifier(i);
+    uint8_t x = modulation_sources_[mod.operands[0]];
+    uint8_t y = modulation_sources_[mod.operands[1]];
     uint8_t op = patch_.modifier(i).op;
     if (op <= MODIFIER_LE) {
-      if (x > y) {
-        ops[4] = x;  ops[7] = 255;
-        ops[5] = y;  ops[8] = 0;
-      } else {
-        ops[4] = y;  ops[7] = 0;
-        ops[5] = x;  ops[8] = 255;
-      }
-      ops[1] = (x >> 1u) + (y >> 1u);
+      ops[1] = (x / 2u) + (y / 2u);
       ops[2] = U8U8MulShift8(x, y);
       ops[3] = S8U8MulShift8(x + 128, y) + 128;
+      if (x > y) {
+        ops[4] = x; // max
+        ops[5] = y; // min
+        ops[7] = 255;
+        ops[8] = 0;
+      } else {
+        ops[4] = y; // max
+        ops[5] = x; // min
+        ops[7] = 0;
+        ops[8] = 255;
+      }
       ops[6] = x ^ y;
       modulation_sources_[MOD_SRC_OP_1 + i] = ops[op];
     } else if (op == MODIFIER_QUANTIZE) {
       uint8_t mask = 0;
-      while (y >>= 1u) {
-        mask >>= 1u;
-        mask |= 0x80u;
+      while (y /= 2) {
+        mask /= 2;
+        mask = byteOr(mask, 0x80);
       }
-      modulation_sources_[MOD_SRC_OP_1 + i] = x & mask;
+      modulation_sources_[MOD_SRC_OP_1 + i] = byteAnd(x, mask);
     } else if (op == MODIFIER_LAG_PROCESSOR) {
-      y >>= 2u;
+      y /= 4;
       ++y;
-      uint16_t v = U8U8Mul(256 - y, modulation_sources_[MOD_SRC_OP_1 + i]);
-      v += U8U8Mul(y, x);
-      modulation_sources_[MOD_SRC_OP_1 + i] = v >> 8u;
+      uint16_t v = U8U8Mul(256-y, modulation_sources_[MOD_SRC_OP_1 + i]);
+      v += y*x;
+      modulation_sources_[MOD_SRC_OP_1 + i] = highByte(v);
     }
   }
 
-  modulation_destinations_[MOD_DST_VCA] = part_.volume() << 1u;
+  modulation_destinations_[MOD_DST_VCA] = part_.volume() * 2;
   
   // Load and scale to 0-16383 the initial value of each modulated parameter.
   dst_[MOD_DST_OSC_1] = dst_[MOD_DST_OSC_2] = 8192;
@@ -292,28 +300,27 @@ inline void Voice::ProcessModulationMatrix() {
     uint8_t source = patch_.modulation(i).source;
     uint8_t destination = patch_.modulation(i).destination;
     uint8_t source_value = modulation_sources_[source];
-    if (destination != MOD_DST_VCA) {
+    if (destination == MOD_DST_VCA) {
+      // The VCA modulation is multiplicative, not additive.
+      // Yet another special case :(.
+      if (amount < 0) {
+        amount = -amount;
+        source_value = 255 - source_value;
+      }
+      if (amount != 63) {
+        source_value = U8Mix(255, source_value, amount * 4);
+      }
+      modulation_destinations_[MOD_DST_VCA] = U8U8MulShift8(modulation_destinations_[MOD_DST_VCA], source_value);
+    } else {
       int16_t modulation = dst_[destination];
       if ((source >= MOD_SRC_LFO_1 && source <= MOD_SRC_LFO_4) ||
-           source == MOD_SRC_PITCH_BEND ||
-           source == MOD_SRC_NOTE) {
+           source == MOD_SRC_PITCH_BEND || source == MOD_SRC_NOTE) {
         // These sources are "AC-coupled" (128 = no modulation).
         modulation += S8S8Mul(amount, source_value + 128);
       } else {
         modulation += S8U8Mul(amount, source_value);
       }
       dst_[destination] = S16ClipU14(modulation);
-    } else {
-      // The VCA modulation is multiplicative, not additive. Yet another
-      // Special case :(.
-      if (amount < 0) {
-        amount = -amount;
-        source_value = 255 - source_value;
-      }
-      if (amount != 63) {
-        source_value = U8Mix(255, source_value, amount << 2u);
-      }
-      modulation_destinations_[MOD_DST_VCA] = U8U8MulShift8(modulation_destinations_[MOD_DST_VCA], source_value);
     }
   }
 }
@@ -325,13 +332,14 @@ inline void Voice::UpdateDestinations() {
   // transistors are thermically coupled. You can disable tracking by applying
   // a negative modulation from NOTE to CUTOFF.
   uint16_t cutoff = dst_[MOD_DST_FILTER_CUTOFF];
+#ifndef ALTERNATIVE_CODE
   cutoff = S16ClipU14(cutoff + S8U8Mul(patch_.filter_env(), modulation_sources_[MOD_SRC_ENV_2]));
   cutoff = S16ClipU14(cutoff + S8S8Mul(patch_.filter_lfo(), modulation_sources_[MOD_SRC_LFO_2] + 128));
   
   // Store in memory all the updated parameters.
   modulation_destinations_[MOD_DST_FILTER_CUTOFF] = U14ShiftRight6(cutoff);
   modulation_destinations_[MOD_DST_FILTER_RESONANCE] = U14ShiftRight6(dst_[MOD_DST_FILTER_RESONANCE]);
-  modulation_destinations_[MOD_DST_MIX_CRUSH] = (dst_[MOD_DST_MIX_CRUSH] >> 8u) + 1;
+  modulation_destinations_[MOD_DST_MIX_CRUSH] = S8(highByte(dst_[MOD_DST_MIX_CRUSH])) + 1;
 
   osc_1.set_parameter(U15ShiftRight7(dst_[MOD_DST_PARAMETER_1]));
   osc_1.set_fm_parameter(patch_.osc(0).range() + 36);
@@ -342,17 +350,27 @@ inline void Voice::UpdateDestinations() {
   int8_t decay_mod = U15ShiftRight7(dst_[MOD_DST_DECAY]) - 64;
   int8_t release_mod = U15ShiftRight7(dst_[MOD_DST_RELEASE]) - 64;
   for (int i = 0; i < kNumEnvelopes; ++i) {
-    int16_t new_attack = patch_.env_lfo(i).attack;
-    new_attack = Clip(new_attack + attack_mod, 0, 127);
-    int16_t new_decay = patch_.env_lfo(i).decay;
-    new_decay = Clip(new_decay + decay_mod, 0, 127);
-    int16_t new_release = patch_.env_lfo(i).release;
-    new_release = Clip(new_release + release_mod, 0, 127);
-    envelope_[i].Update(new_attack, new_decay, patch_.env_lfo(i).sustain, new_release);
+    uint8_t new_attack = patch_.env_lfo(i).attack;
+    uint8_t new_decay = patch_.env_lfo(i).decay;
+    uint8_t new_release = patch_.env_lfo(i).release;
+    // integer addition is promoted to 16 bits so no worries
+    uint8_t attack = Clip(S16(new_attack + attack_mod), 0, 127);
+    uint8_t decay = Clip(S16(new_decay + decay_mod), 0, 127);
+    uint8_t sustain = patch_.env_lfo(i).sustain;
+    uint8_t release = Clip(S16(new_release + release_mod), 0, 127);
+    envelope_[i].Update(attack, decay, sustain, release);
   }
-  
+#else
+    for (int i = 0; i < kNumEnvelopes; ++i) {
+      auto attack = patch_.env_lfo(i).attack;
+      auto decay = patch_.env_lfo(i).decay;
+      auto sustain = patch_.env_lfo(i).sustain;
+      auto release = patch_.env_lfo(i).release;
+      envelope_[i].Update(attack, decay, sustain, release);
+    }
+#endif
   voice_lfo_.set_phase_increment(ResourcesManager::Lookup<uint16_t, uint8_t>(
-          lut_res_lfo_increments, U14ShiftRight6(dst_[MOD_DST_LFO_4]) >> 1u));
+          lut_res_lfo_increments, U14ShiftRight6(dst_[MOD_DST_LFO_4]) / 2u));
 }
 
 /* static */
@@ -369,18 +387,18 @@ inline void Voice::RenderOscillators() {
   // -0.5 / +0.5 semitones by the vibrato and pitch bend (fine).
   base_pitch += (dst_[MOD_DST_OSC_1_2_COARSE] - 8192) >> 4u;
   base_pitch += (dst_[MOD_DST_OSC_1_2_FINE] - 8192) >> 7u;
-  
+
   // Update the oscillator parameters.
   for (uint8_t i = 0; i < kNumOscillators; ++i) {
     int16_t pitch = base_pitch;
     // -36 / +36 semitones by the range controller.
     if (patch_.osc(i).shape() != WAVEFORM_FM) {
-      pitch += S8U8Mul(patch_.osc(i).range(), 128);
+      pitch += S16(patch_.osc(i).range() * 128);
     }
     // -1 / +1 semitones by the detune controller.
     pitch += patch_.osc(i).detune();
     // -16 / +16 semitones by the routed modulations.
-    pitch += (dst_[MOD_DST_OSC_1 + i] - 8192) >> 2u;
+    pitch += (dst_[MOD_DST_OSC_1 + i] - 8192) / 4;
 
     if (pitch >= kHighestNote) {
       pitch = kHighestNote;
@@ -392,9 +410,10 @@ inline void Voice::RenderOscillators() {
       ref_pitch += kOctave;
       ++num_shifts;
     }
-    uint24_t increment {ResourcesManager::Lookup<uint16_t, uint16_t>(
-            lut_res_oscillator_increments, ref_pitch >> 1u),
-            0};
+    uint24_t increment {
+      ResourcesManager::Lookup<uint16_t, uint16_t>(lut_res_oscillator_increments, ref_pitch / 2),
+      0
+    };
     // Divide the pitch increment by the number of octaves we had to transpose
     // to get a value in the lookup table.
     while (num_shifts--) {
@@ -406,6 +425,7 @@ inline void Voice::RenderOscillators() {
     if (midi_note < 0) {
       midi_note = 0;
     }
+#ifndef ALTERNATIVE_CODE
     if (i == 0) {
       sub_osc.set_increment(U24ShiftRight(increment));
       osc_1.Render(patch_.osc(0).shape(), midi_note, increment, no_sync_, sync_state_, buffer_);
@@ -413,6 +433,11 @@ inline void Voice::RenderOscillators() {
       osc_2.Render(patch_.osc(1).shape(), midi_note, increment,
           patch_.mix_op() == OP_SYNC ? sync_state_ : no_sync_, dummy_sync_state_, osc2_buffer_);
     }
+#else
+    if (i == 0) {
+      osc_1.Render(patch_.osc(0).shape(), midi_note, increment, no_sync_, sync_state_, buffer_);
+    }
+#endif
   }
 }
 
@@ -421,25 +446,25 @@ void Voice::ProcessBlock() {
   LoadSources();
   ProcessModulationMatrix();
   UpdateDestinations();
-  
+
   // Skip the oscillator rendering code if the VCA output has converged to
   // a small value.
   if (vca() < 2) {
     for (uint8_t i = 0; i < kAudioBlockSize; i += 2) {
-      audio_buffer.Overwrite2(128, 128);
+      audio_buffer.overwrite2(128, 128);
     }
     return;
   }
 
   RenderOscillators();
-  uint8_t op = patch_.mix_op();
+
   uint8_t osc_2_gain = U14ShiftRight6(dst_[MOD_DST_MIX_BALANCE]);
-  uint8_t osc_1_gain = ~osc_2_gain;
   uint8_t wet_gain = U14ShiftRight6(dst_[MOD_DST_MIX_PARAM]);
+  uint8_t osc_1_gain = ~osc_2_gain;
   uint8_t dry_gain = ~wet_gain;
-  
+
   // Mix oscillators.
-  switch (op) {
+  switch (patch_.mix_op()) {
     case OP_RING_MOD:
       for (uint8_t i = 0; i < kAudioBlockSize; ++i) {
         uint8_t mix = U8Mix(buffer_[i], osc2_buffer_[i], osc_1_gain, osc_2_gain);
@@ -475,39 +500,44 @@ void Voice::ProcessBlock() {
       }
       break;
   }
-  
+
   // Mix-in sub oscillator or transient generator.
   uint8_t sub_gain = U15ShiftRight7(dst_[MOD_DST_MIX_SUB_OSC]);
   if (patch_.mix_sub_osc_shape() < WAVEFORM_SUB_OSC_CLICK) {
     sub_osc.Render(patch_.mix_sub_osc_shape(), buffer_, sub_gain);
   } else {
-    sub_gain <<= 1u;
+    sub_gain *= 2;
     transient_generator.Render(patch_.mix_sub_osc_shape(), buffer_, sub_gain);
   }
 
+#ifndef ALTERNATIVE_CODE
   uint8_t noise = Random::state_msb();
   uint8_t noise_gain = U15ShiftRight7(dst_[MOD_DST_MIX_NOISE]);
   uint8_t signal_gain = ~noise_gain;
   wet_gain = U14ShiftRight6(dst_[MOD_DST_MIX_FUZZ]);
   dry_gain = ~wet_gain;
-  
+
+
   // Mix with noise, and apply distortion. The loop processes samples by 2 to
-  // avoid some of the overhead of audio_buffer.Overwrite()
-  for (uint8_t i = 0; i < kAudioBlockSize;) {
-    uint8_t signal_noise_a, signal_noise_b;
+  // avoid some of the overhead of audio_buffer.overwrite()
+  for (uint8_t i = 0; i < kAudioBlockSize; i+=2) {
     noise = (noise * 73) + 1;
-    signal_noise_a = U8Mix(buffer_[i++], noise, signal_gain, noise_gain);
-    uint8_t a = U8Mix(signal_noise_a,
-        ResourcesManager::Lookup<uint8_t, uint8_t>(wav_res_distortion, signal_noise_a),
-            dry_gain, wet_gain);
+    uint8_t signal_noise_a = U8Mix(buffer_[i], noise, signal_gain, noise_gain);
+    auto distortion_a = ResourcesManager::Lookup<uint8_t, uint8_t>(wav_res_distortion, signal_noise_a);
+    uint8_t a = U8Mix(signal_noise_a, distortion_a, dry_gain, wet_gain);
+
 
     noise = (noise * 73) + 1;
-    signal_noise_b = U8Mix(buffer_[i++], noise, signal_gain, noise_gain);
-    uint8_t b = U8Mix(signal_noise_b,
-        ResourcesManager::Lookup<uint8_t, uint8_t>(wav_res_distortion, signal_noise_b),
-            dry_gain, wet_gain);
-    audio_buffer.Overwrite2(a, b);
+    uint8_t signal_noise_b = U8Mix(buffer_[i+1], noise, signal_gain, noise_gain);
+    auto distortion_b = ResourcesManager::Lookup<uint8_t, uint8_t>(wav_res_distortion, signal_noise_b);
+    uint8_t b = U8Mix(signal_noise_b, distortion_b, dry_gain, wet_gain);
+    audio_buffer.overwrite2(a, b);
   }
+#else
+  for (uint8_t i = 0; i < kAudioBlockSize; i+=2) {
+    audio_buffer.overwrite2(buffer_[i], buffer_[i + 1]);
+  }
+#endif
 }
 
 }  // namespace ambika

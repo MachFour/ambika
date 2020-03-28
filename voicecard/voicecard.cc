@@ -42,46 +42,52 @@ PwmOutput<kPinVcaOut> vca_out;
 
 ParallelPort<PortC, PARALLEL_TRIPLE_LOW> vcf_mode;
 
-Gpio<PortB, 0> log_vca;
+using log_vca = PortBPin<0>;
 
-UartSpiMaster<UartSpiPort0, Gpio<PortD, 2>, 2> dac_interface;
+using UartSpiSS = PortDPin<2>;
+UartSpiMaster<UartSpiPort0, UartSpiSS, 2> dac_interface;
 
-static uint8_t update_vca;
+using timing_signal1 = PortCPin<0>;
+using timing_signal2 = PortCPin<1>;
+using timing_signal3 = PortCPin<2>;
+
+
 static constexpr uint8_t dac_scale = 16;
+static volatile uint8_t update_vca;
+static volatile uint8_t interrupt_counter;
 
 ISR(TIMER2_OVF_vect) {
   static uint8_t sample_counter = 0;
   static Word vca_12bits;
-  
   if (update_vca) {
     dac_interface.Strobe();
     update_vca = 0;
     dac_interface.Overwrite(vca_12bits.bytes[1]);
     dac_interface.Overwrite(vca_12bits.bytes[0]);
     dac_interface.Wait();
-    uint16_t next_vca_value;
-    if (log_vca.is_low()) {
-      next_vca_value = ambika::ResourcesManager::Lookup<uint16_t, uint8_t>(
-          lut_res_vca_linearization, voice.vca());
-    } else {
-      next_vca_value = voice.vca() * dac_scale;
-    }
+    auto voice_vca = voice.vca();
+    uint16_t next_vca_value = log_vca::isLow()
+        ? ambika::ResourcesManager::Lookup<uint16_t, uint8_t>(lut_res_vca_linearization, voice_vca)
+        : voice_vca * dac_scale;
     vca_12bits.value = next_vca_value | 0x1000u;
   }
-  
-  uint8_t sample = audio_buffer.ImmediateRead();
-  if (++sample_counter >= voice.crush()) {
-    dac_interface.Strobe();
-    sample_counter = 0;
-    Word sample_12bits {U16(U16(sample * dac_scale) | 0x9000u)};
-    dac_interface.Overwrite(sample_12bits.bytes[1]);
-    dac_interface.Overwrite(sample_12bits.bytes[0]);
+
+  if (audio_buffer.isReadable()) {
+    uint8_t sample = audio_buffer.immediateRead();
+    sample_counter++;
+    if (sample_counter >= voice.crush()) {
+      dac_interface.Strobe();
+      sample_counter = 0;
+      uint16_t sample_12bits = U16(U16(sample * dac_scale) | 0x9000u);
+      dac_interface.Overwrite(highByte(sample_12bits));
+      dac_interface.Overwrite(lowByte(sample_12bits));
+    }
   }
   voicecard_rx.Receive();
+
+  interrupt_counter++;
 }
 
-// This GPIO is used during development for timing code.
-Gpio<PortD, 7> timing_signal;
 
 inline void Init() {
   sei();
@@ -94,7 +100,7 @@ inline void Init() {
   NoteLed::outputMode();
   RxLed::low();
   NoteLed::low();
-  
+
   vcf_cutoff_out.Init();
   vcf_resonance_out.Init();
   vca_out.Init();
@@ -102,13 +108,14 @@ inline void Init() {
 
   voicecard_rx.Init();
   voice.Init();
-  
-  log_vca.set_mode(DIGITAL_INPUT);
-  log_vca.High();
+
   dac_interface.Strobe();
   dac_interface.Overwrite(0x10u | 0x0fu);
   dac_interface.Overwrite(0xffu);
-  
+
+  log_vca::inputMode();
+  log_vca::high();
+
   // Successful boot!
   if (eeprom_read_byte(kFirmwareUpdateFlagPtr) != FIRMWARE_UPDATE_DONE) {
     eeprom_write_byte(kFirmwareUpdateFlagPtr, FIRMWARE_UPDATE_DONE);
@@ -122,6 +129,13 @@ inline void Init() {
   Timer<2>::set_prescaler(1);
   Timer<2>::set_mode(TIMER_PWM_PHASE_CORRECT);
   Timer<2>::Start();
+
+  timing_signal1::outputMode();
+  timing_signal2::outputMode();
+  timing_signal3::outputMode();
+  timing_signal1::low();
+  timing_signal2::low();
+  timing_signal3::low();
 }
 
 static uint8_t filter_mode_bytes[] = { 0, 1, 2, 3 };
@@ -133,14 +147,24 @@ int main() {
   //voice.Trigger(60 * 128, 100, 0);
   while (1) {
     // Check if there's a block of samples to fill.
-    if (audio_buffer.writable() >= kAudioBlockSize) {
+    interrupt_counter = 0;
+    if (audio_buffer.spaceLeft() >= kAudioBlockSize) {
       voicecard_rx.TickRxLed();
+      timing_signal1::high();
       voice.ProcessBlock();
+      timing_signal1::low();
       vcf_cutoff_out.Write(voice.cutoff());
       vcf_resonance_out.Write(voice.resonance());
       vcf_mode.Write(filter_mode_bytes[voice.patch().filter(0).mode]);
       update_vca = 1;
     }
     voicecard_rx.Process();
+
+    if (interrupt_counter > kAudioBlockSize) {
+      // interrupts going faster than audio prcessing
+      timing_signal3::high();
+    } else {
+      timing_signal3::low();
+    }
   }
 }

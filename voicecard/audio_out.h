@@ -22,11 +22,12 @@
 
 #include "avrlib/base.h"
 #include "avrlib/gpio.h"
-#include "avrlib/ring_buffer.h"
+#include "avrlib/ring_buffer2.h"
 #include "voicecard/voicecard.h"
 
 namespace ambika {
 
+/*
 struct AudioBufferSpecs {
   typedef uint8_t Value;
   enum {
@@ -36,6 +37,12 @@ struct AudioBufferSpecs {
 };
 
 extern avrlib::RingBuffer<AudioBufferSpecs> audio_buffer;
+*/
+
+constexpr uint8_t audio_buffer_size = 128;
+using audio_data_type = uint8_t;
+
+extern avrlib::RingBuffer2<audio_data_type, audio_buffer_size> audio_buffer;
 
 }  // namespace ambika
 

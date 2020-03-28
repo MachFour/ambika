@@ -28,10 +28,10 @@
 namespace ambika {
 
 // Used for MIDI -> oscillator increment conversion.
-static const int16_t kLowestNote = 0 * 128;
-static const int16_t kHighestNote = 120 * 128;
-static const int16_t kOctave = 12 * 128;
-static const int16_t kPitchTableStart = 116 * 128;
+static constexpr int16_t kLowestNote = 0 * 128;
+static constexpr int16_t kHighestNote = 120 * 128;
+static constexpr int16_t kOctave = 12 * 128;
+static constexpr int16_t kPitchTableStart = 116 * 128;
 
 // This mirrors the beginning of the Part data structure in the controller.
 // Has only the bits of PartData that the voice needs to care about.
@@ -84,7 +84,7 @@ class Voice {
   static void Release();
 
   // Move this voice to the release stage.
-  static void Kill() { TriggerEnvelope(DEAD); }
+  static void Kill() { TriggerEnvelope(Envelope::Stage::DEAD); }
 
   static void ProcessBlock();
 
@@ -115,16 +115,16 @@ class Voice {
   static Patch& patch() { return patch_; }
   static VoicePart& part() { return part_; }
 
-  static void TriggerEnvelope(uint8_t stage);
-  static void TriggerEnvelope(uint8_t index, uint8_t stage);
+  static void TriggerEnvelope(Envelope::Stage s);
+  static void TriggerEnvelope(uint8_t index, Envelope::Stage s);
   
   static void ResetAllControllers();
 
  private:
-  static inline void LoadSources() __attribute__((always_inline));
-  static inline void ProcessModulationMatrix() __attribute__((always_inline));
-  static inline void UpdateDestinations() __attribute__((always_inline));
-  static inline void RenderOscillators() __attribute__((always_inline));
+  static inline void LoadSources();
+  static inline void ProcessModulationMatrix();
+  static inline void UpdateDestinations();
+  static inline void RenderOscillators();
 
   static Patch patch_;
   static VoicePart part_;

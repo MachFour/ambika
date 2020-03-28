@@ -40,11 +40,7 @@ typedef Gpio<PortC, 2> EncoderBLine;
 typedef Gpio<PortC, 1> EncoderClickLine;
 
 // MIDI
-typedef avrlib::Serial<
-    SerialPort0,
-    31250,
-    avrlib::POLLED,
-    avrlib::POLLED> MidiIO;
+typedef avrlib::Serial<SerialPort0, 31250, avrlib::POLLED, avrlib::POLLED> MidiIO;
 typedef RingBuffer<SerialInput<SerialPort0> > MidiBuffer;
 
 // LCD
@@ -74,7 +70,7 @@ enum SpiSlaves {
   SPI_SLAVE_SD_CARD
 };
 
-static uint8_t* kFirmwareUpdateFlagPtr = (uint8_t*)(E2END);
+static const auto kFirmwareUpdateFlagPtr = reinterpret_cast<uint8_t*>(E2END);
 
 }  // namespace ambika
 

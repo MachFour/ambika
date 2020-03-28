@@ -44,7 +44,7 @@ class TransientGenerator {
     RenderFn fn = fn_table_[shape - WAVEFORM_SUB_OSC_CLICK];
     uint8_t size = kAudioBlockSize;
     while (counter_ && size--) {
-      uint8_t value = (*fn)();
+      uint8_t value = fn();
       uint8_t amplitude = U8U8MulShift8(gain_, amount);
       *buffer = U8Mix(*buffer, value, amplitude);
       ++buffer;
@@ -111,7 +111,6 @@ uint8_t TransientGenerator::rng_state_;
 uint8_t TransientGenerator::decimate_;
 uint8_t TransientGenerator::gain_;
 uint8_t TransientGenerator::counter_;
-const TransientGenerator::RenderFn TransientGenerator::fn_table_[];
 
 }  // namespace ambika
 

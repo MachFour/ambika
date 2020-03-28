@@ -49,13 +49,13 @@ const EventHandlers SequenceEditor::event_handlers_ PROGMEM = {
 };
 
 /* static */
-inline PartData* SequenceEditor::mutable_part_data() {
-  return multi.mutable_part(ui.state().active_part)->mutable_data();
+inline PartData& SequenceEditor::mutable_part_data() {
+  return multi.mutable_part(ui.state().active_part).data();
 }
 
 /* static */
 inline const PartData& SequenceEditor::part_data() {
-  return multi.part(ui.state().active_part).data();
+  return multi.part(ui.state().active_part).data_readonly();
 }
 
 /* static */
@@ -86,8 +86,8 @@ uint8_t SequenceEditor::OnNote(uint8_t note, uint8_t velocity) {
       return 0;
     }
     step = actual_step(step, 2);
-    mutable_part_data()->set_note(step, note);
-    mutable_part_data()->set_velocity(step, velocity);
+    mutable_part_data().set_note(step, note);
+    mutable_part_data().set_velocity(step, velocity);
     step_ = actual_step(step + 1, 2);
     return 1;
   } else {
@@ -107,7 +107,7 @@ uint8_t SequenceEditor::OnIncrement(int8_t increment) {
     }
     uint8_t max_num_steps = 0x00;
     for (uint8_t i = 0; i < 3; ++i) {
-      uint8_t l = part_data().sequence_length[i];
+      uint8_t l = mutable_part_data().sequence_length(i); // doesn't need to be mutable but oh well
       if (l > max_num_steps) {
         max_num_steps = l;
       }
@@ -138,7 +138,7 @@ uint8_t SequenceEditor::OnIncrement(int8_t increment) {
           step = actual_step(step, 2);
           uint8_t note = part_data().note(step) + increment;
           if (note >= 0 && note <= 127) {
-            mutable_part_data()->set_note(step, note);
+            mutable_part_data().set_note(step, note);
           }
         }
         break;
@@ -148,7 +148,7 @@ uint8_t SequenceEditor::OnIncrement(int8_t increment) {
           int16_t velocity = part_data().ordered_gate_velocity(step);
           velocity += increment;
           if (velocity >= 0 && velocity <= 0x100) {
-            mutable_part_data()->set_ordered_gate_velocity(step, velocity);
+            mutable_part_data().set_ordered_gate_velocity(step, velocity);
           }
         }
         break;
@@ -159,7 +159,7 @@ uint8_t SequenceEditor::OnIncrement(int8_t increment) {
           int16_t value = part_data().step_value(index - 2, step);
           value += increment;
           if (value >= 0 && value <= 255) {
-            mutable_part_data()->set_step_value(index - 2, step, value);
+            mutable_part_data().set_step_value(index - 2, step, value);
           }
         }
         break;
@@ -193,16 +193,16 @@ uint8_t SequenceEditor::OnPot(uint8_t index, uint8_t value) {
   switch (index) {
     case 0:
       step = actual_step(step, 2);
-      mutable_part_data()->set_note(step, 24 + (value >> 1));
+      mutable_part_data().set_note(step, 24 + (value / 2));
       break;
     case 1:
       step = actual_step(step, 2);
-      mutable_part_data()->set_ordered_gate_velocity(step, value << 1);
+      mutable_part_data().set_ordered_gate_velocity(step, value * 2);
       break;
     case 2:
     case 3:
       step = actual_step(step, index - 2);
-      mutable_part_data()->set_step_value(index - 2, step, value << 1);
+      mutable_part_data().set_step_value(index - 2, step, value * 2);
       break;
   }
   return 1;
@@ -210,7 +210,8 @@ uint8_t SequenceEditor::OnPot(uint8_t index, uint8_t value) {
 
 /* static */
 uint8_t SequenceEditor::actual_step(uint8_t index, uint8_t sequence) {
-  uint8_t l = part_data().sequence_length[sequence];
+  // doesn't need to be mutable but oh well
+  uint8_t l = mutable_part_data().sequence_length(sequence);
   if (l == 0) {
     return 0;
   } else {
@@ -281,7 +282,7 @@ void SequenceEditor::UpdateScreen() {
       index -= 4;
       position += kLcdWidth;
     }
-    position += index * 10 + 4 + (index >> 1);
+    position += index * 10 + 4 + (index / 2);
     display.set_cursor_position(position);
   }
 }

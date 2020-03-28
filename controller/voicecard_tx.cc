@@ -128,9 +128,7 @@ void VoicecardProtocolTx::FlushBuffers() {
 }
 
 /* static */
-uint8_t VoicecardProtocolTx::BlockingTransaction(
-    uint8_t voice_id,
-    uint8_t value) {
+uint8_t VoicecardProtocolTx::BlockingTransaction(uint8_t voice_id, uint8_t value) {
   FlushBuffers();
   ConstantDelay(1);
   voicecard_address_.Write(voice_id);

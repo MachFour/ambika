@@ -20,17 +20,14 @@
 #ifndef VOICECARD_LEDS_H_
 #define VOICECARD_LEDS_H_
 
+#include "avrlib/avrlib.h"
 #include "avrlib/bitops.h"
 #include <avr/io.h>
 
 namespace ambika {
 
-//typedef avrlib::Gpio<avrlib::PortC, 4> RxLed;
-//typedef avrlib::Gpio<avrlib::PortC, 5> NoteLed;
-//
-//extern RxLed rx_led;
-//extern NoteLed note_led;
 
+/*
 // specialised templates for the LEDs, using PORTC, PINC, DDRC
 template<uint8_t bit, uint8_t bitFlag = staticBitFlag(bit)>
 struct PortCPin {
@@ -50,9 +47,10 @@ struct PortCPin {
     PINC |= bitFlag;
   }
 };
+*/
 
-using RxLed = PortCPin<4>;
-using NoteLed = PortCPin<5>;
+using RxLed = avrlib::PortCPin<4>;
+using NoteLed = avrlib::PortCPin<5>;
 
 }  // namespace ambika
 

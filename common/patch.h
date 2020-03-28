@@ -135,7 +135,7 @@ enum Operator {
   OP_LAST
 };
 
-enum ModifierOp {
+enum ModifierOp : uint8_t {
   MODIFIER_NONE,
   MODIFIER_SUM,
   MODIFIER_PRODUCT,
@@ -147,10 +147,10 @@ enum ModifierOp {
   MODIFIER_LE,
   MODIFIER_QUANTIZE,
   MODIFIER_LAG_PROCESSOR,
-  MODIFIER_LAST
+  MODIFIER_COUNT
 };
 
-enum LfoWave {
+enum LfoWave : uint8_t {
   // For oscillators.
   LFO_WAVEFORM_TRIANGLE,
   LFO_WAVEFORM_SQUARE,
@@ -172,17 +172,17 @@ enum LfoWave {
   LFO_WAVEFORM_WAVE_14,
   LFO_WAVEFORM_WAVE_15,
   LFO_WAVEFORM_WAVE_16,
-  LFO_WAVEFORM_LAST
+  LFO_WAVEFORM_COUNT
 };
 
-enum LfoSyncMode {
+enum LfoSyncMode : uint8_t {
   LFO_SYNC_MODE_FREE,
   LFO_SYNC_MODE_SLAVE,
   LFO_SYNC_MODE_MASTER,
-  LFO_SYNC_MODE_LAST
+  LFO_SYNC_MODE_COUNT
 };
 
-enum ModulationSource {
+enum ModulationSource : uint8_t {
   MOD_SRC_ENV_1,
   MOD_SRC_ENV_2,
   MOD_SRC_ENV_3,
@@ -219,7 +219,7 @@ enum ModulationSource {
   MOD_SRC_CONSTANT_16,
   MOD_SRC_CONSTANT_8,
   MOD_SRC_CONSTANT_4,
-  MOD_SRC_LAST
+  MOD_SRC_COUNT
 };
 
 enum ModulationDestination {
@@ -247,7 +247,7 @@ enum ModulationDestination {
   
   MOD_DST_VCA,
 
-  MOD_DST_LAST
+  MOD_DST_COUNT
 };
 
 enum FilterMode {
@@ -263,8 +263,8 @@ static constexpr uint8_t kNumLfos = kNumEnvelopes;
 static constexpr uint8_t kNumModulations = 14;
 static constexpr uint8_t kNumModifiers = 4;
 static constexpr uint8_t kNumOscillators = 2;
-static constexpr uint8_t kNumModulationSources = MOD_SRC_LAST;
-static constexpr uint8_t kNumModulationDestinations = MOD_DST_LAST;
+static constexpr uint8_t kNumModulationSources = MOD_SRC_COUNT;
+static constexpr uint8_t kNumModulationDestinations = MOD_DST_COUNT;
 
 struct Patch {
   struct Parameters {
@@ -321,6 +321,8 @@ public:
   inline uint8_t* bytes() {
     return data.bytes;
   }
+
+  [[nodiscard]] // Clang-Tidy wants this
   inline const uint8_t* bytes_readonly() const {
     return data.bytes;
   }

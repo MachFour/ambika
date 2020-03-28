@@ -21,6 +21,7 @@
 
 #include <avr/eeprom.h>
 
+#include "avrlib/bitops.h"
 #include "avrlib/op.h"
 #include "avrlib/string.h"
 
@@ -33,10 +34,10 @@
 namespace ambika {
 
 
-static const uint32_t kRiffTag = FourCC<'R', 'I', 'F', 'F'>::value;
-static const uint32_t kFormatTag = FourCC<'M', 'B', 'K', 'S'>::value;
-static const uint32_t kNameTag = FourCC<'n', 'a', 'm', 'e'>::value;
-static const uint32_t kObjectTag = FourCC<'o', 'b', 'j', ' '>::value;
+static constexpr uint32_t kRiffTag = FourCC('R', 'I', 'F', 'F');
+static constexpr uint32_t kFormatTag = FourCC('M', 'B', 'K', 'S');
+static constexpr uint32_t kNameTag = FourCC('n', 'a', 'm', 'e');
+static constexpr uint32_t kObjectTag = FourCC('o', 'b', 'j', ' ');
 
 using namespace avrlib;
 
@@ -330,23 +331,24 @@ void Storage::SysExSendRaw(uint8_t command, uint8_t argument, const uint8_t* dat
   // Outputs the data.
   uint8_t checksum = 0;
   if (send_address) {
-    Word address;
-    address.value = reinterpret_cast<uint16_t>(data);
-    checksum += address.bytes[0];
-    checksum += address.bytes[1];
-    midi_dispatcher.SendBlocking(U8ShiftRight4(address.bytes[0]));
-    midi_dispatcher.SendBlocking(address.bytes[0] & 0x0f);
-    midi_dispatcher.SendBlocking(U8ShiftRight4(address.bytes[1]));
-    midi_dispatcher.SendBlocking(address.bytes[1] & 0x0f);
+    auto address = reinterpret_cast<uint16_t>(data);
+    auto addr_low = lowByte(address);
+    auto addr_high = highByte(address);
+    checksum += addr_low;
+    checksum += addr_high;
+    midi_dispatcher.SendBlocking(U8ShiftRight4(addr_low));
+    midi_dispatcher.SendBlocking(byteAnd(addr_low, 0x0f));
+    midi_dispatcher.SendBlocking(U8ShiftRight4(addr_high));
+    midi_dispatcher.SendBlocking(byteAnd(addr_high, 0x0f));
   }
   for (uint8_t i = 0; i < size; ++i) {
     checksum += data[i];
     midi_dispatcher.SendBlocking(U8ShiftRight4(data[i]));
-    midi_dispatcher.SendBlocking(data[i] & 0x0f);
+    midi_dispatcher.SendBlocking(byteAnd(data[i], 0x0f));
   }
   // Outputs a checksum.
   midi_dispatcher.SendBlocking(U8ShiftRight4(checksum));
-  midi_dispatcher.SendBlocking(checksum & 0x0f);
+  midi_dispatcher.SendBlocking(byteAnd(checksum, 0x0f));
 
   // End of SysEx block.
   midi_dispatcher.SendBlocking(0xf7);
@@ -768,9 +770,9 @@ void Storage::SysExReceive(uint8_t byte) {
 
     case RECEIVING_DATA:
       {
-        uint16_t i = sysex_rx_bytes_received_ >> 1;
-        if (sysex_rx_bytes_received_ & 1) {
-          buffer_[i] |= byte & 0xf;
+        uint16_t i = sysex_rx_bytes_received_ / 2;
+        if (sysex_rx_bytes_received_ & 1u) {
+          buffer_[i] |= byte & 0xfu;
           if (i < sysex_rx_expected_size_) {
             sysex_rx_checksum_ += buffer_[i];
           }

@@ -34,7 +34,7 @@ namespace ambika {
 
 __attribute__((always_inline))
 static inline uint8_t ReadSample(const uint8_t* table, uint16_t phase) {
-  return ResourcesManager::Lookup<uint8_t, uint8_t>(table, phase >> 8);
+  return ResourcesManager::Lookup<uint8_t, uint8_t>(table, highByte(phase));
 }
 
 static inline uint8_t InterpolateTwoTables(
@@ -73,14 +73,11 @@ union OscillatorState {
   uint16_t secondary_phase;
 };
 
-//typedef void (*OscRenderFn)(uint8_t* buffer);
-
 class Oscillator {
  public:
   using RenderFn = void (Oscillator::*)(uint8_t*);
    
   Oscillator() = default;
-  //Oscillator() { }
 
   inline void Reset() {
     data_.no.rng_reset_value = Random::GetByte() + 1;
@@ -101,7 +98,7 @@ class Oscillator {
         RenderBandlimitedPwm(buffer);
       }
     } else {
-      uint8_t index = shape_ >= WAVEFORM_WAVETABLE_1 ? U8(WAVEFORM_WAVETABLE_1) : shape_;
+      uint8_t index = shape_>= WAVEFORM_WAVETABLE_1 ? U8(WAVEFORM_WAVETABLE_1) : shape_;
       RenderFn fn;
       ResourcesManager::Load(fn_table_, index, &fn);
       if (shape_ == WAVEFORM_WAVEQUENCE) {

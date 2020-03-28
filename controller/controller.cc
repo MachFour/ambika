@@ -117,7 +117,7 @@ void Init() {
   storage.Init();
 }
 
-int main(void) {
+int main() {
   Init();
   ui.FlushEvents();
   while (1) {

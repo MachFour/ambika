@@ -26,6 +26,8 @@
 
 namespace ambika {
 
+//#define ALTERNATIVE_CODE
+
 // One control signal sample is generated for each 40 audio sample.
 static const uint8_t kControlRate = 40;
 

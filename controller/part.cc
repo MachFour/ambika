@@ -235,9 +235,9 @@ void Part::InitializeAllocators() {
   } else {
     uint8_t size = num_allocated_voices_;
     if (data_.polyphony_mode() == UNISON_2X) {
-      size = (num_allocated_voices_ + 1) >> 1;
+      size = (num_allocated_voices_ + 1) / 2u;
     } else if (data_.polyphony_mode() == CHAIN) {
-      size <<= 1;
+      size *= 2;
     }
     // We reuse the storage for the monophonic allocator (note stack) for the
     // polyphonic allocator - since these two datastructures are never used
@@ -610,8 +610,7 @@ void Part::Stop() {
 
 
 uint16_t Part::TuneNote(uint8_t midi_note) {
-  int16_t n = Clip(
-      static_cast<int16_t>(midi_note) + S8U8Mul(data_.octave(), 12), 0, 127);
+  int16_t n = Clip(S16(midi_note) + S8U8Mul(data_.octave(), 12), 0, 127);
   int16_t note = U8U8Mul(n, 128);
   // Apply microtuning.
   if (data_.raga()) {
@@ -674,7 +673,7 @@ void Part::InternalNoteOn(uint8_t note, uint8_t velocity) {
         retrigger_lfos = 1;
       }
     } else if (data_.polyphony_mode() == CHAIN) {
-      if (voice_index < (poly_allocator_.size() >> 1)) {
+      if (voice_index < (poly_allocator_.size() / 2)) {
         uint16_t tuned_note = TuneNote(note);
         voicecard_tx.Trigger(
             allocated_voices_[voice_index],
@@ -746,7 +745,7 @@ void Part::InternalNoteOff(uint8_t note) {
         voicecard_tx.Release(allocated_voices_[GetNextVoice(voice_index)]);
       }
     } else if (data_.polyphony_mode() == CHAIN) {
-      if (voice_index < (poly_allocator_.size() >> 1)) {
+      if (voice_index < (poly_allocator_.size() / 2)) {
         voicecard_tx.Release(allocated_voices_[voice_index]);
       } else {
         midi_dispatcher.ForwardNote(this, note, 0);
@@ -821,7 +820,7 @@ void Part::ClockSequencer() {
   if (data_.arp_sequencer_mode() == ARP_SEQUENCER_MODE_NOTE &&
       pressed_keys_.size() && data_.sequence_length(2)) {
     NoteStep n = data_.note_step(sequencer_step_[2]);
-    uint8_t note = Clip(static_cast<int16_t>(n.note) + \
+    uint8_t note = Clip(S16(n.note) + \
         pressed_keys_.most_recent_note().note - 60, 0, 127);
     if (!n.gate) {
       // Just kill the previous note.

@@ -45,7 +45,7 @@ class SequenceEditor : public UiPage {
  private:
   static uint8_t actual_step(uint8_t index, uint8_t sequence);
    
-  static PartData* mutable_part_data();
+  static PartData& mutable_part_data();
   static const PartData& part_data();
   
   static uint8_t step_;

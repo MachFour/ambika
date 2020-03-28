@@ -93,7 +93,7 @@ void Droner::OnRelease() {
 /* static */
 void Droner::UpdateJoystick(uint8_t x, uint8_t y) {
   if (!recording_mode_) {
-    midi_output.PitchBend(x >> 1);
+    midi_output.PitchBend(x / 2);
     if (y > 128) {
       midi_output.Modulation(y - 128);
     } else {
@@ -131,8 +131,8 @@ void Droner::UpdateAccelerometer(uint8_t x, uint8_t y, uint8_t z) {
     while (!num_notes_played) {
       for (uint8_t i = 0; i < num_notes_; ++i) {
         midi_output.NoteOff(note_list_[i]);
-        if (Random::GetByte() & 0x80) {
-          midi_output.NoteOn(note_list_[i], 50 + ((Random::GetByte()) >> 2));
+        if (Random::GetByte() & 0x80u) {
+          midi_output.NoteOn(note_list_[i], 50 + (Random::GetByte() / 4));
           ++num_notes_played;
         }
         inhibit_ = 50;

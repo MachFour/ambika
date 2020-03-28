@@ -321,7 +321,13 @@ class Part {
     return patch_.getData(address);
   }
 
-  inline PartData& data() { return data_; }
+  inline PartData& data() {
+    return data_;
+  }
+
+  inline const PartData& data_readonly() const {
+    return data_;
+  }
 
   inline uint8_t* raw_sequence_data() {
     return data_.sequence_data();
