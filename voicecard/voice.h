@@ -90,30 +90,30 @@ class Voice {
 
   // Called whenever a write to the CV analog outputs has to be made.
   static inline uint8_t cutoff()  {
-    return modulation_destinations_[MOD_DST_FILTER_CUTOFF];
+    return modulation_destinations[MOD_DST_FILTER_CUTOFF];
   }
   static inline uint8_t vca()  {
-    return modulation_destinations_[MOD_DST_VCA];
+    return modulation_destinations[MOD_DST_VCA];
   }
   static inline uint8_t crush()  {
-    return modulation_destinations_[MOD_DST_MIX_CRUSH];
+    return modulation_destinations[MOD_DST_MIX_CRUSH];
   }
   static inline uint8_t resonance()  {
-    return modulation_destinations_[MOD_DST_FILTER_RESONANCE];
+    return modulation_destinations[MOD_DST_FILTER_RESONANCE];
   }
   static inline uint8_t modulation_source(uint8_t i) {
-    return modulation_sources_[i];
+    return modulation_sources[i];
   }
   static uint8_t modulation_destination(uint8_t i) {
-    return modulation_destinations_[i];
+    return modulation_destinations[i];
   }
   
   static inline void set_modulation_source(uint8_t i, uint8_t value) {
-    modulation_sources_[i] = value;
+    modulation_sources[i] = value;
   }
 
-  static Patch& patch() { return patch_; }
-  static VoicePart& part() { return part_; }
+  static Patch& patch() { return patch_object; }
+  static VoicePart& part() { return part_object; }
 
   static void TriggerEnvelope(Envelope::Stage s);
   static void TriggerEnvelope(uint8_t index, Envelope::Stage s);
@@ -126,29 +126,29 @@ class Voice {
   static inline void UpdateDestinations();
   static inline void RenderOscillators();
 
-  static Patch patch_;
-  static VoicePart part_;
+  static Patch patch_object;
+  static VoicePart part_object;
   
   // Envelope generators.
-  static Envelope envelope_[kNumEnvelopes];
-  static uint8_t gate_;
-  static Lfo voice_lfo_;
-  static uint8_t modulation_sources_[kNumModulationSources];
-  static int8_t modulation_destinations_[kNumModulationDestinations];
-  static int16_t dst_[kNumModulationDestinations];
+  static Envelope envelope[kNumEnvelopes];
+  static uint8_t gate;
+  static Lfo voice_lfo;
+  static uint8_t modulation_sources[kNumModulationSources];
+  static int8_t modulation_destinations[kNumModulationDestinations];
+  static int16_t dst[kNumModulationDestinations];
 
   // Counters/phases for the pitch envelope generator (portamento).
   // Pitches are stored on 14 bits, the 7 highest bits are the MIDI note value,
   // the 7 lowest bits are used for fine-tuning.
-  static int16_t pitch_increment_;
-  static int16_t pitch_target_;
-  static int16_t pitch_value_;
+  static int16_t pitch_increment;
+  static int16_t pitch_target;
+  static int16_t pitch_value;
   
-  static uint8_t buffer_[kAudioBlockSize];
-  static uint8_t osc2_buffer_[kAudioBlockSize];
-  static uint8_t sync_state_[kAudioBlockSize];
-  static uint8_t no_sync_[kAudioBlockSize];
-  static uint8_t dummy_sync_state_[kAudioBlockSize];
+  static uint8_t buffer[kAudioBlockSize];
+  static uint8_t osc2_buffer[kAudioBlockSize];
+  static uint8_t sync_state[kAudioBlockSize];
+  static uint8_t no_sync[kAudioBlockSize];
+  static uint8_t dummy_sync_state[kAudioBlockSize];
 
   DISALLOW_COPY_AND_ASSIGN(Voice);
 };

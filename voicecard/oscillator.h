@@ -80,68 +80,68 @@ class Oscillator {
   Oscillator() = default;
 
   inline void Reset() {
-    data_.no.rng_reset_value = Random::GetByte() + 1;
+    data.no.rng_reset_value = Random::GetByte() + 1;
   }
 
-  inline void Render(uint8_t shape, uint8_t note, uint24_t increment,
-      uint8_t* sync_input, uint8_t* sync_output, uint8_t* buffer) {
-    shape_ = shape;
-    note_ = note;
-    phase_increment_ = increment;
-    sync_input_ = sync_input;
-    sync_output_ = sync_output;
+  inline void Render(uint8_t new_shape, uint8_t new_note, uint24_t new_phase_increment,
+                 uint8_t* new_sync_input, uint8_t* new_sync_output, uint8_t* buffer) {
+    shape = new_shape;
+    note = new_note;
+    phase_increment = new_phase_increment;
+    sync_input = new_sync_input;
+    sync_output = new_sync_output;
     // A hack: when pulse width is set to 0, use a simple wavetable.
-    if (shape_ == WAVEFORM_SQUARE) {
-      if (parameter_ == 0) {
+    if (new_shape == WAVEFORM_SQUARE) {
+      if (parameter == 0) {
         RenderSimpleWavetable(buffer);
       } else {
         RenderBandlimitedPwm(buffer);
       }
     } else {
-      uint8_t index = shape_>= WAVEFORM_WAVETABLE_1 ? U8(WAVEFORM_WAVETABLE_1) : shape_;
+      uint8_t index = new_shape >= WAVEFORM_WAVETABLE_1 ? U8(WAVEFORM_WAVETABLE_1) : new_shape;
       RenderFn fn;
-      ResourcesManager::Load(fn_table_, index, &fn);
-      if (shape_ == WAVEFORM_WAVEQUENCE) {
+      ResourcesManager::Load(fn_table, index, &fn);
+      if (new_shape == WAVEFORM_WAVEQUENCE) {
         fn = &Oscillator::RenderWavequence;
       }
       (this->*fn)(buffer);
     }
   }
   
-  inline void set_parameter(uint8_t parameter) {
-    parameter_ = parameter;
+  inline void set_parameter(uint8_t new_parameter) {
+    this->parameter = new_parameter;
   }
   
-  inline void set_fm_parameter(uint8_t fm_parameter) {
-    fm_parameter_ = fm_parameter;
+  inline void set_fm_parameter(uint8_t new_fm_parameter) {
+    this->fm_parameter = new_fm_parameter;
   }
   
  private:
   // Current phase of the oscillator.
-  uint24_t phase_;
+  uint24_t phase;
 
   // Phase increment (and phase increment x 2, for low-sr oscillators).
-  uint24_t phase_increment_;
+  uint24_t phase_increment;
 
   // Copy of the shape used by this oscillator. When changing this, you
   // should also update the Update/Render pointers.
-  uint8_t shape_;
+  uint8_t shape;
 
   // Current value of the oscillator parameter.
-  uint8_t parameter_;
-  uint8_t fm_parameter_;
-  uint8_t note_;
+  uint8_t parameter;
+  uint8_t fm_parameter;
+  uint8_t note;
 
   // Union of state data used by each algorithm.
-  OscillatorState data_;
+  OscillatorState data;
 
   // Pointer to the render function.
-  static const RenderFn fn_table_[];
+  static const RenderFn fn_table[];
   
   // A flag set to true when sync is enabled ; and a table to record the
   // position of phrase wraps
-  uint8_t* sync_input_;
-  uint8_t* sync_output_;
+  uint8_t* sync_input;
+  uint8_t* sync_output;
   
   void RenderSilence(uint8_t* buffer);
   void RenderBandlimitedPwm(uint8_t* buffer);
