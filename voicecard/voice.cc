@@ -134,9 +134,9 @@ void Voice::Init() {
   ResourcesManager::Load(&init_patch_params, 0, &p);
   patch() = Patch(p);
   ResetAllControllers();
-    part().volume() = 127;
-    part().portamento_time() = 0;
-    part().legato() = 0;
+  part().volume() = 127;
+  part().portamento_time() = 0;
+  part().legato() = 0;
   Kill();
 }
 
@@ -211,12 +211,12 @@ inline void Voice::LoadSources() {
   // Rescale the value of each modulation sources. Envelopes are in the
   // 0-16383 range ; just like pitch. All are scaled to 0-255.
   modulation_sources[MOD_SRC_NOISE] = Random::GetByte();
-    modulation_sources[MOD_SRC_ENV_1] = envelope[0].Render();
-    modulation_sources[MOD_SRC_ENV_2] = envelope[1].Render();
-    modulation_sources[MOD_SRC_ENV_3] = envelope[2].Render();
-    modulation_sources[MOD_SRC_NOTE] = U14ShiftRight6(pitch_value);
-    modulation_sources[MOD_SRC_GATE] = gate;
-    modulation_sources[MOD_SRC_LFO_4] = voice_lfo.Render(patch().voice_lfo_shape());
+  modulation_sources[MOD_SRC_ENV_1] = envelope[0].Render();
+  modulation_sources[MOD_SRC_ENV_2] = envelope[1].Render();
+  modulation_sources[MOD_SRC_ENV_3] = envelope[2].Render();
+  modulation_sources[MOD_SRC_NOTE] = U14ShiftRight6(pitch_value);
+  modulation_sources[MOD_SRC_GATE] = gate;
+  modulation_sources[MOD_SRC_LFO_4] = voice_lfo.Render(patch().voice_lfo_shape());
 
   // Apply the modulation operators
   uint8_t ops[9] {0};
@@ -261,29 +261,33 @@ inline void Voice::LoadSources() {
     }
   }
 
-    modulation_destinations[MOD_DST_VCA] = part().volume() * 2;
+  modulation_destinations[MOD_DST_VCA] = part().volume() * 2;
   
   // Load and scale to 0-16383 the initial value of each modulated parameter.
-  dst[MOD_DST_OSC_1] = dst[MOD_DST_OSC_2] = 8192;
-    dst[MOD_DST_OSC_1_2_COARSE] = dst[MOD_DST_OSC_1_2_FINE] = 8192;
-    dst[MOD_DST_PARAMETER_1] = U8U8Mul(patch().osc(0).parameter(), 128);
-    dst[MOD_DST_PARAMETER_2] = U8U8Mul(patch().osc(1).parameter(), 128);
+  int16_t initial_value = 8192;
+  dst[MOD_DST_OSC_1] = initial_value;
+  dst[MOD_DST_OSC_2] = initial_value;
+  dst[MOD_DST_OSC_1_2_COARSE] = initial_value;
+  dst[MOD_DST_OSC_1_2_FINE] = initial_value;
 
-    dst[MOD_DST_MIX_BALANCE] = patch().mix_balance() << 8u;
-    dst[MOD_DST_MIX_PARAM] = patch().mix_parameter() << 8u;
-    dst[MOD_DST_MIX_FUZZ] = patch().mix_fuzz() << 8u;
-    dst[MOD_DST_MIX_CRUSH] = patch().mix_crush() << 8u;
-    dst[MOD_DST_MIX_NOISE] = patch().mix_noise() << 8u;
-    dst[MOD_DST_MIX_SUB_OSC] = patch().mix_sub_osc() << 8u;
+  dst[MOD_DST_PARAMETER_1] = U8U8Mul(patch().osc(0).parameter(), 128);
+  dst[MOD_DST_PARAMETER_2] = U8U8Mul(patch().osc(1).parameter(), 128);
+
+  dst[MOD_DST_MIX_BALANCE] = patch().mix_balance() << 8u;
+  dst[MOD_DST_MIX_PARAM] = patch().mix_parameter() << 8u;
+  dst[MOD_DST_MIX_FUZZ] = patch().mix_fuzz() << 8u;
+  dst[MOD_DST_MIX_CRUSH] = patch().mix_crush() << 8u;
+  dst[MOD_DST_MIX_NOISE] = patch().mix_noise() << 8u;
+  dst[MOD_DST_MIX_SUB_OSC] = patch().mix_sub_osc() << 8u;
 
   uint16_t cutoff = U8U8Mul(patch().filter(0).cutoff, 128);
-    dst[MOD_DST_FILTER_CUTOFF] = S16ClipU14(cutoff + pitch_value - 8192);
-    dst[MOD_DST_FILTER_RESONANCE] = patch().filter(0).resonance << 8u;
+  dst[MOD_DST_FILTER_CUTOFF] = S16ClipU14(cutoff + pitch_value - 8192);
+  dst[MOD_DST_FILTER_RESONANCE] = patch().filter(0).resonance << 8u;
 
-    dst[MOD_DST_ATTACK] = 8192;
-    dst[MOD_DST_DECAY] = 8192;
-    dst[MOD_DST_RELEASE] = 8192;
-    dst[MOD_DST_LFO_4] = U8U8Mul(patch().voice_lfo_rate(), 128);
+  dst[MOD_DST_ATTACK] = initial_value;
+  dst[MOD_DST_DECAY] = initial_value;
+  dst[MOD_DST_RELEASE] = initial_value;
+  dst[MOD_DST_LFO_4] = U8U8Mul(patch().voice_lfo_rate(), 128);
 }
 
 
@@ -312,15 +316,15 @@ inline void Voice::ProcessModulationMatrix() {
       }
       modulation_destinations[MOD_DST_VCA] = U8U8MulShift8(modulation_destinations[MOD_DST_VCA], source_value);
     } else {
-      int16_t modulation = dst[destination];
+      int16_t current_mod_value = dst[destination];
       if ((source >= MOD_SRC_LFO_1 && source <= MOD_SRC_LFO_4) ||
            source == MOD_SRC_PITCH_BEND || source == MOD_SRC_NOTE) {
         // These sources are "AC-coupled" (128 = no modulation).
-        modulation += S8S8Mul(amount, source_value + 128);
+        current_mod_value += S8S8Mul(amount, source_value + 128);
       } else {
-        modulation += S8U8Mul(amount, source_value);
+        current_mod_value += S8U8Mul(amount, source_value);
       }
-      dst[destination] = S16ClipU14(modulation);
+      dst[destination] = S16ClipU14(current_mod_value);
     }
   }
 }
@@ -338,8 +342,8 @@ inline void Voice::UpdateDestinations() {
   
   // Store in memory all the updated parameters.
   modulation_destinations[MOD_DST_FILTER_CUTOFF] = U14ShiftRight6(cutoff);
-    modulation_destinations[MOD_DST_FILTER_RESONANCE] = U14ShiftRight6(dst[MOD_DST_FILTER_RESONANCE]);
-    modulation_destinations[MOD_DST_MIX_CRUSH] = S8(highByte(dst[MOD_DST_MIX_CRUSH])) + 1;
+  modulation_destinations[MOD_DST_FILTER_RESONANCE] = U14ShiftRight6(dst[MOD_DST_FILTER_RESONANCE]);
+  modulation_destinations[MOD_DST_MIX_CRUSH] = S8(highByte(dst[MOD_DST_MIX_CRUSH])) + 1;
 
   osc_1.set_parameter(U15ShiftRight7(dst[MOD_DST_PARAMETER_1]));
   osc_1.set_fm_parameter(patch().osc(0).range() + 36);
@@ -350,27 +354,23 @@ inline void Voice::UpdateDestinations() {
   int8_t decay_mod = U15ShiftRight7(dst[MOD_DST_DECAY]) - 64;
   int8_t release_mod = U15ShiftRight7(dst[MOD_DST_RELEASE]) - 64;
   for (int i = 0; i < kNumEnvelopes; ++i) {
-    uint8_t new_attack = patch().env_lfo(i).attack;
-    uint8_t new_decay = patch().env_lfo(i).decay;
-    uint8_t new_release = patch().env_lfo(i).release;
+    auto env_lfo = patch().env_lfo(i);
     // integer addition is promoted to 16 bits so no worries
-    uint8_t attack = Clip(S16(new_attack + attack_mod), 0, 127);
-    uint8_t decay = Clip(S16(new_decay + decay_mod), 0, 127);
+    uint8_t attack = Clip(S16(env_lfo.attack + attack_mod), 0, 127);
+    uint8_t decay = Clip(S16(env_lfo.decay + decay_mod), 0, 127);
+    uint8_t release = Clip(S16(env_lfo.release + release_mod), 0, 127);
     uint8_t sustain = patch().env_lfo(i).sustain;
-    uint8_t release = Clip(S16(new_release + release_mod), 0, 127);
     envelope[i].Update(attack, decay, sustain, release);
   }
 #else
     for (int i = 0; i < kNumEnvelopes; ++i) {
-      auto attack = patch().env_lfo(i).attack;
-      auto decay = patch().env_lfo(i).decay;
-      auto sustain = patch().env_lfo(i).sustain;
-      auto release = patch().env_lfo(i).release;
-      envelope[i].Update(attack, decay, sustain, release);
+      auto env_lfo = patch().env_lfo(i);
+      envelope[i].Update(env_lfo.attack, env_lfo.decay, env_lfo.sustain, env_lfo.release);
     }
 #endif
+  uint8_t lfo_increment_index = U14ShiftRight6(dst[MOD_DST_LFO_4]) / 2;
   voice_lfo.set_phase_increment(ResourcesManager::Lookup<uint16_t, uint8_t>(
-          lut_res_lfo_increments, U14ShiftRight6(dst[MOD_DST_LFO_4]) / 2u));
+      lut_res_lfo_increments, lfo_increment_index));
 }
 
 /* static */

@@ -104,7 +104,7 @@ class Voice {
   static inline uint8_t modulation_source(uint8_t i) {
     return modulation_sources[i];
   }
-  static uint8_t modulation_destination(uint8_t i) {
+  static inline uint8_t modulation_destination(uint8_t i) {
     return modulation_destinations[i];
   }
   

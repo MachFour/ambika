@@ -125,9 +125,9 @@ uint8_t OsInfoPage::OnKey(uint8_t key) {
 /* static */
 void OsInfoPage::PrintVersionNumber(char* buffer, uint8_t number) {
   *buffer++ = 'v';
-  *buffer++ = '0' + U8ShiftRight4(number);
+  *buffer++ = '0' + highNibble(number);
   *buffer++ = '.';
-  *buffer++ = '0' + (number & 0x0f);
+  *buffer++ = '0' + lowNibble(number);
 }
 
 /* static */

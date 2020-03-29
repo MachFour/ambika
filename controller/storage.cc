@@ -336,19 +336,19 @@ void Storage::SysExSendRaw(uint8_t command, uint8_t argument, const uint8_t* dat
     auto addr_high = highByte(address);
     checksum += addr_low;
     checksum += addr_high;
-    midi_dispatcher.SendBlocking(U8ShiftRight4(addr_low));
-    midi_dispatcher.SendBlocking(byteAnd(addr_low, 0x0f));
-    midi_dispatcher.SendBlocking(U8ShiftRight4(addr_high));
-    midi_dispatcher.SendBlocking(byteAnd(addr_high, 0x0f));
+    midi_dispatcher.SendBlocking(highNibble(addr_low));
+    midi_dispatcher.SendBlocking(lowNibble(addr_low));
+    midi_dispatcher.SendBlocking(highNibble(addr_high));
+    midi_dispatcher.SendBlocking(lowNibble(addr_high));
   }
   for (uint8_t i = 0; i < size; ++i) {
     checksum += data[i];
-    midi_dispatcher.SendBlocking(U8ShiftRight4(data[i]));
-    midi_dispatcher.SendBlocking(byteAnd(data[i], 0x0f));
+    midi_dispatcher.SendBlocking(highNibble(data[i]));
+    midi_dispatcher.SendBlocking(lowNibble(data[i]));
   }
   // Outputs a checksum.
-  midi_dispatcher.SendBlocking(U8ShiftRight4(checksum));
-  midi_dispatcher.SendBlocking(byteAnd(checksum, 0x0f));
+  midi_dispatcher.SendBlocking(highNibble(checksum));
+  midi_dispatcher.SendBlocking(lowNibble(checksum));
 
   // End of SysEx block.
   midi_dispatcher.SendBlocking(0xf7);

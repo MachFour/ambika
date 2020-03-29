@@ -79,7 +79,7 @@ class VoicecardProtocolRx {
   }
   
   static void DoLongCommand() {
-    switch (command_ & 0xf0u) {
+    switch (highNibbleUnshifted(command_)) {
       case COMMAND_NOTE_ON:
         voice.Trigger(word(arguments_[0], arguments_[1]), arguments_[2], command_ & 1u);
         if (!lights_out_) {
@@ -96,7 +96,7 @@ class VoicecardProtocolRx {
         voice.set_modulation_source(arguments_[0], arguments_[1]);
         break;
       case COMMAND_WRITE_LFO:
-        voice.set_modulation_source(MOD_SRC_LFO_1 + byteAnd(command_, 0x0f), arguments_[0]);
+        voice.set_modulation_source(MOD_SRC_LFO_1 + lowNibble(command_), arguments_[0]);
         break;
     }
   }

@@ -66,7 +66,7 @@ void Oscillator::RenderSilence(uint8_t* buffer) {
 void Oscillator::RenderBandlimitedPwm(uint8_t* buffer) {
   uint8_t balance_index = U8Swap4(note /* - 12 play safe with Aliasing */);
   uint8_t wave_index = lowNibble(balance_index);
-  uint8_t gain_2 = highNibble(balance_index);
+  uint8_t gain_2 = highNibbleUnshifted(balance_index);
   uint8_t gain_1 = byteInverse(gain_2);
 
   const uint8_t* wave_1 = waveform_table[WAV_RES_BANDLIMITED_SAW_1 + wave_index];
@@ -107,15 +107,17 @@ void Oscillator::RenderBandlimitedPwm(uint8_t* buffer) {
 
 void Oscillator::RenderSimpleWavetable(uint8_t* buffer) {
   uint8_t balance_index = U8Swap4(note);
-  uint8_t gain_2 = highNibble(balance_index);
-  uint8_t gain_1 = ~gain_2;
+  uint8_t gain_2 = highNibbleUnshifted(balance_index);
+  uint8_t gain_1 = byteInverse(gain_2);
   uint8_t wave_1_index, wave_2_index;
   if (shape != WAVEFORM_SINE) {
     uint8_t wave_index = lowNibble(balance_index);
-    uint8_t base_resource_id = shape == WAVEFORM_SAW ?
-                               WAV_RES_BANDLIMITED_SAW_0 :
-                               (shape == WAVEFORM_SQUARE ? WAV_RES_BANDLIMITED_SQUARE_0 :
-                                WAV_RES_BANDLIMITED_TRIANGLE_0);
+    uint8_t base_resource_id;
+    switch (shape) {
+      default: base_resource_id = WAV_RES_BANDLIMITED_TRIANGLE_0; break;
+      case WAVEFORM_SAW: base_resource_id = WAV_RES_BANDLIMITED_SAW_0; break;
+      case WAVEFORM_SQUARE: base_resource_id = WAV_RES_BANDLIMITED_SQUARE_0; break;
+    }
     wave_1_index = base_resource_id + wave_index;
     wave_index = U8AddClip(wave_index, 1, kNumZonesFullSampleRate);
     wave_2_index = base_resource_id + wave_index;
@@ -163,6 +165,7 @@ void Oscillator::RenderCzResoSaw(uint8_t* buffer) {
   uint16_t increment = phase_increment.integral + U16((phase_increment.integral * U16(parameter)) / 4);
   uint8_t type = shape - WAVEFORM_CZ_SAW_LP;
   uint16_t phase_2 = data.secondary_phase;
+  uint8_t typeCheck = byteAnd(type, 2); // TODO rename this when I figure out what it means
   BEGIN_SAMPLE_LOOP
     UPDATE_PHASE
     if (phase_tmp.carry) {
@@ -171,7 +174,7 @@ void Oscillator::RenderCzResoSaw(uint8_t* buffer) {
     phase_2 += increment;
     uint8_t carrier = ReadSample(wav_res_sine, phase_2);
     uint8_t window = ~highByte(phase_tmp.integral);
-    if (byteAnd(type, 2)) {
+    if (typeCheck) {
       *buffer++ = S8U8MulShift8(carrier + 128, window) + 128;
     } else {
       *buffer++ = U8U8MulShift8(carrier, window);
@@ -184,6 +187,7 @@ void Oscillator::RenderCzResoPulse(uint8_t* buffer) {
   uint16_t increment = phase_increment.integral + U16((phase_increment.integral * U16(parameter)) / 4);
   uint8_t type = shape - WAVEFORM_CZ_SAW_LP;
   uint16_t phase_2 = data.secondary_phase;
+  uint8_t typeCheck = byteAnd(type, 2); // TODO rename this when I figure out what it means
   BEGIN_SAMPLE_LOOP
     UPDATE_PHASE
     if (phase_tmp.carry) {
@@ -201,7 +205,7 @@ void Oscillator::RenderCzResoPulse(uint8_t* buffer) {
       carrier >>= 1u;
       carrier += 128;
     }
-    if (byteAnd(type, 2)) {
+    if (typeCheck) {
       *buffer++ = S8U8MulShift8(carrier + 128, window) + 128;
     } else {
       *buffer++ = U8U8MulShift8(carrier, window);
@@ -214,6 +218,7 @@ void Oscillator::RenderCzResoTri(uint8_t* buffer) {
   uint16_t increment = phase_increment.integral + ((phase_increment.integral * U16(parameter)) / 4);
   uint8_t type = shape - WAVEFORM_CZ_SAW_LP;
   uint16_t phase_2 = data.secondary_phase;
+  uint8_t typeCheck = byteAnd(type, 2); // TODO rename this when I figure out what it means
   BEGIN_SAMPLE_LOOP
     UPDATE_PHASE
     if (phase_tmp.carry) {
@@ -225,7 +230,7 @@ void Oscillator::RenderCzResoTri(uint8_t* buffer) {
     if (byteAnd(phase_tmp.integral, 0x8000)) {
       window = byteInverse(window);
     }
-    if (byteAnd(type, 2)) {
+    if (typeCheck) {
       *buffer++ = S8U8MulShift8(carrier + 128, window) + 128;
     } else {
       *buffer++ = U8U8MulShift8(carrier, window);
@@ -270,13 +275,13 @@ void Oscillator::Render8BitLand(uint8_t* buffer) {
 
 void Oscillator::RenderVowel(uint8_t* buffer) {
   using rs = ResourcesManager;
-  data.vw.update = U8(data.vw.update + 1u) & 3u;
+  data.vw.update = byteAnd(data.vw.update + 1, 0x3);
   if (!data.vw.update) {
-    uint8_t offset_1 = U8ShiftRight4(parameter);
+    uint8_t offset_1 = highNibble(parameter);
+    uint8_t balance = lowNibble(parameter);
     offset_1 = U8U8Mul(offset_1, 7);
     uint8_t offset_2 = offset_1 + 7;
-    uint8_t balance = byteAnd(parameter, 15);
-    
+
     // Interpolate formant frequencies.
     for (uint8_t i = 0; i < 3; ++i) {
       data.vw.formant_increment[i] = U8U4MixU12(
@@ -299,15 +304,15 @@ void Oscillator::RenderVowel(uint8_t* buffer) {
     uint8_t phaselet;
 
     data.vw.formant_phase[0] += data.vw.formant_increment[0];
-    phaselet = highNibble(highByte(data.vw.formant_phase[0]));
+    phaselet = highNibbleUnshifted(highByte(data.vw.formant_phase[0]));
     result = rs::Lookup<uint8_t, uint8_t>(wav_res_formant_sine, phaselet | data.vw.formant_amplitude[0]);
 
     data.vw.formant_phase[1] += data.vw.formant_increment[1];
-    phaselet = highNibble(highByte(data.vw.formant_phase[1]));
+    phaselet = highNibbleUnshifted(highByte(data.vw.formant_phase[1]));
     result += rs::Lookup<uint8_t, uint8_t>(wav_res_formant_sine, phaselet | data.vw.formant_amplitude[1]);
 
     data.vw.formant_phase[2] += data.vw.formant_increment[2];
-    phaselet = highNibble(highByte(data.vw.formant_phase[2]));
+    phaselet = highNibbleUnshifted(highByte(data.vw.formant_phase[2]));
     result += rs::Lookup<uint8_t, uint8_t>(wav_res_formant_square, phaselet | data.vw.formant_amplitude[2]);
     
     result = S8U8MulShift8(result, highByte(phase_tmp.integral));

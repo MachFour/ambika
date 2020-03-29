@@ -157,10 +157,10 @@
 <text x="156.21" y="121.285" size="1.3208" layer="25" ratio="14">Port 3-4</text>
 <text x="223.52" y="121.285" size="1.3208" layer="25" ratio="14">Port 5-6</text>
 <text x="250.825" y="147.32" size="1.9304" layer="26" ratio="15" rot="MR90">9VAC 1A</text>
-<text x="189.865" y="6.35" size="1.524" layer="29" ratio="15">cc-by-sa, Olivier Gillet. v0.9</text>
+<text x="189.865" y="6.35" size="1.524" layer="29" ratio="15">cc-by-sa, Emilie Gillet. v0.9</text>
 <text x="124.46" y="6.35" size="2.54" layer="29" ratio="15">Ambika motherboard</text>
 <text x="124.46" y="6.35" size="2.54" layer="1" ratio="15">Ambika motherboard</text>
-<text x="189.865" y="6.35" size="1.524" layer="1" ratio="15">cc-by-sa, Olivier Gillet. v0.9</text>
+<text x="189.865" y="6.35" size="1.524" layer="1" ratio="15">cc-by-sa, Emilie Gillet. v0.9</text>
 <text x="126.6825" y="129.8575" size="0.8128" layer="25" ratio="14">4.7k to 10K</text>
 <polygon width="0.4064" layer="21" pour="hatch">
 <vertex x="245.11" y="49.53"/>

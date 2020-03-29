@@ -21780,7 +21780,7 @@ NS Package M08A</description>
 <sheet>
 <plain>
 <text x="45.72" y="-73.66" size="3.81" layer="94" ratio="15">Main MCU / digital plumbing</text>
-<text x="45.72" y="-78.74" size="2.54" layer="94">Olivier Gillet, 2011. cc-by-sa</text>
+<text x="45.72" y="-78.74" size="2.54" layer="94">Emilie Gillet, 2011. cc-by-sa</text>
 </plain>
 <instances>
 <instance part="U1" gate="G$1" x="60.96" y="22.86" smashed="yes">
@@ -22384,7 +22384,7 @@ NS Package M08A</description>
 <plain>
 <text x="25.4" y="-15.24" size="3.81" layer="94" ratio="15">User interface</text>
 <text x="93.98" y="124.46" size="1.778" layer="97">Duo-color LEDs</text>
-<text x="25.4" y="-20.32" size="2.54" layer="94">Olivier Gillet, 2011. cc-by-sa</text>
+<text x="25.4" y="-20.32" size="2.54" layer="94">Emilie Gillet, 2011. cc-by-sa</text>
 </plain>
 <instances>
 <instance part="IC11" gate="A" x="53.34" y="73.66" smashed="yes">
@@ -23740,7 +23740,7 @@ NS Package M08A</description>
 <sheet>
 <plain>
 <text x="33.02" y="88.9" size="3.81" layer="94" ratio="15">Peripherals</text>
-<text x="33.02" y="83.82" size="2.54" layer="94">Olivier Gillet, 2011. cc-by-sa</text>
+<text x="33.02" y="83.82" size="2.54" layer="94">Emilie Gillet, 2011. cc-by-sa</text>
 <text x="-93.98" y="198.12" size="1.9304" layer="97" ratio="15" rot="R90">Port 7</text>
 </plain>
 <instances>
@@ -24132,7 +24132,7 @@ NS Package M08A</description>
 <sheet>
 <plain>
 <text x="40.64" y="-48.26" size="3.81" layer="94" ratio="15">Voicecards and mixing</text>
-<text x="40.64" y="-53.34" size="2.54" layer="94">Olivier Gillet, 2011. cc-by-sa</text>
+<text x="40.64" y="-53.34" size="2.54" layer="94">Emilie Gillet, 2011. cc-by-sa</text>
 <text x="15.24" y="106.68" size="1.9304" layer="97" ratio="15" rot="R270">Port 1-2</text>
 <text x="15.24" y="60.96" size="1.9304" layer="97" ratio="15" rot="R270">Port 3-4</text>
 <text x="15.24" y="15.24" size="1.9304" layer="97" ratio="15" rot="R270">Port 5-6</text>
@@ -24911,7 +24911,7 @@ NS Package M08A</description>
 <plain>
 <text x="-7.62" y="76.2" size="1.778" layer="97">9V AC, 1A</text>
 <text x="83.82" y="-2.54" size="3.81" layer="94" ratio="15">Power supply</text>
-<text x="83.82" y="-7.62" size="2.54" layer="94">Olivier Gillet, 2011. cc-by-sa</text>
+<text x="83.82" y="-7.62" size="2.54" layer="94">Emilie Gillet, 2011. cc-by-sa</text>
 <text x="88.9" y="93.98" size="1.778" layer="97">130mA</text>
 <text x="88.9" y="50.8" size="1.778" layer="97">130mA</text>
 <text x="86.36" y="134.62" size="1.778" layer="97">310mA</text>

@@ -33,8 +33,7 @@ bootstrap_voicecard:
 update_voicecard:
 		make -f voicecard/makefile
 		$(AVRDUDE) -B 1 $(AVRDUDE_COM_OPTS) $(AVRDUDE_ISP_OPTS) \
-			-U flash:w:$(VOICECARD_FIRMWARE):i \
-			-U lock:w:0x2f:m
+			-U flash:w:$(VOICECARD_FIRMWARE):i
 
 bootstrap_controller:
 		make -f controller/makefile

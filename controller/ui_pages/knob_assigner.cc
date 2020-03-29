@@ -106,7 +106,7 @@ uint8_t KnobAssigner::OnPot(uint8_t index, uint8_t value) {
   switch (index) {
     case 0:
     case 4:
-      active_knob_ = U8ShiftRight4(value);
+      active_knob_ = highNibble(value);
       break;
     case 1:
     case 5:

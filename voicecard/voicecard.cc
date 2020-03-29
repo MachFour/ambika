@@ -47,14 +47,19 @@ using log_vca = PortBPin<0>;
 using UartSpiSS = PortDPin<2>;
 UartSpiMaster<UartSpiPort0, UartSpiSS, 2> dac_interface;
 
+//#define TIMING_CODE
+
+#ifdef TIMING_CODE
 using timing_signal1 = PortCPin<0>;
 using timing_signal2 = PortCPin<1>;
 using timing_signal3 = PortCPin<2>;
 
+static volatile uint8_t interrupt_counter;
+#endif
+
 
 static constexpr uint8_t dac_scale = 16;
 static volatile uint8_t update_vca;
-static volatile uint8_t interrupt_counter;
 
 ISR(TIMER2_OVF_vect) {
   static uint8_t sample_counter = 0;
@@ -85,7 +90,9 @@ ISR(TIMER2_OVF_vect) {
   }
   voicecard_rx.Receive();
 
+#ifdef TIMING_CODE
   interrupt_counter++;
+#endif
 }
 
 
@@ -130,12 +137,14 @@ inline void Init() {
   Timer<2>::set_mode(TIMER_PWM_PHASE_CORRECT);
   Timer<2>::Start();
 
+#ifdef TIMING_CODE
   timing_signal1::outputMode();
   timing_signal2::outputMode();
   timing_signal3::outputMode();
   timing_signal1::low();
   timing_signal2::low();
   timing_signal3::low();
+#endif
 }
 
 static uint8_t filter_mode_bytes[] = { 0, 1, 2, 3 };
@@ -147,12 +156,19 @@ int main() {
   //voice.Trigger(60 * 128, 100, 0);
   while (1) {
     // Check if there's a block of samples to fill.
+
+#ifdef TIMING_CODE
     interrupt_counter = 0;
+#endif
     if (audio_buffer.spaceLeft() >= kAudioBlockSize) {
       voicecard_rx.TickRxLed();
+#ifdef TIMING_CODE
       timing_signal1::high();
       voice.ProcessBlock();
       timing_signal1::low();
+#else
+      voice.ProcessBlock();
+#endif
       vcf_cutoff_out.Write(voice.cutoff());
       vcf_resonance_out.Write(voice.resonance());
       vcf_mode.Write(filter_mode_bytes[voice.patch().filter(0).mode]);
@@ -160,11 +176,13 @@ int main() {
     }
     voicecard_rx.Process();
 
+#ifdef TIMING_CODE
     if (interrupt_counter > kAudioBlockSize) {
       // interrupts going faster than audio prcessing
       timing_signal3::high();
     } else {
       timing_signal3::low();
     }
+#endif
   }
 }

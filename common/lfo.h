@@ -41,71 +41,68 @@ class Lfo {
   Lfo() = default;
 
   uint8_t Render(uint8_t shape) {
-    phase_ += phase_increment_;
-    looped_ = phase_ < phase_increment_;
+    phase += phase_increment;
+    is_looped = phase < phase_increment;
     
     // Compute the LFO value.
-    uint8_t value = 0;
+    uint8_t new_value;
     switch (shape) {
       case LFO_WAVEFORM_RAMP:
-        value = phase_ >> 8u;
+        new_value = lowByte(phase);
         break;
-        
       case LFO_WAVEFORM_S_H:
-        if (looped_) {
-          value_ = Random::GetByte();
+        if (is_looped) {
+          value = Random::GetByte();
         }
-        value = value_;
+        new_value = value;
         break;
-
       case LFO_WAVEFORM_TRIANGLE:
-        value = (phase_ & 0x8000u) ? phase_ >> 7u : ~U8(phase_ >> 7u);
+        new_value = (phase & 0x8000u) ? phase >> 7u : byteInverse(phase >> 7u);
         break;
-
       case LFO_WAVEFORM_SQUARE:
-        value = (phase_ & 0x8000u) ? 255 : 0;
+        new_value = (phase & 0x8000u) ? 255 : 0;
         break;
-
       default:
         {
 #ifndef DISABLE_WAVETABLE_LFOS
           uint8_t shape_offset = shape - LFO_WAVEFORM_WAVE_1;
           uint16_t offset = U16(shape_offset) << 8u;
           offset += shape_offset;
-          value = InterpolateSample(wav_res_lfo_waveforms + offset, phase_);
+          value = InterpolateSample(wav_res_lfo_waveforms + offset, phase);
 #else
-          value = 0;
+        new_value = 0;
 #endif  // DISABLE_WAVETABLE_LFOS
         }
         break;
-
     }
-    return value;
+    return new_value;
   }
 
-  void set_phase(uint16_t phase) {
-    looped_ = phase <= phase_;
-    phase_ = phase;
+  void set_phase(uint16_t new_phase) {
+    is_looped = (new_phase <= phase);
+    phase = new_phase;
   }
   
 
-  void set_phase_increment(uint16_t phase_increment) {
-    phase_increment_ = phase_increment;
+  void set_phase_increment(uint16_t new_phase_increment) {
+    phase_increment = new_phase_increment;
   }
   
-  uint8_t looped() const { return looped_; }
+  inline uint8_t looped() const {
+    return is_looped;
+  }
 
  private:
   // Phase increment.
-  uint16_t phase_increment_;
+  uint16_t phase_increment;
 
   // Current phase of the lfo.
-  uint16_t phase_;
-  uint8_t looped_;
+  uint16_t phase;
+  uint8_t is_looped;
 
   // Current value of S&H.
-  uint8_t value_;
-  uint8_t step_;
+  uint8_t value;
+  //uint8_t step;
   
   DISALLOW_COPY_AND_ASSIGN(Lfo);
 };
