@@ -284,21 +284,24 @@ void Oscillator::RenderVowel(uint8_t* buffer) {
 
     // Interpolate formant frequencies.
     for (uint8_t i = 0; i < 3; ++i) {
-      data.vw.formant_increment[i] = U8U4MixU12(
-          rs::Lookup<uint8_t, uint8_t>(wav_res_vowel_data, offset_1 + i),
-          rs::Lookup<uint8_t, uint8_t>(wav_res_vowel_data, offset_2 + i), balance);
-      data.vw.formant_increment[i] <<= 3u;
+      auto freq_a = rs::Lookup<uint8_t, uint8_t>(wav_res_vowel_data, offset_1 + i);
+      auto freq_b = rs::Lookup<uint8_t, uint8_t>(wav_res_vowel_data, offset_2 + i);
+      data.vw.formant_increment[i] = 8u * U8U4MixU12(freq_a, freq_b, balance);
     }
     
     // Interpolate formant amplitudes.
+    // formant_amplitude[3] is noise_modulation
     for (uint8_t i = 0; i < 4; ++i) {
-      auto amplitude_a = rs::Lookup<uint8_t, uint8_t>(wav_res_vowel_data, offset_1 + 3 + i);
-      auto amplitude_b = rs::Lookup<uint8_t, uint8_t>(wav_res_vowel_data, offset_2 + 3 + i);
+      const auto index_a = offset_1 + 3 + i;
+      const auto index_b = offset_2 + 3 + i;
+      auto amplitude_a = rs::Lookup<uint8_t, uint8_t>(wav_res_vowel_data, index_a);
+      auto amplitude_b = rs::Lookup<uint8_t, uint8_t>(wav_res_vowel_data, index_b);
       data.vw.formant_amplitude[i] = U8U4MixU8(amplitude_a, amplitude_b, balance);
     }
   }
-  // formant_amplitude[3] is noise_modulation
-  int16_t phase_noise = S8S8Mul(Random::state_msb(), data.vw.formant_amplitude[3]);
+  auto noise_modulation = data.vw.formant_amplitude[3];
+  const int16_t phase_noise = S8S8Mul(Random::state_msb(), noise_modulation);
+
   BEGIN_SAMPLE_LOOP
     int8_t result = 0;
     uint8_t phaselet;
@@ -325,7 +328,7 @@ void Oscillator::RenderVowel(uint8_t* buffer) {
     uint8_t x = S16ClipS8(4 * result) + 128;
     *buffer++ = x;
     *buffer++ = x;
-    size--;
+    size--; // second decrement
   END_SAMPLE_LOOP
 }
 

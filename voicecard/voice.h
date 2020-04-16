@@ -90,27 +90,30 @@ class Voice {
 
   // Called whenever a write to the CV analog outputs has to be made.
   static inline uint8_t cutoff()  {
-    return modulation_destinations[MOD_DST_FILTER_CUTOFF];
+    return get_mod_dest_value(MOD_DST_FILTER_CUTOFF);
   }
   static inline uint8_t vca()  {
-    return modulation_destinations[MOD_DST_VCA];
+    return get_mod_dest_value(MOD_DST_VCA);
   }
   static inline uint8_t crush()  {
-    return modulation_destinations[MOD_DST_MIX_CRUSH];
+    return get_mod_dest_value(MOD_DST_MIX_CRUSH);
   }
   static inline uint8_t resonance()  {
-    return modulation_destinations[MOD_DST_FILTER_RESONANCE];
+    return get_mod_dest_value(MOD_DST_FILTER_RESONANCE);
   }
-  static inline uint8_t modulation_source(uint8_t i) {
-    return modulation_sources[i];
+  static inline uint8_t get_mod_source_value(ModSource i) {
+    return mod_source_value[i];
   }
-  static inline uint8_t modulation_destination(uint8_t i) {
-    return modulation_destinations[i];
+  static inline uint8_t get_mod_dest_value(ModDestination dest) {
+    return modulation_destinations[dest];
+  }
+  static inline void set_mod_source_value(ModSource source, uint8_t value) {
+    mod_source_value[source] = value;
+  }
+  static inline void set_mod_dest_value(ModDestination dest, int8_t value) {
+    modulation_destinations[dest] = value;
   }
   
-  static inline void set_modulation_source(uint8_t i, uint8_t value) {
-    modulation_sources[i] = value;
-  }
 
   static Patch& patch() { return patch_object; }
   static VoicePart& part() { return part_object; }
@@ -133,7 +136,7 @@ class Voice {
   static Envelope envelope[kNumEnvelopes];
   static uint8_t gate;
   static Lfo voice_lfo;
-  static uint8_t modulation_sources[kNumModulationSources];
+  static uint8_t mod_source_value[kNumModulationSources];
   static int8_t modulation_destinations[kNumModulationDestinations];
   static int16_t dst[kNumModulationDestinations];
 

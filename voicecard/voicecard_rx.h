@@ -93,10 +93,10 @@ class VoicecardProtocolRx {
         voice.part().setData(arguments_[0], arguments_[1]);
         break;
       case COMMAND_WRITE_MOD_MATRIX:
-        voice.set_modulation_source(arguments_[0], arguments_[1]);
+        voice.set_mod_source_value(static_cast<ModSource>(arguments_[0]), arguments_[1]);
         break;
       case COMMAND_WRITE_LFO:
-        voice.set_modulation_source(MOD_SRC_LFO_1 + lowNibble(command_), arguments_[0]);
+        voice.set_mod_source_value(static_cast<ModSource>(MOD_SRC_LFO_1 + lowNibble(command_)), arguments_[0]);
         break;
     }
   }
@@ -114,7 +114,7 @@ class VoicecardProtocolRx {
       case COMMAND_RETRIGGER_ENVELOPE:
       case COMMAND_RETRIGGER_ENVELOPE + 1:
       case COMMAND_RETRIGGER_ENVELOPE + 2:
-        voice.TriggerEnvelope(byteAnd(command_, 0x0f), Envelope::Stage::ATTACK);
+        voice.TriggerEnvelope(lowNibble(command_), Envelope::Stage::ATTACK);
         break;
       case COMMAND_RESET_ALL_CONTROLLERS:
         voice.ResetAllControllers();
@@ -167,7 +167,7 @@ class VoicecardProtocolRx {
           data_size_ = 3;
         } else if (command_ >= COMMAND_WRITE_PATCH_DATA && command_ < COMMAND_WRITE_LFO) {
           data_size_ = 2;
-        } else if (byteAnd(command_, 0xf0) == COMMAND_WRITE_LFO) {
+        } else if (highNibbleUnshifted(command_) == COMMAND_WRITE_LFO) {
           data_size_ = 1;
         } else {
           DoShortCommand();

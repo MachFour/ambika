@@ -71,17 +71,6 @@ struct EnvelopeLfoSettings {
   uint8_t retrigger_mode;
 };
 
-struct Modulation {
-  uint8_t source;
-  uint8_t destination;
-  int8_t amount;
-};
-
-struct Modifier {
-  uint8_t operands[2];
-  uint8_t op;
-};
-
 enum OscillatorAlgorithm : uint8_t {
   WAVEFORM_NONE,
   WAVEFORM_SAW,
@@ -125,7 +114,7 @@ enum SubOscillatorAlgorithm {
   WAVEFORM_SUB_OSC_LAST
 };
 
-enum Operator {
+enum Operator : uint8_t {
   OP_SUM,
   OP_SYNC,
   OP_RING_MOD,
@@ -182,7 +171,7 @@ enum LfoSyncMode : uint8_t {
   LFO_SYNC_MODE_COUNT
 };
 
-enum ModulationSource : uint8_t {
+enum ModSource : uint8_t {
   MOD_SRC_ENV_1,
   MOD_SRC_ENV_2,
   MOD_SRC_ENV_3,
@@ -222,7 +211,7 @@ enum ModulationSource : uint8_t {
   MOD_SRC_COUNT
 };
 
-enum ModulationDestination {
+enum ModDestination : uint8_t {
   MOD_DST_PARAMETER_1,
   MOD_DST_PARAMETER_2,
   MOD_DST_OSC_1,
@@ -250,11 +239,24 @@ enum ModulationDestination {
   MOD_DST_COUNT
 };
 
-enum FilterMode {
-  FILTER_MODE_LP,
-  FILTER_MODE_BP,
-  FILTER_MODE_HP,
-  FILTER_MODE_NOTCH,
+
+struct Modulation {
+  ModSource source;
+  ModDestination destination;
+  int8_t amount;
+};
+
+struct Modifier {
+  ModSource operands[2];
+  ModifierOp op;
+};
+
+
+enum FilterMode : uint8_t {
+FILTER_MODE_LP,
+FILTER_MODE_BP,
+FILTER_MODE_HP,
+FILTER_MODE_NOTCH,
 };
 
 static constexpr uint8_t kNumSyncedLfoRates = 15;
