@@ -32,7 +32,7 @@ using namespace avrlib;
 
 namespace ambika {
 
-__attribute__((always_inline))
+//__attribute__((always_inline))
 static inline uint8_t ReadSample(const uint8_t* table, uint16_t phase) {
   return ResourcesManager::Lookup<uint8_t, uint8_t>(table, highByte(phase));
 }

@@ -152,8 +152,8 @@ void Oscillator::RenderSimpleWavetable(uint8_t* buffer) {
 
 // ------- Casio CZ-like synthesis -------------------------------------------
 void Oscillator::RenderCzSaw(uint8_t* buffer) {
-  BEGIN_SAMPLE_LOOP
-    UPDATE_PHASE
+  BEGIN_SAMPLE_LOOP_WITH_TMP
+    UPDATE_PHASE_WITH_TMP
     uint8_t phi = highByte(phase_tmp.integral);
     uint8_t clipped_phi = phi < 0x20 ? phi << 3u : 0xff;
     // Interpolation causes more aliasing here.
@@ -166,8 +166,8 @@ void Oscillator::RenderCzResoSaw(uint8_t* buffer) {
   uint8_t type = shape - WAVEFORM_CZ_SAW_LP;
   uint16_t phase_2 = data.secondary_phase;
   uint8_t typeCheck = byteAnd(type, 2); // TODO rename this when I figure out what it means
-  BEGIN_SAMPLE_LOOP
-    UPDATE_PHASE
+  BEGIN_SAMPLE_LOOP_WITH_TMP
+    UPDATE_PHASE_WITH_TMP
     if (phase_tmp.carry) {
       phase_2 = ResourcesManager::Lookup<uint16_t, uint8_t>(lut_res_cz_phase_reset, byteAnd(type, 0x03));
     }
@@ -184,14 +184,15 @@ void Oscillator::RenderCzResoSaw(uint8_t* buffer) {
 }
 
 void Oscillator::RenderCzResoPulse(uint8_t* buffer) {
+  using rs = ResourcesManager;
+  const uint8_t wave_type = shape - WAVEFORM_CZ_SAW_LP;
+  const uint8_t isBPorHP = byteAnd(wave_type, 2); // != 0;
   uint16_t increment = phase_increment.integral + U16((phase_increment.integral * U16(parameter)) / 4);
-  uint8_t type = shape - WAVEFORM_CZ_SAW_LP;
   uint16_t phase_2 = data.secondary_phase;
-  uint8_t typeCheck = byteAnd(type, 2); // TODO rename this when I figure out what it means
-  BEGIN_SAMPLE_LOOP
-    UPDATE_PHASE
+  BEGIN_SAMPLE_LOOP_WITH_TMP
+    UPDATE_PHASE_WITH_TMP
     if (phase_tmp.carry) {
-      phase_2 = ResourcesManager::Lookup<uint16_t, uint8_t>(lut_res_cz_phase_reset, byteAnd(type, 0x03));
+      phase_2 = rs::Lookup<uint16_t, uint8_t>(lut_res_cz_phase_reset, byteAnd(wave_type, 0x03));
     }
     phase_2 += increment;
     uint8_t carrier = ReadSample(wav_res_sine, phase_2);
@@ -201,11 +202,11 @@ void Oscillator::RenderCzResoPulse(uint8_t* buffer) {
     } else if (phase_tmp.integral < 0x8000) {
       window = U16(~(phase_tmp.integral - 0x4000u)) >> 6u;
     }
-    if (type == 5) {
+    if (wave_type == 5) {
       carrier >>= 1u;
       carrier += 128;
     }
-    if (typeCheck) {
+    if (isBPorHP) {
       *buffer++ = S8U8MulShift8(carrier + 128, window) + 128;
     } else {
       *buffer++ = U8U8MulShift8(carrier, window);
@@ -215,22 +216,26 @@ void Oscillator::RenderCzResoPulse(uint8_t* buffer) {
 }
 
 void Oscillator::RenderCzResoTri(uint8_t* buffer) {
+  using rs = ResourcesManager;
+  const uint8_t cz_wave_type = shape - WAVEFORM_CZ_SAW_LP; // == 8 for ztri
+  // this computation depends on order of waves specified in patch.h
+  // 0 corresponds to LP, 1 to PK, 2 to BP, 3 to HP
+  const uint8_t filter_type = byteAnd(cz_wave_type, 3); // == wave_type % 4
+  const uint8_t isBPorHP = byteAnd(cz_wave_type, 2); // == (filter_type >= 2) in boolean expressions
   uint16_t increment = phase_increment.integral + ((phase_increment.integral * U16(parameter)) / 4);
-  uint8_t type = shape - WAVEFORM_CZ_SAW_LP;
   uint16_t phase_2 = data.secondary_phase;
-  uint8_t typeCheck = byteAnd(type, 2); // TODO rename this when I figure out what it means
-  BEGIN_SAMPLE_LOOP
-    UPDATE_PHASE
+  BEGIN_SAMPLE_LOOP_WITH_TMP
+    UPDATE_PHASE_WITH_TMP
     if (phase_tmp.carry) {
-      phase_2 = ResourcesManager::Lookup<uint16_t, uint8_t>(lut_res_cz_phase_reset, type & 0x03u);
+      phase_2 = rs::Lookup<uint16_t, uint8_t>(lut_res_cz_phase_reset, filter_type);
     }
     phase_2 += increment;
     uint8_t carrier = ReadSample(wav_res_sine, phase_2);
     uint8_t window = phase_tmp.integral >> 7u;
-    if (byteAnd(phase_tmp.integral, 0x8000)) {
+    if (wordAnd(phase_tmp.integral, 0x8000)) {
       window = byteInverse(window);
     }
-    if (typeCheck) {
+    if (isBPorHP) {
       *buffer++ = S8U8MulShift8(carrier + 128, window) + 128;
     } else {
       *buffer++ = U8U8MulShift8(carrier, window);
@@ -280,13 +285,13 @@ void Oscillator::RenderVowel(uint8_t* buffer) {
     uint8_t offset_1 = highNibble(parameter);
     uint8_t balance = lowNibble(parameter);
     offset_1 = U8U8Mul(offset_1, 7);
-    uint8_t offset_2 = offset_1 + 7;
+    uint8_t offset_2 = offset_1 + 7; // == offset 1 * 8
 
     // Interpolate formant frequencies.
     for (uint8_t i = 0; i < 3; ++i) {
       auto freq_a = rs::Lookup<uint8_t, uint8_t>(wav_res_vowel_data, offset_1 + i);
       auto freq_b = rs::Lookup<uint8_t, uint8_t>(wav_res_vowel_data, offset_2 + i);
-      data.vw.formant_increment[i] = 8u * U8U4MixU12(freq_a, freq_b, balance);
+      data.vw.formant_increment[i] = U8U4MixU12(freq_a, freq_b, balance) << 3u;
     }
     
     // Interpolate formant amplitudes.
@@ -325,7 +330,16 @@ void Oscillator::RenderVowel(uint8_t* buffer) {
       data.vw.formant_phase[1] = 0;
       data.vw.formant_phase[2] = 0;
     }
-    uint8_t x = S16ClipS8(4 * result) + 128;
+    // (-32, 32) -> (0, 255)
+    //uint8_t x = S16ClipS8(4 * result) + 128;
+    uint8_t x;
+    if (result <= -32) {
+      x = 0;
+    } else if (result >= 32) {
+      x = 255;
+    } else {
+      x = U8(result + 32) << 2u;
+    }
     *buffer++ = x;
     *buffer++ = x;
     size--; // second decrement

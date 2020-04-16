@@ -71,6 +71,9 @@ struct EnvelopeLfoSettings {
   uint8_t retrigger_mode;
 };
 
+// ordering of the LP/PK/BP/HP is important!!
+// offsets of the wave shape from CZ_SAW_LP are used in rendering code
+// e.g. in RenderCzResoTri
 enum OscillatorAlgorithm : uint8_t {
   WAVEFORM_NONE,
   WAVEFORM_SAW,
