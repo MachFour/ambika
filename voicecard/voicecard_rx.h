@@ -80,6 +80,8 @@ class VoicecardProtocolRx {
   
   static void DoLongCommand() {
     switch (highNibbleUnshifted(command_)) {
+      default:
+        break;
       case COMMAND_NOTE_ON:
         voice.Trigger(word(arguments_[0], arguments_[1]), arguments_[2], command_ & 1u);
         if (!lights_out_) {
@@ -103,6 +105,8 @@ class VoicecardProtocolRx {
   
   static void DoShortCommand() {
     switch (command_) {
+      default:
+        break;
       case COMMAND_RELEASE:
         voice.Release();
         NoteLed::low();

@@ -65,7 +65,7 @@ class Envelope {
   
   inline void Update(uint8_t attack, uint8_t decay, uint8_t sustain, uint8_t release) {
     using rm = ResourcesManager;
-    auto portamento_incr = lut_res_env_portamento_increments;
+    const uint16_t* portamento_incr = lut_res_env_portamento_increments;
     stage_phase_increment[ATTACK] = rm::Lookup<uint16_t, uint8_t>(portamento_incr, attack);
     stage_phase_increment[DECAY] = rm::Lookup<uint16_t, uint8_t>(portamento_incr, decay);
     stage_phase_increment[RELEASE] = rm::Lookup<uint16_t, uint8_t>(portamento_incr, release);

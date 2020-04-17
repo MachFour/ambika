@@ -102,7 +102,7 @@ enum OscillatorAlgorithm : uint8_t {
   WAVEFORM_LAST
 };
 
-enum SubOscillatorAlgorithm {
+enum SubOscillatorAlgorithm : uint8_t {
   WAVEFORM_SUB_OSC_SQUARE_1,
   WAVEFORM_SUB_OSC_TRIANGLE_1,
   WAVEFORM_SUB_OSC_PULSE_1,

@@ -53,6 +53,8 @@ private:
   Parameters& p = data.params;
 
 public:
+  VoicePart() : data() {};
+
   inline uint8_t& volume() {
     return p.volume;
   }
