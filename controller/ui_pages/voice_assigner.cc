@@ -37,7 +37,7 @@ void VoiceAssigner::OnInit(PageInfo* info) {
 /* static */
 void VoiceAssigner::SetActiveControl(ActiveControl active_control) {
   if (active_control == ACTIVE_CONTROL_FIRST) {
-    active_control_ = 0xff;
+    active_control_ = -1; //0xff;
     OnIncrement(1);
   } else {
     active_control_ = 3 + kNumVoices;
@@ -88,8 +88,8 @@ uint8_t VoiceAssigner::OnClick() {
 
 /* static */
 uint8_t VoiceAssigner::OnNote(uint8_t note, uint8_t velocity) {
-  if (edit_mode_ != EDIT_IDLE &&
-      (active_control_ == 2 || active_control_ == 3)) {
+  IGNORE_UNUSED(velocity);
+  if (edit_mode_ != EDIT_IDLE && (active_control_ == 2 || active_control_ == 3)) {
     ParameterEditor::OnPot(active_control_, note);
     edit_mode_ = EDIT_IDLE;
     return 1;
@@ -109,16 +109,16 @@ uint8_t VoiceAssigner::OnPot(uint8_t index, uint8_t value) {
     }
     return 1;
   } else {
-    value >>= 5;
+    value >>= 5u;
     uint8_t shift = 2 * (index - 5);
-    uint8_t mask = 3 << shift;
+    uint8_t mask = 3u << shift;
     uint8_t part = ui.state().active_part;
-    uint8_t allocation = multi.data().part_mapping_[part].voice_allocation;
-    allocation = (allocation & ~mask) | (value << shift);
-    allocation &= multi.SolveAllocationConflicts(part);
-    if (multi.mutable_data()->part_mapping_[part].voice_allocation != \
-        allocation) {
-      multi.mutable_data()->part_mapping_[part].voice_allocation = allocation;
+    // read, modify, write
+    uint8_t& allocation = multi.mutable_data()->part_mapping_[part].voice_allocation;
+    uint8_t new_allocation = byteOr(byteAnd(allocation, byteInverse(mask)), value << shift);
+    new_allocation &= multi.SolveAllocationConflicts(part);
+    if (allocation != new_allocation) {
+      allocation = new_allocation;
       multi.AssignVoicesToParts();
     }
     return 1;

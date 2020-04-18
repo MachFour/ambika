@@ -99,8 +99,9 @@ uint8_t Multi::SolveAllocationConflicts(uint8_t constraint) {
   uint8_t available_voices = 0xff;
   for (uint8_t i = 0; i < kNumParts; ++i) {
     if (i != constraint) {
-      data_.part_mapping_[i].voice_allocation &= available_voices;
-      available_voices &= ~data_.part_mapping_[i].voice_allocation;
+      uint8_t& part_i_allocation = data_.part_mapping_[i].voice_allocation;
+      part_i_allocation &= available_voices;
+      available_voices &= byteInverse(part_i_allocation);
     }
   }
   return available_voices;
