@@ -27,11 +27,11 @@ using namespace avrlib;
 
 namespace ambika {
 
-static const uint8_t midi_clock_tick_per_step[15] PROGMEM = {
+static constexpr uint8_t midi_clock_tick_per_step[15] PROGMEM = {
   96, 72, 64, 48, 36, 32, 24, 16, 12, 8, 6, 4, 3, 2, 1
 };
 
-static const uint16_t lfo_phase_increment_per_clock_tick[15] PROGMEM = {
+static constexpr uint16_t lfo_phase_increment_per_clock_tick[15] PROGMEM = {
   683, 910, 1024, 1365, 1820, 2048, 2731,
   4096, 5461, 8192, 10923, 16384, 21845, 32768, 65536
 };
@@ -53,8 +53,8 @@ static constexpr Patch::Parameters init_patch_params PROGMEM {
   .mix_crush = 0,
   // Filter
   .filter = {
-    {96, 0, 0},
-    {0, 0, 0}
+    {96, 0, FILTER_MODE_LP},
+    {0, 0, FILTER_MODE_LP}
   },
   .filter_env = 24,
   .filter_lfo = 0,
@@ -104,9 +104,9 @@ static constexpr PartData::Parameters init_part_params PROGMEM {
   .raga = 0,
   .legato = 0,
   .portamento_time = 0,
-  .arp_sequencer_mode = 0,
+  .arp_sequencer_mode = ARP_SEQUENCER_MODE_STEP,
   // Arp data
-  .arp_direction = 0,
+  .arp_direction = ARPEGGIO_DIRECTION_UP,
   .arp_octave = 1,
   .arp_pattern = 0,
   .arp_divider = 10,

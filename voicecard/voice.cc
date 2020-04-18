@@ -79,16 +79,16 @@ static const Patch::Parameters init_patch_params PROGMEM {
   .mix_crush = 0,
   // Filter
   .filter = {
-    {127, 0, 0},
-    {0, 0, 0}
+    {127, 0, FILTER_MODE_LP},
+    {0, 0, FILTER_MODE_LP}
   },
   .filter_env = 63,
   .filter_lfo = 0,
   // ADSR
   .env_lfo = {
-      {0, 40, 20, 60, 0, 0, 0, 0},
-      {0, 40, 20, 60, 0, 0, 0, 0},
-      {0, 40, 20, 60, 0, 0, 0, 0}
+      {0, 40, 20, 60, LFO_WAVEFORM_TRIANGLE, 0, 0, 0},
+      {0, 40, 20, 60, LFO_WAVEFORM_TRIANGLE, 0, 0, 0},
+      {0, 40, 20, 60, LFO_WAVEFORM_TRIANGLE, 0, 0, 0}
   },
   .voice_lfo_shape = LFO_WAVEFORM_TRIANGLE,
   .voice_lfo_rate = 16,
@@ -343,7 +343,6 @@ inline void Voice::UpdateDestinations() {
   // transistors are thermically coupled. You can disable tracking by applying
   // a negative modulation from NOTE to CUTOFF.
   uint16_t cutoff = dst[MOD_DST_FILTER_CUTOFF];
-#ifndef ALTERNATIVE_CODE
   cutoff = S16ClipU14(cutoff + S8U8Mul(patch().filter_env(), mod_source_value[MOD_SRC_ENV_2]));
   cutoff = S16ClipU14(cutoff + S8S8Mul(patch().filter_lfo(), mod_source_value[MOD_SRC_LFO_2] + 128));
   
@@ -369,12 +368,6 @@ inline void Voice::UpdateDestinations() {
     uint8_t sustain = patch().env_lfo(i).sustain;
     envelope[i].Update(attack, decay, sustain, release);
   }
-#else
-    for (int i = 0; i < kNumEnvelopes; ++i) {
-      auto env_lfo = patch().env_lfo(i);
-      envelope[i].Update(env_lfo.attack, env_lfo.decay, env_lfo.sustain, env_lfo.release);
-    }
-#endif
   uint8_t lfo_increment_index = U14ShiftRight6(dst[MOD_DST_LFO_4]) / 2;
   voice_lfo.set_phase_increment(ResourcesManager::Lookup<uint16_t, uint8_t>(
       lut_res_lfo_increments, lfo_increment_index));
@@ -432,7 +425,6 @@ inline void Voice::RenderOscillators() {
     if (midi_note < 0) {
       midi_note = 0;
     }
-#ifndef ALTERNATIVE_CODE
     if (i == 0) {
       sub_osc.set_increment(U24ShiftRight(increment));
       osc_1.Render(patch().osc(0).shape(), midi_note, increment, no_sync, sync_state, buffer);
@@ -440,11 +432,6 @@ inline void Voice::RenderOscillators() {
       osc_2.Render(patch().osc(1).shape(), midi_note, increment,
                    patch().mix_op() == OP_SYNC ? sync_state : no_sync, dummy_sync_state, osc2_buffer);
     }
-#else
-    if (i == 0) {
-      osc_1.Render(patch().osc(0).shape(), midi_note, increment, no_sync, sync_state, buffer);
-    }
-#endif
   }
 }
 
@@ -470,7 +457,6 @@ void Voice::ProcessBlock() {
   uint8_t osc_1_gain = ~osc_2_gain;
   uint8_t dry_gain = ~wet_gain;
 
-#ifndef ALTERNATIVE_CODE
   // Mix oscillators.
   switch (patch().mix_op()) {
     case OP_RING_MOD:
@@ -508,7 +494,6 @@ void Voice::ProcessBlock() {
       }
       break;
   }
-#endif
 
     // Mix-in sub oscillator or transient generator.
   uint8_t sub_gain = U15ShiftRight7(dst[MOD_DST_MIX_SUB_OSC]);
@@ -519,12 +504,11 @@ void Voice::ProcessBlock() {
     transient_generator.Render(patch().mix_sub_osc_shape(), buffer, sub_gain);
   }
 
-#ifndef ALTERNATIVE_CODE
   uint8_t noise = Random::state_msb();
   uint8_t noise_gain = U15ShiftRight7(dst[MOD_DST_MIX_NOISE]);
-  uint8_t signal_gain = ~noise_gain;
+  uint8_t signal_gain = byteInverse(noise_gain);
   wet_gain = U14ShiftRight6(dst[MOD_DST_MIX_FUZZ]);
-  dry_gain = ~wet_gain;
+  dry_gain = byteInverse(wet_gain);
 
 
   // Mix with noise, and apply distortion. The loop processes samples by 2 to
@@ -535,18 +519,12 @@ void Voice::ProcessBlock() {
     auto distortion_a = ResourcesManager::Lookup<uint8_t, uint8_t>(wav_res_distortion, signal_noise_a);
     uint8_t a = U8Mix(signal_noise_a, distortion_a, dry_gain, wet_gain);
 
-
     noise = U8(noise * 73) + 1;
     uint8_t signal_noise_b = U8Mix(buffer[i + 1], noise, signal_gain, noise_gain);
     auto distortion_b = ResourcesManager::Lookup<uint8_t, uint8_t>(wav_res_distortion, signal_noise_b);
     uint8_t b = U8Mix(signal_noise_b, distortion_b, dry_gain, wet_gain);
     audio_buffer.overwrite2(a, b);
   }
-#else
-  for (uint8_t i = 0; i < kAudioBlockSize; i += 2) {
-    audio_buffer.overwrite2(buffer[i], buffer[i + 1]);
-  }
-#endif
 }
 
 }  // namespace ambika

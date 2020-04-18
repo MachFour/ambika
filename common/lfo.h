@@ -40,7 +40,7 @@ class Lfo {
  public:
   Lfo() = default;
 
-  uint8_t Render(uint8_t shape) {
+  uint8_t Render(LfoWave shape) {
     phase += phase_increment;
     is_looped = phase < phase_increment;
     
@@ -48,7 +48,7 @@ class Lfo {
     uint8_t new_value;
     switch (shape) {
       case LFO_WAVEFORM_RAMP:
-        new_value = lowByte(phase);
+        new_value = highByte(phase);
         break;
       case LFO_WAVEFORM_S_H:
         if (is_looped) {
@@ -66,9 +66,8 @@ class Lfo {
         {
 #ifndef DISABLE_WAVETABLE_LFOS
           uint8_t shape_offset = shape - LFO_WAVEFORM_WAVE_1;
-          uint16_t offset = U16(shape_offset) << 8u;
-          offset += shape_offset;
-          value = InterpolateSample(wav_res_lfo_waveforms + offset, phase);
+          uint16_t offset = word(shape_offset, shape_offset);
+          new_value = InterpolateSample(wav_res_lfo_waveforms + offset, phase);
 #else
         new_value = 0;
 #endif  // DISABLE_WAVETABLE_LFOS

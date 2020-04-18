@@ -92,10 +92,10 @@ struct PartData {
     // Offset: 5-8
     uint8_t legato;
     uint8_t portamento_time;
-    uint8_t arp_sequencer_mode;
+    ArpSequencerMode arp_sequencer_mode;
 
     // Offset: 8-12
-    uint8_t arp_direction;
+    ArpeggiatorDirection arp_direction;
     uint8_t arp_octave;
     uint8_t arp_pattern;
     uint8_t arp_divider;
@@ -172,13 +172,13 @@ public:
   // contains 72 bytes
   inline uint8_t* sequence_data() {
     // start at arp_direction
-    //return data.bytes + 8;
-    return &data.params.arp_direction;
+    //return &data.params.arp_direction;
+    return data.bytes + 8;
   }
   inline const uint8_t* sequence_data_readonly() const {
     // start at arp_direction
-    //return data.bytes + 8;
-    return &data.params.arp_direction;
+    //return &data.params.arp_direction;
+    return data.bytes + 8;
   }
 
   inline uint8_t& volume() {
@@ -202,10 +202,10 @@ public:
   inline uint8_t& portamento_time() {
     return data.params.portamento_time;
   }
-  inline uint8_t& arp_sequencer_mode() {
+  inline ArpSequencerMode & arp_sequencer_mode() {
     return data.params.arp_sequencer_mode;
   }
-  inline uint8_t& arp_direction() {
+  inline ArpeggiatorDirection& arp_direction() {
     return data.params.arp_direction;
   }
   inline uint8_t& arp_octave() {

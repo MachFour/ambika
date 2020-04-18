@@ -97,7 +97,7 @@ void VoicecardProtocolTx::WriteData(uint8_t voice_id, uint8_t data_type, uint8_t
     
 /* static */
 void VoicecardProtocolTx::WriteLfo(uint8_t voice_id, uint8_t address, uint8_t value) {
-  Write(voice_id, COMMAND_WRITE_LFO | address);
+  Write(voice_id, byteOr(COMMAND_WRITE_LFO, address));
   Write(voice_id, value);
 }
 

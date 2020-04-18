@@ -79,15 +79,21 @@ class VoicecardProtocolRx {
   }
   
   static void DoLongCommand() {
-    switch (highNibbleUnshifted(command_)) {
+    auto commandCode = highNibbleUnshifted(command_);
+    switch (commandCode) {
       default:
         break;
       case COMMAND_NOTE_ON:
-        voice.Trigger(word(arguments_[0], arguments_[1]), arguments_[2], command_ & 1u);
+      {
+        auto note = word(arguments_[0], arguments_[1]);
+        auto velocity = arguments_[2];
+        auto legato = byteAnd(command_, 1);
+        voice.Trigger(note, velocity, legato);
         if (!lights_out_) {
           NoteLed::high();
         }
         break;
+      }
       case COMMAND_WRITE_PATCH_DATA:
         voice.patch().setData(arguments_[0], arguments_[1]);
         break;
@@ -95,11 +101,18 @@ class VoicecardProtocolRx {
         voice.part().setData(arguments_[0], arguments_[1]);
         break;
       case COMMAND_WRITE_MOD_MATRIX:
-        voice.set_mod_source_value(static_cast<ModSource>(arguments_[0]), arguments_[1]);
+      {
+        auto mod_source = static_cast<ModSource>(arguments_[0]);
+        voice.set_mod_source_value(mod_source, arguments_[1]);
         break;
+      }
       case COMMAND_WRITE_LFO:
-        voice.set_mod_source_value(static_cast<ModSource>(MOD_SRC_LFO_1 + lowNibble(command_)), arguments_[0]);
+      {
+        auto lfo_index = lowNibble(command_);
+        auto lfo = static_cast<ModSource>(MOD_SRC_LFO_1 + lfo_index);
+        voice.set_mod_source_value(lfo, arguments_[0]);
         break;
+      }
     }
   }
   

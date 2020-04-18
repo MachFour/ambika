@@ -25,50 +25,30 @@
 namespace ambika {
 
 
-struct OscillatorSettings {
-  struct Parameters {
-    uint8_t shape;
-    uint8_t parameter;
-    int8_t range;
-    int8_t detune;
-  };
 
-  union Data {
-    Parameters params;
-    uint8_t bytes[sizeof(Parameters)];
-  };
-
-  Data data;
-
-  inline uint8_t& shape() {
-      return data.params.shape;
-  }
-  inline uint8_t& parameter() {
-      return data.params.parameter;
-  }
-  inline int8_t& range() {
-      return data.params.range;
-  }
-  inline int8_t& detune() {
-      return data.params.detune;
-  }
-};
-
-struct FilterSettings {
-  uint8_t cutoff;
-  uint8_t resonance;
-  uint8_t mode;
-};
-
-struct EnvelopeLfoSettings {
-  uint8_t attack;
-  uint8_t decay;
-  uint8_t sustain;
-  uint8_t release;
-  uint8_t shape;
-  uint8_t rate;
-  uint8_t padding;
-  uint8_t retrigger_mode;
+enum LfoWave : uint8_t {
+  // For oscillators.
+  LFO_WAVEFORM_TRIANGLE,
+  LFO_WAVEFORM_SQUARE,
+  LFO_WAVEFORM_S_H,
+  LFO_WAVEFORM_RAMP,
+  LFO_WAVEFORM_WAVE_1,
+  LFO_WAVEFORM_WAVE_2,
+  LFO_WAVEFORM_WAVE_3,
+  LFO_WAVEFORM_WAVE_4,
+  LFO_WAVEFORM_WAVE_5,
+  LFO_WAVEFORM_WAVE_6,
+  LFO_WAVEFORM_WAVE_7,
+  LFO_WAVEFORM_WAVE_8,
+  LFO_WAVEFORM_WAVE_9,
+  LFO_WAVEFORM_WAVE_10,
+  LFO_WAVEFORM_WAVE_11,
+  LFO_WAVEFORM_WAVE_12,
+  LFO_WAVEFORM_WAVE_13,
+  LFO_WAVEFORM_WAVE_14,
+  LFO_WAVEFORM_WAVE_15,
+  LFO_WAVEFORM_WAVE_16,
+  LFO_WAVEFORM_COUNT
 };
 
 // ordering of the LP/PK/BP/HP is important!!
@@ -142,31 +122,6 @@ enum ModifierOp : uint8_t {
   MODIFIER_COUNT
 };
 
-enum LfoWave : uint8_t {
-  // For oscillators.
-  LFO_WAVEFORM_TRIANGLE,
-  LFO_WAVEFORM_SQUARE,
-  LFO_WAVEFORM_S_H,
-  LFO_WAVEFORM_RAMP,
-  LFO_WAVEFORM_WAVE_1,
-  LFO_WAVEFORM_WAVE_2,
-  LFO_WAVEFORM_WAVE_3,
-  LFO_WAVEFORM_WAVE_4,
-  LFO_WAVEFORM_WAVE_5,
-  LFO_WAVEFORM_WAVE_6,
-  LFO_WAVEFORM_WAVE_7,
-  LFO_WAVEFORM_WAVE_8,
-  LFO_WAVEFORM_WAVE_9,
-  LFO_WAVEFORM_WAVE_10,
-  LFO_WAVEFORM_WAVE_11,
-  LFO_WAVEFORM_WAVE_12,
-  LFO_WAVEFORM_WAVE_13,
-  LFO_WAVEFORM_WAVE_14,
-  LFO_WAVEFORM_WAVE_15,
-  LFO_WAVEFORM_WAVE_16,
-  LFO_WAVEFORM_COUNT
-};
-
 enum LfoSyncMode : uint8_t {
   LFO_SYNC_MODE_FREE,
   LFO_SYNC_MODE_SLAVE,
@@ -178,21 +133,21 @@ enum ModSource : uint8_t {
   MOD_SRC_ENV_1,
   MOD_SRC_ENV_2,
   MOD_SRC_ENV_3,
-  
+
   MOD_SRC_LFO_1,
   MOD_SRC_LFO_2,
   MOD_SRC_LFO_3,
   MOD_SRC_LFO_4,
-  
+
   MOD_SRC_OP_1,
   MOD_SRC_OP_2,
   MOD_SRC_OP_3,
   MOD_SRC_OP_4,
-  
+
   MOD_SRC_SEQ_1,
   MOD_SRC_SEQ_2,
   MOD_SRC_ARP_STEP,
-  
+
   MOD_SRC_VELOCITY,
   MOD_SRC_AFTERTOUCH,
   MOD_SRC_PITCH_BEND,
@@ -236,11 +191,65 @@ enum ModDestination : uint8_t {
   MOD_DST_DECAY,
   MOD_DST_RELEASE,
   MOD_DST_LFO_4,
-  
+
   MOD_DST_VCA,
 
   MOD_DST_COUNT
 };
+
+enum FilterMode : uint8_t {
+  FILTER_MODE_LP,
+  FILTER_MODE_BP,
+  FILTER_MODE_HP,
+  FILTER_MODE_NOTCH,
+};
+
+struct OscillatorSettings {
+  struct Parameters {
+    OscillatorAlgorithm shape;
+    uint8_t parameter;
+    int8_t range;
+    int8_t detune;
+  };
+
+  union Data {
+    Parameters params;
+    uint8_t bytes[sizeof(Parameters)];
+  };
+
+  Data data;
+
+  inline OscillatorAlgorithm& shape() {
+    return data.params.shape;
+  }
+  inline uint8_t& parameter() {
+    return data.params.parameter;
+  }
+  inline int8_t& range() {
+    return data.params.range;
+  }
+  inline int8_t& detune() {
+    return data.params.detune;
+  }
+};
+
+struct FilterSettings {
+  uint8_t cutoff;
+  uint8_t resonance;
+  FilterMode mode;
+};
+
+struct EnvelopeLfoSettings {
+  uint8_t attack;
+  uint8_t decay;
+  uint8_t sustain;
+  uint8_t release;
+  LfoWave shape;
+  uint8_t rate;
+  uint8_t padding;
+  uint8_t retrigger_mode;
+};
+
 
 
 struct Modulation {
@@ -254,13 +263,6 @@ struct Modifier {
   ModifierOp op;
 };
 
-
-enum FilterMode : uint8_t {
-FILTER_MODE_LP,
-FILTER_MODE_BP,
-FILTER_MODE_HP,
-FILTER_MODE_NOTCH,
-};
 
 static constexpr uint8_t kNumSyncedLfoRates = 15;
 static constexpr uint8_t kNumEnvelopes = 3;
@@ -277,9 +279,9 @@ struct Patch {
     OscillatorSettings osc[kNumOscillators];
     // Offset: 8-16
     uint8_t mix_balance;
-    uint8_t mix_op;
+    Operator mix_op;
     uint8_t mix_parameter;
-    uint8_t mix_sub_osc_shape;
+    SubOscillatorAlgorithm mix_sub_osc_shape;
     uint8_t mix_sub_osc;
     uint8_t mix_noise;
     uint8_t mix_fuzz;
@@ -291,7 +293,7 @@ struct Patch {
     // Offset: 24-48
     EnvelopeLfoSettings env_lfo[kNumEnvelopes];
     // Offset: 48-50
-    uint8_t voice_lfo_shape;
+    LfoWave voice_lfo_shape;
     uint8_t voice_lfo_rate;
     // Offset: 50-92
     Modulation modulation[kNumModulations];
@@ -349,13 +351,13 @@ public:
   inline uint8_t& mix_balance() {
       return data.params.mix_balance;
   }
-  inline uint8_t& mix_op() {
+  inline Operator& mix_op() {
       return data.params.mix_op;
   }
   inline uint8_t& mix_parameter() {
       return data.params.mix_parameter;
   }
-  inline uint8_t& mix_sub_osc_shape() {
+  inline SubOscillatorAlgorithm & mix_sub_osc_shape() {
       return data.params.mix_sub_osc_shape;
   }
   inline uint8_t& mix_sub_osc() {
@@ -382,7 +384,7 @@ public:
   inline EnvelopeLfoSettings& env_lfo(uint8_t index) {
       return data.params.env_lfo[index];
   }
-  inline uint8_t& voice_lfo_shape() {
+  inline LfoWave& voice_lfo_shape() {
       return data.params.voice_lfo_shape;
   }
   inline uint8_t& voice_lfo_rate() {
