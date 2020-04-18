@@ -27,20 +27,6 @@
 
 namespace ambika {
 
-/* static */
-const EventHandlers VoiceAssigner::event_handlers_ PROGMEM = {
-  OnInit,
-  SetActiveControl,
-  OnIncrement,
-  OnClick,
-  OnPot,
-  OnKey,
-  OnNote,
-  OnIdle,
-  UpdateScreen,
-  UpdateLeds,
-  OnDialogClosed,
-};
 
 /* static */
 void VoiceAssigner::OnInit(PageInfo* info) {

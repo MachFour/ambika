@@ -32,25 +32,11 @@
 namespace ambika {
 
 /* static */
-const EventHandlers OsInfoPage::event_handlers_ PROGMEM = {
-  OnInit,
-  SetActiveControl,
-  OnIncrement,
-  OnClick,
-  OnPot,
-  OnKey,
-  NULL,
-  OnIdle,
-  UpdateScreen,
-  UpdateLeds,
-  OnDialogClosed,
-};
-
-/* static */
 uint8_t OsInfoPage::found_firmware_files_;
 
 /* static */
 void OsInfoPage::OnInit(PageInfo* info) {
+  IGNORE_UNUSED(info);
   active_control_ = 0;
   FindFirmwareFiles();
 }
@@ -78,9 +64,11 @@ uint8_t OsInfoPage::OnIncrement(int8_t increment) {
 /* static */
 uint8_t OsInfoPage::OnKey(uint8_t key) {
   switch(key) {
+    default:
+      break;
     case SWITCH_1:
       {
-        if (found_firmware_files_ & 1) {
+        if (byteAnd(found_firmware_files_, 1)) {
           // Force a reset into the SD card loader.
           eeprom_write_byte(kFirmwareUpdateFlagPtr, 1);
           SystemReset(0);
@@ -91,7 +79,7 @@ uint8_t OsInfoPage::OnKey(uint8_t key) {
       
     case SWITCH_4:
       {
-        if (found_firmware_files_ & 2) {
+        if (byteAnd(found_firmware_files_, 2)) {
           // Resets the voicecard into its bootloader.
           voicecard_tx.EnterFirmwareUpdateMode(active_control_);
           // Wait while the voicecard reboots.
@@ -99,16 +87,11 @@ uint8_t OsInfoPage::OnKey(uint8_t key) {
           uint8_t page_size_nibbles = 0;
           for (uint8_t i = 0; i < 250; ++i) {
             // Confirms the reset to the bootloader.
-            page_size_nibbles = \
-                voicecard_tx.EnterFirmwareUpdateMode(active_control_);
+            page_size_nibbles = voicecard_tx.EnterFirmwareUpdateMode(active_control_);
           }
           if (page_size_nibbles) {
             // Sends the firmware data in nibblized format.
-            storage.SpiCopy(
-                active_control_,
-                PSTR("/VOICE$.BIN"),
-                '1' + active_control_,
-                page_size_nibbles);
+            storage.SpiCopy(active_control_, PSTR("/VOICE$.BIN"), '1' + active_control_, page_size_nibbles);
             voicecard_tx.EnterFirmwareUpdateMode(active_control_);
           }
         }
@@ -147,11 +130,11 @@ void OsInfoPage::UpdateScreen() {
   }
   buffer[14] = kDelimiter;
   buffer = display.line_buffer(1) + 1;
-  if (found_firmware_files_ & 1) {
+  if (byteAnd(found_firmware_files_, 1)) {
     strncpy_P(&buffer[0], PSTR("upgrade"), 7);
   }
   buffer[14] = kDelimiter;
-  if (found_firmware_files_ & 2) {
+  if (byteAnd(found_firmware_files_, 2)) {
     if (valid_device) {
       strncpy_P(&buffer[15], PSTR("upgrade"), 7);
     } else {
@@ -164,10 +147,10 @@ void OsInfoPage::UpdateScreen() {
 /* static */
 void OsInfoPage::UpdateLeds() {
   leds.set_pixel(LED_8, 0xf0);
-  if (found_firmware_files_ & 1) {
+  if (byteAnd(found_firmware_files_, 1)) {
     leds.set_pixel(LED_1, 0x0f);
   }
-  if (found_firmware_files_ & 2) {
+  if (byteAnd(found_firmware_files_, 2)) {
     leds.set_pixel(LED_4, 0x0f);
   }
 }

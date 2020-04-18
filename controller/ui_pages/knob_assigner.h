@@ -26,7 +26,7 @@ namespace ambika {
 
 class KnobAssigner : public UiPage {
  public:
-  KnobAssigner() { }
+  KnobAssigner() = default;
   
   static void OnInit(PageInfo* info);
   static uint8_t OnIncrement(int8_t increment);
@@ -34,9 +34,22 @@ class KnobAssigner : public UiPage {
 
   static void UpdateScreen();
   
-  static const EventHandlers event_handlers_;
-  
- private:
+  static constexpr EventHandlers event_handlers_ PROGMEM = {
+      OnInit,
+      SetActiveControl,
+      OnIncrement,
+      OnClick,
+      OnPot,
+      OnKey,
+      nullptr,
+      OnIdle,
+      UpdateScreen,
+      UpdateLeds,
+      OnDialogClosed,
+  };
+
+
+private:
   static uint8_t active_knob_;
   static uint8_t num_parameters_;
   

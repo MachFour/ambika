@@ -38,23 +38,10 @@ uint8_t CardInfoPage::card_type_;
 /* static */
 uint8_t CardInfoPage::fs_type_;
 
-/* static */
-const EventHandlers CardInfoPage::event_handlers_ PROGMEM = {
-  OnInit,
-  SetActiveControl,
-  OnIncrement,
-  OnClick,
-  OnPot,
-  OnKey,
-  NULL,
-  OnIdle,
-  UpdateScreen,
-  UpdateLeds,
-  OnDialogClosed,
-};
 
 /* static */
 void CardInfoPage::OnInit(PageInfo* info) {
+  IGNORE_UNUSED(info);
   storage.InitFilesystem();
   free_space_ = storage.GetFreeSpace();
   uint16_t type = storage.GetType();
@@ -67,23 +54,28 @@ uint8_t CardInfoPage::OnKey(uint8_t key) {
   switch(key) {
     case SWITCH_7:
       {
-        Dialog d;
-        d.dialog_type = DIALOG_CONFIRM;
-        d.text = PSTR("format SD card?");
-        d.user_text = NULL;
+        Dialog d {
+            .dialog_type = DIALOG_CONFIRM,
+            // correct defaults for no choices
+            .num_choices = 0,
+            .first_choice = 0,
+            .text = PSTR("format SD card?"),
+            .user_text = nullptr
+        };
         ui.ShowDialogBox(0, d, 0);
-        break;
       }
       break;
     case SWITCH_8:
       ui.ShowPage(PAGE_SYSTEM_SETTINGS);
+      break;
+    default:
       break;
   }
   
   return 1;
 }
 
-static const char si_prefix[] PROGMEM = " kMGT";
+static constexpr char si_prefix[] PROGMEM = " kMGT";
 
 /* static */
 void CardInfoPage::UpdateScreen() {
@@ -107,7 +99,7 @@ void CardInfoPage::UpdateScreen() {
   uint8_t prefix = 0;
   uint32_t space = free_space_;
   while (space >= 32768) {
-    space >>= 10;
+    space >>= 10u;
     ++prefix;
   }
   UnsafeItoa<int16_t>(space, 5, &buffer[11]);
@@ -129,9 +121,10 @@ void CardInfoPage::UpdateLeds() {
 
 /* static */
 void CardInfoPage::OnDialogClosed(uint8_t dialog_id, uint8_t return_value) {
+  IGNORE_UNUSED(dialog_id);
   if (return_value) {
     storage.Mkfs();
-    OnInit(NULL);
+    OnInit(nullptr);
   }
 }
 

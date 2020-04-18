@@ -26,7 +26,7 @@ namespace ambika {
 
 class OsInfoPage : public UiPage {
  public:
-  OsInfoPage() { }
+  OsInfoPage() = default;
   
   static void OnInit(PageInfo* info);
   
@@ -35,15 +35,28 @@ class OsInfoPage : public UiPage {
   static void UpdateScreen();
   static void UpdateLeds();
 
-  static const EventHandlers event_handlers_;
+  static constexpr EventHandlers event_handlers_ PROGMEM = {
+      OnInit,
+      SetActiveControl,
+      OnIncrement,
+      OnClick,
+      OnPot,
+      OnKey,
+      nullptr,
+      OnIdle,
+      UpdateScreen,
+      UpdateLeds,
+      OnDialogClosed,
+  };
 
- private:
+
+private:
   static void PrintVersionNumber(char* buffer, uint8_t number);
-  static void ReadVoicecardVersion();
+  //static void ReadVoicecardVersion();
   static void FindFirmwareFiles();
   
-  static uint8_t voicecard_version_;
-  static uint8_t active_port_;
+  //static uint8_t voicecard_version_;
+  //static uint8_t active_port_;
   static uint8_t found_firmware_files_;
   
   DISALLOW_COPY_AND_ASSIGN(OsInfoPage);

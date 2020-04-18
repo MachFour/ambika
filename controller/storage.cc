@@ -41,7 +41,7 @@ static constexpr uint32_t kObjectTag = FourCC('o', 'b', 'j', ' ');
 
 using namespace avrlib;
 
-static const char sysex_header[] PROGMEM = {
+static constexpr char sysex_header[] PROGMEM = {
   0xf0,  // <SysEx>
   0x00, 0x21, 0x02,  // Mutable instruments manufacturer id.
   0x00, 0x04,  // Product ID for Ambika-6.
@@ -183,6 +183,11 @@ const uint8_t* Storage::object_data(const StorageLocation& location) {
       return multi.part(location.part).raw_data_readonly();
     case STORAGE_OBJECT_MULTI:
       return multi.raw_data();
+    case STORAGE_OBJECT_PROGRAM:
+      /* fall through */
+    default:
+      // TODO is this right?
+       return nullptr;
   }
 }
 
@@ -197,6 +202,11 @@ uint8_t* Storage::mutable_object_data(const StorageLocation& location) {
       return multi.mutable_part(location.part).raw_data();
     case STORAGE_OBJECT_MULTI:
       return multi.mutable_raw_data();
+    case STORAGE_OBJECT_PROGRAM:
+      /* fall through */
+    default:
+      // TODO is this right?
+      return nullptr;
   }
 }
 
@@ -305,12 +315,18 @@ void Storage::TouchObject(const StorageLocation& location) {
       break;
 
     case STORAGE_OBJECT_PART:
+      /* fall through */
     case STORAGE_OBJECT_SEQUENCE:
       multi.mutable_part(location.part).Touch();
       break;
     
     case STORAGE_OBJECT_MULTI:
       multi.Touch();
+      break;
+
+    case STORAGE_OBJECT_PROGRAM:
+      /* fall through */
+    default:
       break;
   }
 }
@@ -749,6 +765,8 @@ void Storage::SysExReceive(uint8_t byte) {
   }
   
   switch (sysex_rx_state_) {
+    default:
+      break;
     case RECEIVING_HEADER:
       if (pgm_read_byte(sysex_header + sysex_rx_bytes_received_) == byte) {
         sysex_rx_bytes_received_++;

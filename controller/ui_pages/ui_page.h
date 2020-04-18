@@ -24,7 +24,7 @@
 
 namespace ambika {
 
-enum EditMode {
+enum EditMode : uint8_t {
   EDIT_IDLE,
   EDIT_STARTED_BY_ENCODER,
   EDIT_STARTED_BY_POT,
@@ -32,8 +32,8 @@ enum EditMode {
 
 class UiPage {
  public:
-  UiPage() { }
-  
+  UiPage() = default;
+
   static void OnInit(PageInfo* info);
   static void SetActiveControl(ActiveControl active_control);
 
@@ -47,9 +47,21 @@ class UiPage {
   static void UpdateScreen();
   static void UpdateLeds();
   
-  static const EventHandlers event_handlers_;
-  
- protected:
+  static constexpr EventHandlers event_handlers_ PROGMEM = {
+      OnInit,
+      SetActiveControl,
+      OnIncrement,
+      OnClick,
+      OnPot,
+      OnKey,
+      nullptr,
+      OnIdle,
+      UpdateScreen,
+      UpdateLeds,
+      OnDialogClosed,
+  };
+
+protected:
   static EditMode edit_mode_;
   static int8_t active_control_;
   static PageInfo* info_;

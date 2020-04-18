@@ -31,7 +31,7 @@
 
 namespace ambika {
 
-static const uint16_t units_definitions[UNIT_LAST] PROGMEM = {
+static constexpr uint16_t units_definitions[UNIT_LAST] PROGMEM = {
   0,                  // UNIT_RAW_UINT8
   0,                  // UNIT_UINT8
   0,                  // UNIT_INDEX
@@ -59,8 +59,8 @@ static const uint16_t units_definitions[UNIT_LAST] PROGMEM = {
   STR_RES_THRU,       // UNIT_MIDI_OUT_MODE
 };
 
-static const char note_names[] PROGMEM = " CC# DD# E FF# GG# AA# B";
-static const char octaves[] PROGMEM = "-0123456789";
+static constexpr char note_names[] PROGMEM = " CC# DD# E FF# GG# AA# B";
+static constexpr char octaves[] PROGMEM = "-0123456789";
 
 
 uint8_t Parameter::Scale(uint8_t value_7bits) const {
@@ -117,22 +117,18 @@ uint8_t Parameter::Clamp(uint8_t value) const {
   return value;
 }
 
-uint8_t Parameter::Increment(
-    uint8_t current_value,
-    int8_t increment) const {
+uint8_t Parameter::Increment(uint8_t current_value, int8_t increment) const {
   int16_t value = current_value;
   uint8_t new_value = current_value;
   if (unit == UNIT_INT8) {
-    value = static_cast<int16_t>(static_cast<int8_t>(value));
-    value += increment;
-    if (value >= static_cast<int8_t>(min_value) &&
-        value <= static_cast<int8_t>(max_value)) {
-      new_value = static_cast<uint8_t>(value);
+    value = S16(S8(value)) + increment;
+    if (value >= S8(min_value) && value <= S8(max_value)) {
+      new_value = U8(value);
     }
   } else {
     value += increment;
     if (value >= min_value && value <= max_value) {
-      new_value = static_cast<uint8_t>(value);
+      new_value = U8(value);
     }
   }
   return new_value;
@@ -157,23 +153,23 @@ uint8_t Parameter::RandomValue() const {
 
 /* static */
 void Parameter::PrintNote(uint8_t note, char* buffer) {
+  using rs = ResourcesManager;
   uint8_t octave = 0;
   while (note >= 12) {
     ++octave;
     note -= 12;
   }
-  *buffer++ = ResourcesManager::Lookup<char, uint8_t>(
-      note_names, note << 1);
-  *buffer++ = ResourcesManager::Lookup<char, uint8_t>(
-      note_names, 1 + (note << 1));
-  *buffer++ = ResourcesManager::Lookup<char, uint8_t>(
-      octaves, octave);
+  *buffer++ = rs::Lookup<char, uint8_t>(note_names, note << 1u);
+  *buffer++ = rs::Lookup<char, uint8_t>(note_names, 1 + (note << 1u));
+  *buffer++ = rs::Lookup<char, uint8_t>(octaves, octave);
   *buffer = '\0';
 }
 
 void Parameter::PrintValue(uint8_t value, char* buffer, uint8_t width) const {
   ResourceId text = ResourcesManager::Lookup<uint16_t, uint8_t>(units_definitions, unit);
   switch (unit) {
+    default:
+      break;
     case UNIT_INDEX:
       ++value;
       break;
@@ -229,11 +225,7 @@ void Parameter::PrintName(char* buffer, uint8_t width) const {
   AlignLeft(buffer, width);
 }
 
-void Parameter::PrintObject(
-    uint8_t part,
-    uint8_t instance,
-    char* buffer,
-    uint8_t width) const {
+void Parameter::PrintObject(uint8_t part, uint8_t instance, char* buffer, uint8_t width) const {
   // Print a part number.
   if (part != 0xff) {
     *buffer++ = 'p';
@@ -254,11 +246,7 @@ void Parameter::PrintObject(
   AlignLeft(buffer, width);
 }
 
-void Parameter::Print(
-    uint8_t value,
-    char* buffer,
-    uint8_t name_width,
-    uint8_t value_width) const {
+void Parameter::Print(uint8_t value, char* buffer, uint8_t name_width, uint8_t value_width) const {
   PrintName(buffer, name_width);
   uint8_t start = name_width - 1;
   while (buffer[start] == ' ') {
@@ -270,7 +258,7 @@ void Parameter::Print(
 }
 
 
-static const char midi_cc_map[128] PROGMEM = {
+static constexpr uint8_t midi_cc_map[128] PROGMEM = {
    // 0-15
    255, 255, 255,  22, 255,  48, 255,  42,
    255,  23, 255, 255,  14,  15,   2,   3,
@@ -297,7 +285,7 @@ static const char midi_cc_map[128] PROGMEM = {
    255, 255, 255, 255, 255, 255, 255, 255
 };
 
-static const char midi_nrpn_map[256] PROGMEM = {
+static constexpr uint8_t midi_nrpn_map[256] PROGMEM = {
    // 0-15
      0,   1,   2,   3,   4,   5,   6,   7,
      8,   9,  10,  11,  12,  13,  14,  15,
@@ -347,7 +335,7 @@ static const char midi_nrpn_map[256] PROGMEM = {
 
 
 
-static const Parameter parameters[kNumParameters] PROGMEM = {
+static constexpr Parameter parameters[kNumParameters] PROGMEM = {
   // Parameters for patch editor.
   
   // Oscillators
@@ -857,7 +845,7 @@ static const Parameter parameters[kNumParameters] PROGMEM = {
     1, 0, 0xff, 0xff,
     STR_RES_LEDS, STR_RES_CARD_LEDS, STR_RES_SYSTEM },
   
-  // 71 2
+  // 72
   { PARAMETER_LEVEL_SYSTEM,
     PRM_SYSTEM_VOICECARD_SWAP_LEDS_COLORS,
     UNIT_BOOLEAN, 0, 1,
@@ -870,7 +858,13 @@ Parameter ParameterManager::cached_definition_;
 
 /* static */
 Parameter ParameterManager::dummy_parameter_ = {
-  PARAMETER_LEVEL_PART, 0, UNIT_UINT8, 0, 255, 0, 0, 0, 0, 0, 0, 0
+  PARAMETER_LEVEL_PART, 0, UNIT_UINT8,
+  0, 255,
+  0, 0, 0,
+  0,
+  0,
+  0,
+  0
 };
 
 /* static */
@@ -881,8 +875,7 @@ void ParameterManager::Init() {
 }
 
 /* static */
-const Parameter& ParameterManager::parameter(
-    uint8_t index) {
+const Parameter& ParameterManager::parameter(uint8_t index) {
   if (index == 0xfe) {
     return dummy_parameter_;
   }
@@ -906,43 +899,58 @@ uint8_t ParameterManager::AddressToParameterId(uint8_t address) {
   return ResourcesManager::Lookup<uint8_t, uint8_t>(midi_nrpn_map, address);
 }
 
+inline uint8_t get_address(const Parameter& p, uint8_t instance_index) {
+  return p.offset + p.stride * instance_index;
+}
+
 /* static */
-void ParameterManager::SetValue(
-    const Parameter& parameter,
-    uint8_t part,
-    uint8_t instance_index,
-    uint8_t value,
-    uint8_t user_initiated) {
-  uint8_t address = parameter.offset + parameter.stride * instance_index;
-  if (parameter.level <= PARAMETER_LEVEL_PART) {
-    multi.mutable_part(part).SetValue(address, value, user_initiated);
-  } else if (parameter.level == PARAMETER_LEVEL_MULTI) {
-    multi.SetValue(address, value);
-  } else if (parameter.level == PARAMETER_LEVEL_SYSTEM) {
-    auto bytes = reinterpret_cast<uint8_t*>(system_settings.mutable_data());
-    bytes[address] = value;
-  } else {
-    auto bytes = reinterpret_cast<uint8_t*>(ui.mutable_state());
-    bytes[address] = value;
+void ParameterManager::SetValue(const Parameter& p,
+      uint8_t part, uint8_t instance_index, uint8_t value, uint8_t user_initiated) {
+  auto address = get_address(p, instance_index);
+  switch(p.level) {
+    case PARAMETER_LEVEL_PATCH:
+    case PARAMETER_LEVEL_PART:
+      multi.mutable_part(part).SetValue(address, value, user_initiated);
+      break;
+    case PARAMETER_LEVEL_MULTI:
+      multi.SetValue(address, value);
+      break;
+    case PARAMETER_LEVEL_SYSTEM:
+      {
+        auto bytes = reinterpret_cast<uint8_t*>(system_settings.mutable_data());
+        bytes[address] = value;
+      }
+      break;
+    default:
+      {
+        auto bytes = reinterpret_cast<uint8_t*>(ui.mutable_state());
+        bytes[address] = value;
+      }
+      break;
   }
 }
 
 /* static */
-uint8_t ParameterManager::GetValue(
-    const Parameter& parameter,
-    uint8_t part,
-    uint8_t instance_index) {
-  uint8_t address = parameter.offset + parameter.stride * instance_index;
+uint8_t ParameterManager::GetValue(const Parameter& p, uint8_t part, uint8_t instance_index) {
+  auto address = get_address(p, instance_index);
   uint8_t value = 0;
-  if (parameter.level <= PARAMETER_LEVEL_PART) {
-    value = multi.part(part).GetValue(address);
-  } else if (parameter.level == PARAMETER_LEVEL_MULTI) {
-    value = multi.GetValue(address);
-  } else if (parameter.level == PARAMETER_LEVEL_SYSTEM) {
-    auto bytes = reinterpret_cast<uint8_t*>(system_settings.mutable_data());
-    value = bytes[address];
-  } else {
-    return ui.GetValue(address);
+  switch (p.level) {
+    case PARAMETER_LEVEL_PATCH:
+    case PARAMETER_LEVEL_PART:
+      value = multi.part(part).GetValue(address);
+      break;
+    case PARAMETER_LEVEL_MULTI:
+      value = multi.GetValue(address);
+      break;
+    case PARAMETER_LEVEL_SYSTEM:
+      {
+        auto bytes = reinterpret_cast<uint8_t *>(system_settings.mutable_data());
+        value = bytes[address];
+      }
+      break;
+    default:
+      value = ui.GetValue(address);
+      break;
   }
   return value;
 }

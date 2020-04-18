@@ -34,10 +34,9 @@ using avrlib::PortD;
 
 namespace ambika {
 
-static const uint8_t kDelimiter = 0x07;
+static constexpr uint8_t kDelimiter = 0x07;
 
-typedef Hd44780Lcd<
-    LcdRsLine, LcdEnableLine, LcdDataBus, kLcdWidth, kLcdHeight> Lcd;
+typedef Hd44780Lcd<LcdRsLine, LcdEnableLine, LcdDataBus, kLcdWidth, kLcdHeight> Lcd;
 
 extern Lcd lcd;
 extern BufferedDisplay<Lcd> display;

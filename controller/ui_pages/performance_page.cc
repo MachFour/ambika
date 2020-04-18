@@ -24,24 +24,8 @@
 #include "controller/display.h"
 #include "controller/leds.h"
 #include "controller/multi.h"
-#include "controller/ui_pages/parameter_editor.h"
 
 namespace ambika {
-
-/* static */
-const EventHandlers PerformancePage::event_handlers_ PROGMEM = {
-  ParameterEditor::OnInit,
-  ParameterEditor::SetActiveControl,
-  OnIncrement,
-  OnClick,
-  ParameterEditor::OnPot,
-  OnKey,
-  NULL,
-  ParameterEditor::OnIdle,
-  ParameterEditor::UpdateScreen,
-  UpdateLeds,
-  OnDialogClosed,
-};
 
 /* static */
 uint8_t PerformancePage::note_ = 60;
@@ -74,11 +58,6 @@ uint8_t PerformancePage::OnClick() {
     note_active_ = 0;
   }
   return 1;
-}
-
-/* static */
-uint8_t PerformancePage::OnKey(uint8_t key) {
-  return ParameterEditor::OnKey(key);
 }
 
 /* static */

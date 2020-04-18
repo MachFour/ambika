@@ -153,7 +153,7 @@ struct PageInfo {
 
 class Ui {
  public:
-  Ui() { }
+  Ui() = default;
   
   static void Init();
   static void Poll();

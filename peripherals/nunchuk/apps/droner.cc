@@ -48,15 +48,15 @@ uint8_t Droner::note_changed_;
 uint8_t Droner::inhibit_;
 
 /* static */
-const AppInfo Droner::app_info_ PROGMEM = {
+constexpr AppInfo Droner::app_info_ PROGMEM = {
   &OnInit, // void (*OnInit)();
   &OnPress, // void (*OnPress)();
   &OnRelease, // void (*OnRelease)();
   &UpdateJoystick, // void (*UpdateJoystick)(uint8_t x, uint8_t y);
   &UpdateJoystickIntegrated, // void (*UpdateJoystickIntegrated)(int32_t x, int32_t y);
-  NULL, // void (*UpdateJoystickPolar)(uint8_t radius, uint8_t octant);
+  nullptr, // void (*UpdateJoystickPolar)(uint8_t radius, uint8_t octant);
   &UpdateAccelerometer, // void (*UpdateAccelerometer)(uint8_t, uint8_t, uint8_t);
-  NULL, // void (*OnShake)();
+  nullptr, // void (*OnShake)();
   &PlayLogotone // void (*PlayLogotone)();
 };
 

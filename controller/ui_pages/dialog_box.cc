@@ -30,21 +30,6 @@ namespace ambika {
 uint8_t DialogBox::choice_;
 
 /* static */
-const EventHandlers DialogBox::event_handlers_ PROGMEM = {
-  OnInit,
-  SetActiveControl,
-  OnIncrement,
-  OnClick,
-  OnPot,
-  OnKey,
-  NULL,
-  OnIdle,
-  UpdateScreen,
-  UpdateLeds,
-  OnDialogClosed,
-};
-
-/* static */
 void DialogBox::OnInit(PageInfo* info) {
   choice_ = 0;
 }

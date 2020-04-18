@@ -36,15 +36,15 @@ uint8_t Drummer::inhibit_;
 uint8_t Drummer::active_instrument_;
 
 /* static */
-const AppInfo Drummer::app_info_ PROGMEM = {
+constexpr AppInfo Drummer::app_info_ PROGMEM = {
   &OnInit, // void (*OnInit)();
   &OnPress, // void (*OnPress)();
   &OnRelease, // void (*OnRelease)();
-  NULL, // void (*UpdateJoystick)(uint8_t x, uint8_t y);
-  NULL, // void (*UpdateJoystickIntegrated)(int32_t x, int32_t y);
+  nullptr, // void (*UpdateJoystick)(uint8_t x, uint8_t y);
+  nullptr, // void (*UpdateJoystickIntegrated)(int32_t x, int32_t y);
   &UpdateJoystickPolar, // void (*UpdateJoystickPolar)(uint8_t radius, uint8_t octant);
   &UpdateAccelerometer, // void (*UpdateAccelerometer)(uint8_t, uint8_t, uint8_t);
-  NULL, // void (*OnShake)();
+  nullptr, // void (*OnShake)();
   &PlayLogotone // void (*PlayLogotone)();
 };
 
@@ -72,7 +72,7 @@ void Drummer::UpdateJoystickPolar(uint8_t r, uint8_t octant) {
   }
 }
 
-static const char octant_to_note[] PROGMEM = {
+static constexpr char octant_to_note[] PROGMEM = {
   36, 38,  // Kick, snare
   43, 61,  // Tom 2, Bongo
   45, 60,  // Tom 3, Bongo

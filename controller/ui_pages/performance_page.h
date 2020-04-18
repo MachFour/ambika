@@ -21,22 +21,35 @@
 #define CONTROLLER_UI_PAGES_PERFORMANCE_PAGE_H_
 
 #include "controller/ui_pages/ui_page.h"
+#include "controller/ui_pages/parameter_editor.h"
 
 namespace ambika {
 
 class PerformancePage : public UiPage {
  public:
-  PerformancePage() { }
+  PerformancePage() = default;
   
   static uint8_t OnIncrement(int8_t increment);
   static uint8_t OnClick();
-  static uint8_t OnKey(uint8_t key);
-  
+
   static void UpdateLeds();
   
-  static const EventHandlers event_handlers_;
-  
- private:
+  static constexpr EventHandlers event_handlers_ PROGMEM = {
+      ParameterEditor::OnInit,
+      ParameterEditor::SetActiveControl,
+      OnIncrement,
+      OnClick,
+      ParameterEditor::OnPot,
+      ParameterEditor::OnKey,
+      nullptr,
+      ParameterEditor::OnIdle,
+      ParameterEditor::UpdateScreen,
+      UpdateLeds,
+      OnDialogClosed,
+  };
+
+
+private:
   static uint8_t note_;
   static uint8_t note_active_;
   

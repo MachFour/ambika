@@ -30,23 +30,10 @@
 
 namespace ambika {
 
-/* static */
-const EventHandlers VersionManager::event_handlers_ PROGMEM = {
-  OnInit,
-  SetActiveControl,
-  OnIncrement,
-  OnClick,
-  OnPot,
-  OnKey,
-  NULL,
-  OnIdle,
-  UpdateScreen,
-  UpdateLeds,
-  OnDialogClosed,
-};
 
 /* static */
 void VersionManager::OnInit(PageInfo* info) {
+  IGNORE_UNUSED(info);
   storage.InitFilesystem();
   storage.Snapshot(Library::location());
   storage.PreviousVersion(Library::location());
@@ -55,6 +42,8 @@ void VersionManager::OnInit(PageInfo* info) {
 /* static */
 uint8_t VersionManager::OnKey(uint8_t key) {
   switch(key) {
+    default:
+      break;
     case SWITCH_1:
       storage.Copy(Library::location());
       ui.ShowPreviousPage();

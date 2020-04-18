@@ -53,15 +53,15 @@ uint8_t CycloSequencer::retrigger_;
 uint8_t CycloSequencer::center_cut_enabled_;
 
 /* static */
-const AppInfo CycloSequencer::app_info_ PROGMEM = {
+constexpr AppInfo CycloSequencer::app_info_ PROGMEM = {
   &OnInit, // void (*OnInit)();
   &OnPress, // void (*OnPress)();
   &OnRelease, // void (*OnRelease)();
-  NULL, // void (*UpdateJoystick)(uint8_t x, uint8_t y);
+  nullptr, // void (*UpdateJoystick)(uint8_t x, uint8_t y);
   &UpdateJoystickIntegrated, // void (*UpdateJoystickIntegrated)(int32_t x, int32_t y);
   &UpdateJoystickPolar, // void (*UpdateJoystickPolar)(uint8_t, uint8_t);
   &UpdateAccelerometer, // void (*UpdateAccelerometer)(uint8_t, uint8_t, uint8_t);
-  NULL, // void (*OnShake)();
+  nullptr, // void (*OnShake)();
   &PlayLogotone // void (*PlayLogotone)();
 };
 

@@ -28,27 +28,30 @@ namespace ambika {
 /* static */
 SystemSettingsData SystemSettings::data_;
 
-static const SystemSettingsData init_settings PROGMEM = {
-  0, 0, 1, 0, 1, 1, 1
+static constexpr SystemSettingsData init_settings PROGMEM = {
+    .midi_in_mask = 0,
+    .midi_out_mode = MIDI_OUT_THRU,
+    .show_help = 1,
+    .snap = 0,
+    .autobackup = 1,
+    .voicecard_leds = 1,
+    .swap_leds_colors = 1,
+    .padding = {0},
+    .checksum = 4 // .checksum is the sum of all previous data values
 };
+
+static constexpr uint8_t settingsSize = sizeof(SystemSettingsData);
 
 /* static */
 void SystemSettings::Save() {
-  data_.checksum = Storage::Checksum(&data_, sizeof(SystemSettingsData) - 1);
-  eeprom_write_block(
-      &data_,
-      (void*)(E2END - sizeof(SystemSettingsData)),
-      sizeof(SystemSettingsData));
+  data_.checksum = Storage::Checksum(&data_, settingsSize - 1);
+  eeprom_write_block(&data_, reinterpret_cast<void*>(E2END - settingsSize), settingsSize);
 }
 
 /* static */
 void SystemSettings::Init(bool force_reset) {
-  eeprom_read_block(
-      &data_,
-      (void*)(E2END - sizeof(SystemSettingsData)),
-      sizeof(SystemSettingsData));
-  if (data_.checksum != Storage::Checksum(
-          &data_, sizeof(SystemSettingsData) - 1) || force_reset) {
+  eeprom_read_block(&data_, reinterpret_cast<void*>(E2END - settingsSize), settingsSize);
+  if (data_.checksum != Storage::Checksum(&data_, settingsSize - 1) || force_reset) {
     ResourcesManager::Load(&init_settings, 0, &data_);
   }
 }

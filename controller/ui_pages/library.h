@@ -33,10 +33,10 @@ enum LibraryAction {
 
 class Library : public UiPage {
  public:
-  Library() { }
+  Library() = default;
   
   static void OnInit(PageInfo* info);
-  static void SetActiveControl(ActiveControl active_control);
+  //static void SetActiveControl(ActiveControl active_control);
 
   static uint8_t OnIncrement(int8_t increment);
   static uint8_t OnClick();
@@ -45,8 +45,21 @@ class Library : public UiPage {
   static void UpdateScreen();
   static void UpdateLeds();
   
-  static const EventHandlers event_handlers_;
-  
+  static constexpr EventHandlers event_handlers_ PROGMEM = {
+      OnInit,
+      UiPage::SetActiveControl,
+      OnIncrement,
+      OnClick,
+      UiPage::OnPot,
+      OnKey,
+      nullptr,
+      OnIdle,
+      UpdateScreen,
+      UpdateLeds,
+      OnDialogClosed,
+  };
+
+
   static void OnDialogClosed(uint8_t dialog_id, uint8_t return_value);
   static void SaveLocation() {
     loaded_objects_indices_[location_.index()] = location_.bank_slot();

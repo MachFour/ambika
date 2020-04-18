@@ -27,7 +27,7 @@
 
 namespace ambika {
 
-enum Unit {
+enum Unit : uint8_t {
   UNIT_RAW_UINT8,
   UNIT_UINT8,
   UNIT_INDEX,
@@ -57,7 +57,7 @@ enum Unit {
   UNIT_LAST
 };
 
-enum ParameterLevel {
+enum ParameterLevel : uint8_t {
   PARAMETER_LEVEL_PATCH,
   PARAMETER_LEVEL_PART,
   PARAMETER_LEVEL_MULTI,
@@ -67,14 +67,14 @@ enum ParameterLevel {
 
 struct Parameter {
   // Whether this parameter belongs to a patch, a part, or the global level.
-  uint8_t level;
+  ParameterLevel level;
   
   // At which offset in the datastructure this parameter resides
   uint8_t offset;
   
   // Unit of this parameter. This is used to invoke a specific format function
   // for displaying the parameter value on screen.
-  uint8_t unit;
+  Unit unit;
   
   // Minimum and maximum value of this parameter.
   uint8_t min_value;
@@ -103,16 +103,8 @@ struct Parameter {
 
   void PrintValue(uint8_t value, char* buffer, uint8_t width) const;
   void PrintName(char* buffer, uint8_t width) const;
-  void PrintObject(
-      uint8_t part,
-      uint8_t instance,
-      char* buffer,
-      uint8_t width) const;
-  void Print(
-      uint8_t value,
-      char* buffer,
-      uint8_t name_width,
-      uint8_t value_width) const;
+  void PrintObject(uint8_t part, uint8_t instance, char* buffer, uint8_t width) const;
+  void Print(uint8_t value, char* buffer, uint8_t name_width, uint8_t value_width) const;
   
   static void PrintNote(uint8_t note, char* buffer);
 };
@@ -123,7 +115,7 @@ const uint8_t kNumParameters = 73;
 // for each specific object type.
 class ParameterManager {
  public:
-  ParameterManager() { }
+  ParameterManager() = default;
 
   static void Init();
   
@@ -132,68 +124,39 @@ class ParameterManager {
   static uint8_t ControlChangeToParameterId(uint8_t cc);
   static uint8_t AddressToParameterId(uint8_t address);
   
-  static void SetValue(
-      const Parameter& parameter,
-      uint8_t part,
-      uint8_t instance_index,
-      uint8_t value,
-      uint8_t user_initiated);
+  static void SetValue(const Parameter& p,
+      uint8_t part, uint8_t instance_index, uint8_t value, uint8_t user_initiated);
 
-  static uint8_t GetValue(
-      const Parameter& parameter,
-      uint8_t part,
-      uint8_t instance_index);
+  static uint8_t GetValue(const Parameter& p,
+      uint8_t part, uint8_t instance_index);
 
-  static void Increment(
-      const Parameter& parameter,
-      uint8_t part,
-      uint8_t instance_index,
-      int8_t increment) {
-    uint8_t value = GetValue(parameter, part, instance_index);
-    value = parameter.Increment(value, increment);
-    SetValue(parameter, part, instance_index, value, 1);
+  static void Increment(const Parameter& p, uint8_t part, uint8_t instance_index, int8_t increment) {
+
+    uint8_t value = GetValue(p, part, instance_index);
+    value = p.Increment(value, increment);
+    SetValue(p, part, instance_index, value, 1);
   }
   
-  static void Increment(
-      uint8_t parameter_index,
-      uint8_t part,
-      uint8_t instance_index,
-      int8_t increment) {
+  static void Increment(uint8_t parameter_index, uint8_t part, uint8_t instance_index, int8_t increment) {
     const Parameter& p = parameter(parameter_index);
     Increment(p, part, instance_index, increment);
   }
   
-  static void Scale(
-      const Parameter& parameter,
-      uint8_t part,
-      uint8_t instance_index,
-      uint8_t value) {
-    SetValue(parameter, part, instance_index, parameter.Scale(value), 1);
+  static void Scale(const Parameter& p, uint8_t part, uint8_t instance_index, uint8_t value) {
+    SetValue(p, part, instance_index, p.Scale(value), 1);
   }
 
-  static void Scale(
-      uint8_t parameter_index,
-      uint8_t part,
-      uint8_t instance_index,
-      uint8_t value) {
+  static void Scale(uint8_t parameter_index, uint8_t part, uint8_t instance_index, uint8_t value) {
     const Parameter& p = parameter(parameter_index);
     Scale(p, part, instance_index, value);
   }
   
-  static uint8_t is_snapped(
-      const Parameter& parameter,
-      uint8_t part,
-      uint8_t instance_index,
-      uint8_t value) {
-    uint8_t current_value = GetValue(parameter, part, instance_index);
-    return parameter.is_snapped(current_value, value);
+  static uint8_t is_snapped(const Parameter& p, uint8_t part, uint8_t instance_index, uint8_t value) {
+    uint8_t current_value = GetValue(p, part, instance_index);
+    return p.is_snapped(current_value, value);
   }
 
-  static uint8_t is_snapped(
-      uint8_t parameter_index,
-      uint8_t part,
-      uint8_t instance_index,
-      uint8_t value) {
+  static uint8_t is_snapped(uint8_t parameter_index, uint8_t part, uint8_t instance_index, uint8_t value) {
     const Parameter& p = parameter(parameter_index);
     return is_snapped(p, part, instance_index, value);
   }

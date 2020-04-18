@@ -71,10 +71,7 @@ class MidiDispatcher : public midi::MidiDevice {
   }
 
   // Handled.
-  static inline void ControlChange(
-      uint8_t channel,
-      uint8_t controller,
-      uint8_t value) {
+  static inline void ControlChange(uint8_t channel, uint8_t controller, uint8_t value) {
     if (controller == midi::kBankMsb) {
       current_bank_ = value;
     } else {
@@ -176,14 +173,12 @@ class MidiDispatcher : public midi::MidiDevice {
   }
   
   static uint8_t CheckChannel(uint8_t channel) {
+    IGNORE_UNUSED(channel);
     return 1;
   }
   
-  static void RawMidiData(
-      uint8_t status,
-      uint8_t* data,
-      uint8_t data_size,
-      uint8_t accepted_channel) {
+  static void RawMidiData(uint8_t status, uint8_t* data, uint8_t data_size, uint8_t accepted_channel) {
+    IGNORE_UNUSED(accepted_channel);
     if (mode() == MIDI_OUT_FULL) {
       Send(status, data, data_size);
     } else if (mode() == MIDI_OUT_CHAIN) {
@@ -296,7 +291,7 @@ class MidiDispatcher : public midi::MidiDevice {
   static uint8_t mode() { return system_settings.data().midi_out_mode; }
   static void ProcessSysEx(uint8_t byte) {
     if (mode() == MIDI_OUT_FULL || mode() == MIDI_OUT_CHAIN) {
-      Send(byte, NULL, 0);
+      Send(byte, nullptr, 0);
     }
     Storage::SysExReceive(byte);
   }

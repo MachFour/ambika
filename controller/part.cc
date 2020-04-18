@@ -36,10 +36,12 @@ static const uint16_t lfo_phase_increment_per_clock_tick[15] PROGMEM = {
   4096, 5461, 8192, 10923, 16384, 21845, 32768, 65536
 };
 
-static const Patch init_patch PROGMEM { {
+static const Patch::Parameters init_patch_params PROGMEM {
   // Oscillators
-  .osc[0] = {WAVEFORM_SAW, 0, 0, 0},
-  .osc[1] = {WAVEFORM_SQUARE, 32, -12, 12},
+  .osc = {
+    {WAVEFORM_SAW, 0, 0, 0},
+    {WAVEFORM_SQUARE, 32, -12, 12}
+  },
   // Mixer
   .mix_balance = 32,
   .mix_op = OP_SUM,
@@ -50,43 +52,51 @@ static const Patch init_patch PROGMEM { {
   .mix_fuzz = 0,
   .mix_crush = 0,
   // Filter
-  .filter[0] = {96, 0, 0},
-  .filter[1] = {0, 0, 0},
+  .filter = {
+    {96, 0, 0},
+    {0, 0, 0}
+  },
   .filter_env = 24,
   .filter_lfo = 0,
   // ADSR
-  .env_lfo[0] = {0, 40, 20,  60, LFO_WAVEFORM_TRIANGLE, kNumSyncedLfoRates + 24, 0, 0},
-  .env_lfo[1] = {0, 40, 0,   40, LFO_WAVEFORM_TRIANGLE, kNumSyncedLfoRates + 32, 0, 0},
-  .env_lfo[2] = {0, 40, 100, 40, LFO_WAVEFORM_TRIANGLE, kNumSyncedLfoRates + 48, 0, 0},
+  .env_lfo = {
+    {0, 40, 20,  60, LFO_WAVEFORM_TRIANGLE, kNumSyncedLfoRates + 24, 0, 0},
+    {0, 40, 0,   40, LFO_WAVEFORM_TRIANGLE, kNumSyncedLfoRates + 32, 0, 0},
+    {0, 40, 100, 40, LFO_WAVEFORM_TRIANGLE, kNumSyncedLfoRates + 48, 0, 0}
+  },
 
   .voice_lfo_shape = LFO_WAVEFORM_TRIANGLE,
   .voice_lfo_rate = 72,
   // Routing
-  .modulation[0] = {MOD_SRC_ENV_1, MOD_DST_PARAMETER_1, 0},
-  .modulation[1] = {MOD_SRC_ENV_1, MOD_DST_PARAMETER_2, 0},
-  .modulation[2] = {MOD_SRC_LFO_1, MOD_DST_OSC_1, 0},
-  .modulation[3] = {MOD_SRC_LFO_1, MOD_DST_OSC_2, 0},
-  .modulation[4] = {MOD_SRC_LFO_2, MOD_DST_PARAMETER_1, 0},
-  .modulation[5] = {MOD_SRC_LFO_2, MOD_DST_PARAMETER_2, 0},
-  .modulation[6] = {MOD_SRC_LFO_3, MOD_DST_MIX_BALANCE, 0},
-  .modulation[7] = {MOD_SRC_LFO_4, MOD_DST_FILTER_CUTOFF, 0},
-  .modulation[8] = {MOD_SRC_SEQ_1, MOD_DST_FILTER_CUTOFF, 0},
-  .modulation[9] = {MOD_SRC_SEQ_2, MOD_DST_MIX_BALANCE, 0},
+  .modulation = {
+    {MOD_SRC_ENV_1, MOD_DST_PARAMETER_1, 0},
+    {MOD_SRC_ENV_1, MOD_DST_PARAMETER_2, 0},
+    {MOD_SRC_LFO_1, MOD_DST_OSC_1, 0},
+    {MOD_SRC_LFO_1, MOD_DST_OSC_2, 0},
+    {MOD_SRC_LFO_2, MOD_DST_PARAMETER_1, 0},
+    {MOD_SRC_LFO_2, MOD_DST_PARAMETER_2, 0},
+    {MOD_SRC_LFO_3, MOD_DST_MIX_BALANCE, 0},
+    {MOD_SRC_LFO_4, MOD_DST_FILTER_CUTOFF, 0},
+    {MOD_SRC_SEQ_1, MOD_DST_FILTER_CUTOFF, 0},
+    {MOD_SRC_SEQ_2, MOD_DST_MIX_BALANCE, 0},
 
-  .modulation[10] = {MOD_SRC_ENV_3, MOD_DST_VCA, 63},
-  .modulation[11] = {MOD_SRC_VELOCITY, MOD_DST_VCA, 16},
-  .modulation[12] = {MOD_SRC_PITCH_BEND, MOD_DST_OSC_1_2_COARSE, 32},
-  .modulation[13] = {MOD_SRC_LFO_4, MOD_DST_OSC_1_2_COARSE, 16},
+    {MOD_SRC_ENV_3, MOD_DST_VCA, 63},
+    {MOD_SRC_VELOCITY, MOD_DST_VCA, 16},
+    {MOD_SRC_PITCH_BEND, MOD_DST_OSC_1_2_COARSE, 32},
+    {MOD_SRC_LFO_4, MOD_DST_OSC_1_2_COARSE, 16}
+  },
   
-  .modifier[0] = {MOD_SRC_LFO_1, MOD_SRC_LFO_2, 0},
-  .modifier[1] = {MOD_SRC_LFO_2, MOD_SRC_LFO_3, 0},
-  .modifier[2] = {MOD_SRC_LFO_3, MOD_SRC_SEQ_1, 0},
-  .modifier[3] = {MOD_SRC_SEQ_1, MOD_SRC_SEQ_2, 0},
+  .modifier = {
+    {MOD_SRC_LFO_1, MOD_SRC_LFO_2, MODIFIER_NONE},
+    {MOD_SRC_LFO_2, MOD_SRC_LFO_3, MODIFIER_NONE},
+    {MOD_SRC_LFO_3, MOD_SRC_SEQ_1, MODIFIER_NONE},
+    {MOD_SRC_SEQ_1, MOD_SRC_SEQ_2, MODIFIER_NONE}
+  },
 
   .padding = {0, 0, 0, 0, 0, 0, 0, 0}
-}};
+};
 
-static const PartData init_part PROGMEM {{
+static const PartData::Parameters init_part_params PROGMEM {
   .volume = 120,
   .octave = 0,
   .tuning = 0,
@@ -130,7 +140,7 @@ static const PartData init_part PROGMEM {{
       48u        , 100u
   },
   .padding = {0, 0, 0, 0}
-}};
+};
 
 void Part::Touch() {
   TouchClock();
@@ -172,7 +182,9 @@ void Part::Init() {
 
 void Part::InitPatch(InitializationMode mode) {
   if (mode == INITIALIZATION_DEFAULT) {
-    ResourcesManager::Load(&init_patch, 0, &patch_);
+    Patch::Parameters p;
+    ResourcesManager::Load(&init_patch_params, 0, &p);
+    patch_ = Patch(p);
   } else {
     RandomizeRange(0, sizeof(Patch));
   }
@@ -182,7 +194,9 @@ void Part::InitPatch(InitializationMode mode) {
 void Part::InitSettings(InitializationMode mode) {
   InitPatch(mode);
   if (mode == INITIALIZATION_DEFAULT) {
-    ResourcesManager::Load(&init_part, 0, &data_);
+    PartData::Parameters p;
+    ResourcesManager::Load(&init_part_params, 0, &p);
+    data_ = PartData(p);
   } else {
     RandomizeRange(PRM_PART_VOLUME, sizeof(PartData));
   }
@@ -191,10 +205,12 @@ void Part::InitSettings(InitializationMode mode) {
 
 void Part::InitSequence(InitializationMode mode) {
   if (mode == INITIALIZATION_DEFAULT) {
-    memcpy_P(raw_sequence_data(), init_part.sequence_data_readonly(), PartData::sequence_data_size);
+    // see comments to PartData::sequence_data_size and PartData::sequence_data()
+    // for why arp_direction is the start
+    memcpy_P(raw_sequence_data(), &init_part_params.arp_direction, PartData::sequence_data_size);
   } else {
     // TODO this is really bad
-    RandomizeRange(PRM_PART_VOLUME + 8, PartData::sequence_data_size);
+    RandomizeRange(PRM_PART_ARP_DIRECTION, PartData::sequence_data_size);
   }
 }
 
@@ -385,6 +401,7 @@ void Part::ControlChange(uint8_t controller, uint8_t value) {
       break;
     case midi::kDataEntryLsb:
       value |= data_entry_msb_;
+      // fall through
     case midi::kDataIncrement:
     case midi::kDataDecrement:
       {
@@ -550,13 +567,14 @@ void Part::ResetAllControllers() {
 }
 
 void Part::MonoModeOn(uint8_t num_channels) {
+  IGNORE_UNUSED(num_channels);
   data_.polyphony_mode() = MONO;
-  TouchVoiceAllocation();
+  //TouchVoiceAllocation();
 }
 
 void Part::PolyModeOn() {
   data_.polyphony_mode() = POLY;
-  TouchVoiceAllocation();
+  //TouchVoiceAllocation();
 }
 
 void Part::Reset() {

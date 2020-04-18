@@ -26,7 +26,7 @@
 
 namespace ambika {
 
-enum MidiOutMode {
+enum MidiOutMode : uint8_t {
   MIDI_OUT_THRU,
   MIDI_OUT_SEQUENCER,
   MIDI_OUT_CONTROLLER,
@@ -36,7 +36,7 @@ enum MidiOutMode {
 
 struct SystemSettingsData {
   uint8_t midi_in_mask;
-  uint8_t midi_out_mode;
+  MidiOutMode midi_out_mode;
   uint8_t show_help;
   uint8_t snap;
   uint8_t autobackup;
@@ -48,7 +48,7 @@ struct SystemSettingsData {
 
 class SystemSettings {
  public:
-  SystemSettings() { }
+  SystemSettings() = default;
   
   static void Save();
   static void Init(bool force_reset);
@@ -57,16 +57,16 @@ class SystemSettings {
   static inline const SystemSettingsData& data() { return data_; }
   
   static inline uint8_t rx_sysex() {
-    return !(data_.midi_in_mask & 1);
+    return !byteAnd(data_.midi_in_mask, 1);
   }
   static inline uint8_t rx_program_change() {
-    return !(data_.midi_in_mask & 2);
+    return !byteAnd(data_.midi_in_mask, 2);
   }
   static inline uint8_t rx_nrpn() {
-    return !(data_.midi_in_mask & 4);
+    return !byteAnd(data_.midi_in_mask, 4);
   }
   static inline uint8_t rx_cc() {
-    return !(data_.midi_in_mask & 8);
+    return !byteAnd(data_.midi_in_mask, 8);
   }
   
  private:
@@ -75,7 +75,7 @@ class SystemSettings {
   DISALLOW_COPY_AND_ASSIGN(SystemSettings);
 };
 
-enum SystemParameter {
+enum SystemParameter : uint8_t {
   PRM_SYSTEM_MIDI_IN_MASK,
   PRM_SYSTEM_MIDI_OUT_MODE,
   PRM_SYSTEM_SHOW_HELP,

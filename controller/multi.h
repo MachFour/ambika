@@ -128,6 +128,7 @@ class Multi {
     }
   }
   static void NoteOff(uint8_t channel, uint8_t note, uint8_t velocity) {
+    IGNORE_UNUSED(velocity);
     for (uint8_t i = 0; i < kNumParts; ++i) {
       if (data_.part_mapping_[i].accept_channel_note(channel, note)) {
         parts_[i].NoteOff(note);

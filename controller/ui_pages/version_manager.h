@@ -26,7 +26,7 @@ namespace ambika {
 
 class VersionManager : public UiPage {
  public:
-  VersionManager() { }
+  VersionManager() = default;
   
   static void OnInit(PageInfo* info);
   
@@ -34,7 +34,19 @@ class VersionManager : public UiPage {
   static void UpdateScreen();
   static void UpdateLeds();
 
-  static const EventHandlers event_handlers_;
+  static constexpr EventHandlers event_handlers_ PROGMEM = {
+      OnInit,
+      SetActiveControl,
+      OnIncrement,
+      OnClick,
+      OnPot,
+      OnKey,
+      nullptr,
+      OnIdle,
+      UpdateScreen,
+      UpdateLeds,
+      OnDialogClosed,
+  };
 
  private:
   DISALLOW_COPY_AND_ASSIGN(VersionManager);

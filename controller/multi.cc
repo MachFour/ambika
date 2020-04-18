@@ -39,7 +39,7 @@ uint16_t Multi::tick_duration_table_[kNumStepsInGroovePattern];
 uint8_t Multi::flags_;
 /* </static> */
 
-static const MultiData init_settings PROGMEM = {
+static constexpr MultiData init_settings PROGMEM = {
   // Parts mappings.
   1, 0, 127, 0x15,
   2, 0, 127, 0x2a,

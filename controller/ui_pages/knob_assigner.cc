@@ -28,32 +28,19 @@
 
 namespace ambika {
 
-enum Controls {
+/*
+enum Controls : uint8_t {
   CONTROL_KNOB,
   CONTROL_PART,
   CONTROL_PARAMETER,
 };
+*/
 
 /* static */
 uint8_t KnobAssigner::active_knob_;
 
 /* static */
 uint8_t KnobAssigner::num_parameters_;
-
-/* static */
-const EventHandlers KnobAssigner::event_handlers_ PROGMEM = {
-  OnInit,
-  SetActiveControl,
-  OnIncrement,
-  OnClick,
-  OnPot,
-  OnKey,
-  NULL,
-  OnIdle,
-  UpdateScreen,
-  UpdateLeds,
-  OnDialogClosed,
-};
 
 /* static */
 void KnobAssigner::OnInit(PageInfo* info) {

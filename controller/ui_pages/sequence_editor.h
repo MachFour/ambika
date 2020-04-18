@@ -28,7 +28,7 @@ struct PartData;
 
 class SequenceEditor : public UiPage {
  public:
-  SequenceEditor() { }
+  SequenceEditor() = default;
   
   static void OnInit(PageInfo* info);
   static void SetActiveControl(ActiveControl active_control);
@@ -40,9 +40,22 @@ class SequenceEditor : public UiPage {
   
   static void UpdateScreen();
   
-  static const EventHandlers event_handlers_;
-  
- private:
+  static constexpr EventHandlers event_handlers_ PROGMEM = {
+      OnInit,
+      SetActiveControl,
+      OnIncrement,
+      OnClick,
+      OnPot,
+      OnKey,
+      OnNote,
+      OnIdle,
+      UpdateScreen,
+      UpdateLeds,
+      OnDialogClosed,
+  };
+
+
+private:
   static uint8_t actual_step(uint8_t index, uint8_t sequence);
    
   static PartData& mutable_part_data();

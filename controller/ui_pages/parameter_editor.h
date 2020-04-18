@@ -30,7 +30,7 @@ class ParameterEditor : public UiPage {
  public:
   typedef DataTypeForSize<kNumParametersPerPage>::Type SnapMask;
 
-  ParameterEditor() { }
+  ParameterEditor() = default;
   
   static void OnInit(PageInfo* info);
   static void SetActiveControl(ActiveControl active_control);
@@ -47,9 +47,22 @@ class ParameterEditor : public UiPage {
   static uint8_t part_index(uint8_t control_id);
   static uint8_t instance_index(uint8_t control_id);
   
-  static const EventHandlers event_handlers_;
-  
- private:
+  static constexpr EventHandlers event_handlers_ PROGMEM = {
+      OnInit,
+      SetActiveControl,
+      OnIncrement,
+      OnClick,
+      OnPot,
+      OnKey,
+      nullptr,
+      OnIdle,
+      UpdateScreen,
+      UpdateLeds,
+      OnDialogClosed,
+  };
+
+
+private:
   static SnapMask snapped_;
 
   DISALLOW_COPY_AND_ASSIGN(ParameterEditor);

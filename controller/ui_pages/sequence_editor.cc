@@ -34,21 +34,6 @@ uint8_t SequenceEditor::step_ = 0;
 
 
 /* static */
-const EventHandlers SequenceEditor::event_handlers_ PROGMEM = {
-  OnInit,
-  SetActiveControl,
-  OnIncrement,
-  OnClick,
-  OnPot,
-  OnKey,
-  OnNote,
-  OnIdle,
-  UpdateScreen,
-  UpdateLeds,
-  OnDialogClosed,
-};
-
-/* static */
 inline PartData& SequenceEditor::mutable_part_data() {
   return multi.mutable_part(ui.state().active_part).data();
 }
@@ -133,11 +118,13 @@ uint8_t SequenceEditor::OnIncrement(int8_t increment) {
       return 1;
     }
     switch (index) {
+      default:
+        break;
       case 0:
         {
           step = actual_step(step, 2);
           uint8_t note = part_data().note(step) + increment;
-          if (note >= 0 && note <= 127) {
+          if (/*note >= 0 && */ note <= 127) {
             mutable_part_data().set_note(step, note);
           }
         }
@@ -191,6 +178,8 @@ uint8_t SequenceEditor::OnPot(uint8_t index, uint8_t value) {
     return 1;
   }
   switch (index) {
+    default:
+      break;
     case 0:
       step = actual_step(step, 2);
       mutable_part_data().set_note(step, 24 + (value / 2));

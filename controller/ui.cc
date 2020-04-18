@@ -41,10 +41,10 @@
 
 namespace ambika {
   
-const PageInfo page_registry[] PROGMEM = {
+constexpr PageInfo page_registry[] PROGMEM = {
   { PAGE_OSCILLATORS,
     &ParameterEditor::event_handlers_,
-    { 0, 1, 2, 3, 4, 5, 6, 7 },
+      {  0, 1, 2, 3, 4, 5, 6, 7 },
     PAGE_MIXER, 0, 0xf0,
   },
   
@@ -145,7 +145,7 @@ const PageInfo page_registry[] PROGMEM = {
   },
 };
 
-static const uint8_t default_most_recent_page_in_group[9] PROGMEM = {
+static constexpr uint8_t default_most_recent_page_in_group[9] PROGMEM = {
   PAGE_OSCILLATORS,
   PAGE_FILTER,
   PAGE_ENV_LFO,
@@ -308,6 +308,8 @@ void Ui::DoEvents() {
       continue;
     }
     switch (e.control_type) {
+      default:
+        break;
       case CONTROL_ENCODER_CLICK:
         (*event_handlers_.OnClick)();
         break;

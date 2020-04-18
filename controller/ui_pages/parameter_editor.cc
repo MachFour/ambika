@@ -30,21 +30,6 @@
 namespace ambika {
 
 /* static */
-const EventHandlers ParameterEditor::event_handlers_ PROGMEM = {
-  OnInit,
-  SetActiveControl,
-  OnIncrement,
-  OnClick,
-  OnPot,
-  OnKey,
-  NULL,
-  OnIdle,
-  UpdateScreen,
-  UpdateLeds,
-  OnDialogClosed,
-};
-
-/* static */
 ParameterEditor::SnapMask ParameterEditor::snapped_;
 
 /* static */
@@ -181,19 +166,11 @@ void ParameterEditor::UpdateScreen() {
     const Parameter& parameter = parameter_manager.parameter(parameter_id);
     if (parameter.level != PARAMETER_LEVEL_UI) {
       detailed_info_line = line;
-      parameter.PrintObject(
-          // Include the part number in the name of the parameter iff the
-          // current control is a custom knob.
-          (info_->data[active_control_] & 0xf0) == 0xf0 ?
-              part_index(active_control_) : 0xff,
-          instance_index(active_control_),
-          buffer, 19);
-
+      // Include the part number in the name of the parameter iff the current control is a custom knob.
+      auto part = highNibbleUnshifted(info_->data[active_control_]) == 0xf0 ? part_index(active_control_) : 0xff;
+      parameter.PrintObject(part, instance_index(active_control_), buffer, 19);
       buffer[19] = kDelimiter;
-      uint8_t value = parameter_manager.GetValue(
-          parameter,
-          part_index(active_control_),
-          instance_index(active_control_));
+      uint8_t value = parameter_manager.GetValue(parameter, part_index(active_control_), instance_index(active_control_));
       parameter.Print(value, &buffer[20], 11, 7);
     }
   }
@@ -205,7 +182,7 @@ void ParameterEditor::UpdateScreen() {
     if (line == detailed_info_line) {
       continue;
     }
-    uint8_t row = (i & 3) * 10;
+    uint8_t row = byteAnd(i, 3) * 10;
     char* buffer = display.line_buffer(line) + row;
     if (row != 0) {
       buffer[0] = kDelimiter;

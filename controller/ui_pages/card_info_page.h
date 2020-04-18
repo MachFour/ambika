@@ -26,7 +26,7 @@ namespace ambika {
 
 class CardInfoPage : public UiPage {
  public:
-  CardInfoPage() { }
+  CardInfoPage() = default;
   
   static void OnInit(PageInfo* info);
   
@@ -36,7 +36,19 @@ class CardInfoPage : public UiPage {
 
   static void OnDialogClosed(uint8_t dialog_id, uint8_t return_value);
 
-  static const EventHandlers event_handlers_;
+  static constexpr EventHandlers event_handlers_ PROGMEM = {
+      OnInit,
+      SetActiveControl,
+      OnIncrement,
+      OnClick,
+      OnPot,
+      OnKey,
+      nullptr,
+      OnIdle,
+      UpdateScreen,
+      UpdateLeds,
+      OnDialogClosed,
+  };
 
  private:
   static uint32_t free_space_;

@@ -35,6 +35,11 @@ update_voicecard:
 		$(AVRDUDE) -B 1 $(AVRDUDE_COM_OPTS) $(AVRDUDE_ISP_OPTS) \
 			-U flash:w:$(VOICECARD_FIRMWARE):i
 
+update_controller:
+		make -f controller/makefile
+		$(AVRDUDE) -B 1 -V -p m644p $(AVRDUDE_ISP_OPTS) \
+			-U flash:w:$(CONTROLLER_FIRMWARE):i 
+
 bootstrap_controller:
 		make -f controller/makefile
 		make -f controller/bootloader/makefile

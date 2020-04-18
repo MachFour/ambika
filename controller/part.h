@@ -115,7 +115,16 @@ struct PartData {
   };
 
   // also refers to metadata before it
-  static constexpr uint8_t sequence_data_size = 8 + 64;
+  static constexpr uint8_t sequence_data_size =
+        sizeof(Parameters::arp_direction)   //    1
+      + sizeof(Parameters::arp_octave)      // +  1
+      + sizeof(Parameters::arp_pattern)     // +  1
+      + sizeof(Parameters::arp_divider)     // +  1
+      + sizeof(Parameters::sequence_length) // +  3
+      + sizeof(Parameters::polyphony_mode)  // +  1
+      + sizeof(Parameters::sequence_data);  // + 64
+  // = 72 (like in original code)
+
 
 private:
   union Data {
@@ -127,7 +136,6 @@ private:
   };
 
   Data data;
-  Parameters& p = data.params;
 
 public:
   explicit PartData(Parameters params) : data(params) {};
@@ -150,7 +158,7 @@ public:
 
   // accessor/mutator functions for the parameters
   inline uint8_t* pure_sequence_data() {
-    return p.sequence_data;
+    return data.params.sequence_data;
   }
 
   // actually contains sequence data and metadata,
@@ -158,118 +166,129 @@ public:
   // contains 72 bytes
   inline uint8_t* sequence_data() {
     // start at arp_direction
-    return data.bytes + 8;
+    //return data.bytes + 8;
+    return &data.params.arp_direction;
   }
   inline const uint8_t* sequence_data_readonly() const {
     // start at arp_direction
-    return data.bytes + 8;
+    //return data.bytes + 8;
+    return &data.params.arp_direction;
   }
 
   inline uint8_t& volume() {
-    return p.volume;
+    return data.params.volume;
   }
   inline int8_t& octave() {
-    return p.octave;
+    return data.params.octave;
   }
   inline int8_t& tuning() {
-    return p.tuning;
+    return data.params.tuning;
   }
   inline uint8_t& spread() {
-    return p.spread;
+    return data.params.spread;
   }
   inline uint8_t& raga() {
-    return p.raga;
+    return data.params.raga;
   }
   inline uint8_t& legato() {
-    return p.legato;
+    return data.params.legato;
   }
   inline uint8_t& portamento_time() {
-    return p.portamento_time;
+    return data.params.portamento_time;
   }
   inline uint8_t& arp_sequencer_mode() {
-    return p.arp_sequencer_mode;
+    return data.params.arp_sequencer_mode;
   }
   inline uint8_t& arp_direction() {
-    return p.arp_direction;
+    return data.params.arp_direction;
   }
   inline uint8_t& arp_octave() {
-    return p.arp_octave;
+    return data.params.arp_octave;
   }
   inline uint8_t& arp_pattern() {
-    return p.arp_pattern;
+    return data.params.arp_pattern;
   }
   inline uint8_t& arp_divider() {
-    return p.arp_divider;
+    return data.params.arp_divider;
   }
   inline uint8_t& sequence_length(uint8_t index) {
-    return p.sequence_length[index];
+    return data.params.sequence_length[index];
   }
   inline uint8_t& polyphony_mode() {
-    return p.polyphony_mode;
+    return data.params.polyphony_mode;
   }
 
   // more functions
 
   uint8_t step_value(uint8_t sequence, uint8_t step) const {
-    return p.sequence_data[(step + (sequence << 4)) & 0x1f];
+    const auto index = byteAnd(step + (sequence << 4u), 0x1f);
+    return data.params.sequence_data[index];
   }
   
   void set_step_value(uint8_t sequence, uint8_t step, uint8_t value) {
-    p.sequence_data[(step + (sequence << 4)) & 0x1f] = value;
+    const auto index = byteAnd(step + (sequence << 4u), 0x1f);
+    data.params.sequence_data[index] = value;
   }
-  
+
+private:
+  // used in (set_){note,ordered_gate_velocity,note_step} functions
+  inline uint8_t get_note_offset(uint8_t step) const {
+    return byteAnd(32 + (step << 1u), 0x3f);
+  }
+
+public:
   uint8_t note(uint8_t step) const {
-    uint8_t offset = (32 + (step << 1)) & 0x3f;
-    return p.sequence_data[offset] & 0x7f;
+    auto offset = get_note_offset(step);
+    return byteAnd(data.params.sequence_data[offset], 0x7f);
   }
   
   void set_note(uint8_t step, uint8_t note) {
-    uint8_t offset = (32 + (step << 1)) & 0x3f;
-    p.sequence_data[offset] &= 0x80;
-    p.sequence_data[offset] |= note;
+    auto offset = get_note_offset(step);
+    data.params.sequence_data[offset] &= 0x80u;
+    data.params.sequence_data[offset] |= note;
   }
   
   uint16_t ordered_gate_velocity(uint8_t step) const {
-    uint8_t offset = (32 + (step << 1)) & 0x3f;
-    if (!(p.sequence_data[offset] & 0x80)) {
+    auto offset = get_note_offset(step);
+    if (!byteAnd(data.params.sequence_data[offset], 0x80)) {
       return 0;
     } else {
-      uint8_t o = p.sequence_data[offset + 1] + 128;
-      return static_cast<uint16_t>(o) + 1;
+      uint8_t o = data.params.sequence_data[offset + 1] + 128;
+      return U16(o) + 1;
     }
   }
   
   void set_ordered_gate_velocity(uint8_t step, uint16_t value) {
-    uint8_t offset = (32 + (step << 1)) & 0x3f;
+    auto offset = get_note_offset(step);
     if (!value) {
-      p.sequence_data[offset] &= 0x7f;
-      p.sequence_data[offset + 1] = 0;
+      data.params.sequence_data[offset] &= 0x7f;
+      data.params.sequence_data[offset + 1] = 0;
     } else {
-      p.sequence_data[offset] |= 0x80;
-      p.sequence_data[offset + 1] = (value - 1) + 128;
+      data.params.sequence_data[offset] |= 0x80;
+      data.params.sequence_data[offset + 1] = (value - 1) + 128;
     }
   }
   
   void set_velocity(uint8_t step, uint8_t velocity) {
-    uint8_t offset = (32 + (step << 1)) & 0x3f;
-    p.sequence_data[offset + 1] &= 0x80;
-    p.sequence_data[offset + 1] |= velocity;
+    auto offset = get_note_offset(step);
+    data.params.sequence_data[offset + 1] &= 0x80;
+    data.params.sequence_data[offset + 1] |= velocity;
   }
   
   NoteStep note_step(uint8_t step) const {
     NoteStep n;
-    uint8_t offset = (32 + (step << 1)) & 0x3f;
-    n.note = p.sequence_data[offset];
-    n.velocity = p.sequence_data[offset + 1];
-    n.gate = n.note & 0x80;
-    n.legato = n.velocity & 0x80;
-    n.note &= 0x7f;
-    n.velocity &= 0x7f;
+    auto offset = get_note_offset(step);
+    n.note = data.params.sequence_data[offset];
+    n.velocity = data.params.sequence_data[offset + 1];
+    n.gate = byteAnd(n.note, 0x80);
+    n.legato = byteAnd(n.velocity, 0x80);
+    n.note &= 0x7fu;
+    n.velocity &= 0x7fu;
     return n;
   }
 };
 
-enum PartParameter {
+enum PartParameter : uint8_t {
   PRM_PART_VOLUME = sizeof(Patch), // TODO move these into the actual classes
   PRM_PART_OCTAVE,
   PRM_PART_TUNING,
@@ -290,7 +309,7 @@ enum PartParameter {
 
 class Part {
  public:
-  Part() : data_() { }
+  Part() = default;
   void Init();
 
   void InitPatch(InitializationMode mode);
@@ -315,7 +334,7 @@ class Part {
   
   uint8_t num_pressed_keys() const { return pressed_keys_.size(); }
   
-  inline void SetValue(uint8_t address, uint8_t value, uint8_t user_initiated);
+  void SetValue(uint8_t address, uint8_t value, uint8_t user_initiated);
   
   inline uint8_t GetValue(uint8_t address) const {
     return patch_.getData(address);
@@ -360,14 +379,16 @@ class Part {
   void UpdateLfos(uint8_t refresh_cycle);
   
   void AssignVoices(uint8_t allocation);
-  inline uint8_t flags() const { return flags_; }
-  inline void ClearFlag(uint8_t flag) { flags_ &= ~flag; }
+  inline uint8_t flags() const {
+    return flags_;
+  }
+  inline void ClearFlag(uint8_t flag) { flags_ &= byteInverse(flag); }
   
 
  private:
   void RandomizeRange(uint8_t start, uint8_t size);
   void InitializeAllocators();
-  void TouchVoiceAllocation();
+  //void TouchVoiceAllocation();
   void TouchClock();
   void TouchLfos();
   
@@ -393,7 +414,7 @@ class Part {
   void InternalNoteOff(uint8_t note);
   
   uint8_t GetNextVoice(uint8_t voice_index) const;
-  
+
   Patch patch_;
   PartData data_;
   

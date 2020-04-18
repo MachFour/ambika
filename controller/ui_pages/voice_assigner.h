@@ -26,7 +26,7 @@ namespace ambika {
 
 class VoiceAssigner : public ParameterEditor {
  public:
-  VoiceAssigner() { }
+  VoiceAssigner() = default;
   
   static void OnInit(PageInfo* info);
   static void SetActiveControl(ActiveControl active_control);
@@ -38,10 +38,22 @@ class VoiceAssigner : public ParameterEditor {
 
   static void UpdateScreen();
   
-  static const EventHandlers event_handlers_;
-  
+  static constexpr EventHandlers event_handlers_ PROGMEM = {
+      OnInit,
+      SetActiveControl,
+      OnIncrement,
+      OnClick,
+      OnPot,
+      OnKey,
+      OnNote,
+      OnIdle,
+      UpdateScreen,
+      UpdateLeds,
+      OnDialogClosed,
+  };
+
  private:
-  static uint8_t available_voices();
+  //static uint8_t available_voices();
    
   DISALLOW_COPY_AND_ASSIGN(VoiceAssigner);
 };

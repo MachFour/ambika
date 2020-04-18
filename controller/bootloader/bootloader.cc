@@ -152,6 +152,8 @@ inline void MidiUpdater() {
       continue;
     }
     switch (state) {
+      default:
+        break;
       case MATCHING_HEADER:
         if (byte == sysex_header[bytes_read]) {
           LedsOk();
@@ -219,7 +221,7 @@ inline void MidiUpdater() {
   }
 }
 
-int main(void) {
+int main() {
   ResetWatchdog();
   
   cli();

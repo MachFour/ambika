@@ -28,26 +28,11 @@
 
 namespace ambika {
 
-const char blank_patch_name[] PROGMEM = "(empty)       \0";
-
-/* static */
-const EventHandlers Library::event_handlers_ PROGMEM = {
-  OnInit,
-  UiPage::SetActiveControl,
-  OnIncrement,
-  OnClick,
-  UiPage::OnPot,
-  OnKey,
-  NULL,
-  OnIdle,
-  UpdateScreen,
-  UpdateLeds,
-  OnDialogClosed,
-};
+constexpr char blank_patch_name[] PROGMEM = "(empty)       \0";
 
 /* <static> */
 LibraryAction Library::action_;
-StorageLocation Library::location_ = { STORAGE_OBJECT_PROGRAM, 0, 0 };
+StorageLocation Library::location_ = { STORAGE_OBJECT_PROGRAM, 0, 0, 0, 0, nullptr };
 char Library::name_[16];
 uint8_t Library::is_edit_buffer_;
 uint8_t Library::more_;
@@ -67,6 +52,7 @@ uint8_t Library::name_dirty_ = 0;
 
 /* static */
 void Library::OnInit(PageInfo* info) {
+  IGNORE_UNUSED(info);
   more_ = 0;
   location_.part = ui.state().active_part;
   if (storage.InitFilesystem() != FS_OK) {
@@ -93,13 +79,12 @@ void Library::Browse() {
 
 /* static */
 uint8_t Library::OnIncrement(int8_t increment) {
-  if (action_ == LIBRARY_ACTION_BROWSE ||
-      edit_mode_ == EDIT_STARTED_BY_ENCODER) {
+  if (action_ == LIBRARY_ACTION_BROWSE || edit_mode_ == EDIT_STARTED_BY_ENCODER) {
     if (active_control_ == 0) {
       int8_t bank = location_.bank;
       location_.bank = Clip(bank + increment, 0, 25);
-    } else if (active_control_ == 1){
-      int16_t slot = location_.slot;
+    } else if (active_control_ == 1) {
+      //int16_t slot = location_.slot;
       location_.slot = Clip(location_.slot + increment, 0, 127);
     } else {
       char character = name_[active_control_ - 2];
@@ -139,7 +124,7 @@ uint8_t Library::OnIncrement(int8_t increment) {
 /* static */
 uint8_t Library::OnClick() {
   if (action_ == LIBRARY_ACTION_BROWSE) {
-    active_control_ = (active_control_ + 1) & 1;
+    active_control_ = byteAnd(active_control_ + 1, 1);
   } else {
     UiPage::OnClick();
   }
@@ -175,12 +160,13 @@ uint8_t Library::OnKeyBrowse(uint8_t key) {
       case SWITCH_2:
         {
           PrintActiveObjectName(&name_[0]);
-          Dialog d;
-          d.dialog_type = DIALOG_SELECT;
-          d.num_choices = 2;
-          d.first_choice = STR_RES_RANDOMIZE;
-          d.text = 0;
-          d.user_text = name_;
+          Dialog d {
+              .dialog_type = DIALOG_SELECT,
+              .num_choices = 2,
+              .first_choice = STR_RES_RANDOMIZE,
+              .text = nullptr,
+              .user_text = name_
+          };
           ui.ShowDialogBox(1, d, initialization_mode_);
         }
         break;
@@ -222,10 +208,13 @@ uint8_t Library::OnKeyBrowse(uint8_t key) {
         
       case SWITCH_2:
         {
-          Dialog d;
-          d.dialog_type = DIALOG_CONFIRM;
-          d.text = PSTR("use current multi as default?");
-          d.user_text = NULL;
+          Dialog d {
+            .dialog_type = DIALOG_CONFIRM,
+            .num_choices = 0,
+            .first_choice = 0,
+            .text = PSTR("use current multi as default?"),
+            .user_text = nullptr
+          };
           ui.ShowDialogBox(3, d, 0);
         }
         break;
@@ -299,7 +288,7 @@ void Library::UpdateScreen() {
   AlignLeft(&buffer[0], 15);
 
   if (is_edit_buffer_ && action_ == LIBRARY_ACTION_BROWSE) {
-    buffer[14] = 0xa5;  // square dot.
+    buffer[14] = static_cast<char>(0xa5);  // square dot.
   }
   buffer[15] = 'A' + location_.bank;
   UnsafeItoa<int16_t>(location_.slot, 3, &buffer[16]);
@@ -348,7 +337,8 @@ void Library::UpdateLeds() {
   leds.set_pixel(LED_8, 0xf0);
   leds.set_pixel(LED_7, 0x0f);
   if (action_ == LIBRARY_ACTION_BROWSE) {
-    for (uint8_t i = 0; i < (more_ ? 3 : 5); ++i) {
+    uint8_t loop_end = more_ ? 3 : 5;
+    for (uint8_t i = 0; i < loop_end; ++i) {
       leds.set_pixel(LED_1 + i, 0x0f);
     }
   }
@@ -356,10 +346,13 @@ void Library::UpdateLeds() {
 
 /* static */
 void Library::ShowDiskErrorMessage() {
-  Dialog d;
-  d.dialog_type = DIALOG_ERROR;
-  d.text = PSTR("SD card I/O error");
-  d.user_text = NULL;
+  Dialog d {
+      .dialog_type = DIALOG_ERROR,
+      .num_choices = 0,
+      .first_choice = 0,
+      .text = PSTR("SD card I/O error"),
+      .user_text = nullptr,
+  };
   ui.ShowDialogBox(2, d, 0);
 }
 
@@ -370,24 +363,22 @@ void Library::OnDialogClosed(uint8_t dialog_id, uint8_t return_value) {
     case 1:
       if (return_value) {
         initialization_mode_ = return_value - 1;
-        InitializationMode mode = return_value == 1
-            ? INITIALIZATION_RANDOM
-            : INITIALIZATION_DEFAULT;
+        auto mode = return_value == 1 ? INITIALIZATION_RANDOM : INITIALIZATION_DEFAULT;
         storage.Snapshot(location_);
         if (location_.object == STORAGE_OBJECT_MULTI) {
           multi.InitSettings(mode);
         } else {
           switch (location_.object) {
             case STORAGE_OBJECT_PATCH:
-              multi.mutable_part(location_.part)->InitPatch(mode);
+              multi.mutable_part(location_.part).InitPatch(mode);
               break;
 
             case STORAGE_OBJECT_SEQUENCE:
-              multi.mutable_part(location_.part)->InitSequence(mode);
+              multi.mutable_part(location_.part).InitSequence(mode);
               break;
 
             case STORAGE_OBJECT_PROGRAM:
-              multi.mutable_part(location_.part)->InitSettings(mode);
+              multi.mutable_part(location_.part).InitSettings(mode);
               break;
 
             case STORAGE_OBJECT_MULTI:

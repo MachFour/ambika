@@ -183,9 +183,7 @@ void App::ProcessNunchuk(
     (*app_info_.UpdateAccelerometer)(acc_x, acc_y, acc_z);
   }
   if (app_info_.OnShake) {
-    if (0) {
-      (*app_info_.OnShake)();
-    }
+    //(*app_info_.OnShake)();
   }
   
   if (c_status_) {

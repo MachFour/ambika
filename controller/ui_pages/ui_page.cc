@@ -39,21 +39,6 @@ EditMode UiPage::edit_mode_;
 PageInfo* UiPage::info_;
 
 /* static */
-const EventHandlers UiPage::event_handlers_ PROGMEM = {
-  OnInit,
-  SetActiveControl,
-  OnIncrement,
-  OnClick,
-  OnPot,
-  OnKey,
-  NULL,
-  OnIdle,
-  UpdateScreen,
-  UpdateLeds,
-  OnDialogClosed,
-};
-
-/* static */
 void UiPage::OnInit(PageInfo* info) {
   info_ = info;
   edit_mode_ = EDIT_IDLE;
@@ -61,10 +46,13 @@ void UiPage::OnInit(PageInfo* info) {
 }
 
 /* static */
-void UiPage::SetActiveControl(ActiveControl active_control) { }
+void UiPage::SetActiveControl(ActiveControl active_control) {
+  IGNORE_UNUSED(active_control);
+}
 
 /* static */
 uint8_t UiPage::OnIncrement(int8_t increment) {
+  IGNORE_UNUSED(increment);
   return 1;
 }
 
@@ -80,13 +68,15 @@ uint8_t UiPage::OnClick() {
 
 /* static */
 uint8_t UiPage::OnPot(uint8_t index, uint8_t value) {
+  IGNORE_UNUSED(index);
+  IGNORE_UNUSED(value);
   return 1;
 }
 
 /* static */
 uint8_t UiPage::OnKey(uint8_t key) {
   if (key >= SWITCH_SHIFT_1) {
-    StorageLocation location = { STORAGE_OBJECT_PROGRAM, 0, 0 };
+    StorageLocation location = { STORAGE_OBJECT_PROGRAM, 0, 0, 0, 0, nullptr};
     location.part = ui.state().active_part;
     storage.InitFilesystem();
     switch (key) {
@@ -105,6 +95,8 @@ uint8_t UiPage::OnKey(uint8_t key) {
       case SWITCH_SHIFT_7:
         display.set_status('*');
         storage.Snapshot(location);
+        break;
+      default:
         break;
     }
     return 1;
@@ -129,7 +121,10 @@ uint8_t UiPage::OnIdle() {
 void UiPage::UpdateScreen() { }
 
 /* static */
-void UiPage::OnDialogClosed(uint8_t dialog_id, uint8_t return_value) { }
+void UiPage::OnDialogClosed(uint8_t dialog_id, uint8_t return_value) {
+  IGNORE_UNUSED(dialog_id);
+  IGNORE_UNUSED(return_value);
+}
 
 /* static */
 void UiPage::UpdateLeds() {

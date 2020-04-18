@@ -26,7 +26,7 @@ namespace ambika {
 
 class DialogBox : public UiPage {
  public:
-  DialogBox() { }
+  DialogBox() = default;
   
   static void OnInit(PageInfo* info);
   
@@ -42,8 +42,20 @@ class DialogBox : public UiPage {
   static void UpdateScreen();
   static void UpdateLeds();
   
-  static const EventHandlers event_handlers_;
-  
+  static constexpr EventHandlers event_handlers_ PROGMEM = {
+      OnInit,
+      SetActiveControl,
+      OnIncrement,
+      OnClick,
+      OnPot,
+      OnKey,
+      nullptr,
+      OnIdle,
+      UpdateScreen,
+      UpdateLeds,
+      OnDialogClosed,
+  };
+
  protected:
   static uint8_t choice_;
   
