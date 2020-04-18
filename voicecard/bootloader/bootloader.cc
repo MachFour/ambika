@@ -44,9 +44,9 @@ SpiSlave<MSB_FIRST, true> spi;
 
 static uint8_t rx_buffer[SPM_PAGESIZE];
 
-int main(void) __attribute__ ((naked)) __attribute__ ((section (".init9")));
+int main() __attribute__ ((naked)) __attribute__ ((section (".init9")));
 
-int main(void) {
+int main() {
   ResetWatchdog();
   cli();
   SP = RAMEND;
@@ -164,7 +164,7 @@ int main(void) {
     new_update_flag = update_flag + 1;
   }
   eeprom_write_byte(kFirmwareUpdateFlagPtr, new_update_flag);
-  void (*main_entry_point)(void) = 0x0000;
+  void (*main_entry_point)() = nullptr; // 0x0 aka start of RAM
   main_entry_point();
   return 0;
 }

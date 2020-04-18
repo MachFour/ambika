@@ -175,9 +175,7 @@ class Storage {
   
   static void Expand(const char* name, char variable);
   
-  static FilesystemStatus Save(
-      StorageDir type,
-      const StorageLocation& location);
+  static FilesystemStatus Save(StorageDir type, const StorageLocation& location);
 
   static FilesystemStatus Load(StorageDir type, const StorageLocation& location, uint8_t load_contents);
 

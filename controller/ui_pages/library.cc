@@ -28,11 +28,15 @@
 
 namespace ambika {
 
-constexpr char blank_patch_name[] PROGMEM = "(empty)       \0";
+static constexpr char blank_patch_name[] PROGMEM = "(empty)       \0";
 
 /* <static> */
 LibraryAction Library::action_;
-StorageLocation Library::location_ = { STORAGE_OBJECT_PROGRAM, 0, 0, 0, 0, nullptr };
+StorageLocation Library::location_ {
+  .object = STORAGE_OBJECT_PROGRAM,
+  .part = 0, .alias = 0, .bank = 0, .slot = 0,
+  .name = nullptr
+};
 char Library::name_[16];
 uint8_t Library::is_edit_buffer_;
 uint8_t Library::more_;
@@ -138,11 +142,17 @@ uint8_t Library::OnKey(uint8_t key) {
   }
 }
 
+enum DialogId : uint8_t {
+  DIALOG_ID_INIT = 1,
+
+};
+
 /* static */
 uint8_t Library::OnKeyBrowse(uint8_t key) {
   if (more_ == 0) {
     switch (key) {
       case SWITCH_1:
+        // cycle though different library types: multi, patch, program, sequence
         {
           if (location_.object == STORAGE_OBJECT_MULTI) {
             location_.object = STORAGE_OBJECT_PATCH;
@@ -156,6 +166,7 @@ uint8_t Library::OnKeyBrowse(uint8_t key) {
         break;
 
       case SWITCH_2:
+        // init
         {
           PrintActiveObjectName(&name_[0]);
           Dialog d {
@@ -165,7 +176,7 @@ uint8_t Library::OnKeyBrowse(uint8_t key) {
               .text = nullptr,
               .user_text = name_
           };
-          ui.ShowDialogBox(1, d, initialization_mode_);
+          ui.ShowDialogBox(DIALOG_ID_INIT, d, initialization_mode_);
         }
         break;
 
@@ -197,6 +208,8 @@ uint8_t Library::OnKeyBrowse(uint8_t key) {
       case SWITCH_8:
         ui.ShowPreviousPage();
         break;
+      default:
+        break;
     }
   } else {
     switch (key) {
@@ -227,6 +240,8 @@ uint8_t Library::OnKeyBrowse(uint8_t key) {
         
       case SWITCH_8:
         ui.ShowPreviousPage();
+        break;
+      default:
         break;
     }
   }
@@ -356,10 +371,8 @@ void Library::ShowDiskErrorMessage() {
 /* static */
 void Library::OnDialogClosed(uint8_t dialog_id, uint8_t return_value) {
   switch (dialog_id) {
-    default:
-      break;
-      // Handler for the init dialog box.
-    case 1:
+    // Handler for the init dialog box.
+    case DIALOG_ID_INIT:
       if (return_value) {
         initialization_mode_ = return_value - 1;
         auto mode = return_value == 1 ? INITIALIZATION_RANDOM : INITIALIZATION_DEFAULT;
@@ -391,6 +404,8 @@ void Library::OnDialogClosed(uint8_t dialog_id, uint8_t return_value) {
         display.set_status('>');
         Storage::WriteMultiToEeprom();
       }
+      break;
+    default:
       break;
   }
 }

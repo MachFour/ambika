@@ -46,7 +46,12 @@ class UiPage {
 
   static void UpdateScreen();
   static void UpdateLeds();
-  
+
+  // Function pointer table needs to be done like this, rather than the usual
+  // polymorphic way, because AVR-GCC puts vtables in SRAM.
+  // In subclasses, make sure that this table comes after the overriding
+  // function declarations in the subclass's definition, otherwise the function names
+  // will point to those here.
   static constexpr EventHandlers event_handlers_ PROGMEM = {
       OnInit,
       SetActiveControl,

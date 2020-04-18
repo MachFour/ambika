@@ -268,13 +268,12 @@ class MidiDispatcher : public midi::MidiDevice {
     uint8_t channel = multi.part_channel(part);
     ++data_entry_counter_;
     if (current_parameter_address_ != address || data_entry_counter_ >= 32) {
-      Send3(byteOr(channel, 0xb0), midi::kNrpnMsb, MSB8(address) ? 1 : 0);
+      Send3(byteOr(channel, 0xb0), midi::kNrpnMsb, msb(address));
       Send3(byteOr(channel, 0xb0), midi::kNrpnLsb, U7(address));
       current_parameter_address_ = address;
       data_entry_counter_ = 0;
     }
-    uint8_t msb = MSB8(value) ? 1 : 0;
-    Send3(byteOr(channel, 0xb0), midi::kDataEntryMsb, msb);
+    Send3(byteOr(channel, 0xb0), midi::kDataEntryMsb, msb(value));
     Send3(byteOr(channel, 0xb0), midi::kDataEntryLsb, U7(value));
   }
   

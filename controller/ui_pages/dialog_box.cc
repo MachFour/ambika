@@ -27,19 +27,19 @@
 namespace ambika {
 
 /* static */
-uint8_t DialogBox::choice_;
+uint8_t DialogBox::choice;
 
 /* static */
 void DialogBox::OnInit(PageInfo* info) {
   IGNORE_UNUSED(info);
-  choice_ = 0;
+  choice = 0;
 }
 
 
 /* static */
 uint8_t DialogBox::OnIncrement(int8_t increment) {
   if (info_->dialog.dialog_type == DIALOG_SELECT) {
-    choice_ = Clip(choice_ + increment, 0, info_->dialog.num_choices - 1);
+    choice = Clip(choice + increment, 0, info_->dialog.num_choices - 1);
   }
   return 1;
 }
@@ -48,7 +48,7 @@ uint8_t DialogBox::OnIncrement(int8_t increment) {
 uint8_t DialogBox::OnPot(uint8_t index, uint8_t value) {
   IGNORE_UNUSED(index);
   if (info_->dialog.dialog_type == DIALOG_SELECT) {
-    choice_ = U8U8MulShift8(info_->dialog.num_choices, value << 1u);
+    choice = U8U8MulShift8(info_->dialog.num_choices, value << 1u);
   }
   return 1;
 }
@@ -56,7 +56,7 @@ uint8_t DialogBox::OnPot(uint8_t index, uint8_t value) {
 /* static */
 uint8_t DialogBox::OnKey(uint8_t key) {
   if (key == SWITCH_7 && info_->dialog.dialog_type >= DIALOG_CONFIRM) {
-    ui.CloseDialogBox(1 + choice_);
+    ui.CloseDialogBox(1 + choice);
   } else if (key == SWITCH_8) {
     ui.CloseDialogBox(info_->dialog.dialog_type < DIALOG_CONFIRM);
   }
@@ -65,7 +65,7 @@ uint8_t DialogBox::OnKey(uint8_t key) {
 
 /* static */
 uint8_t DialogBox::OnClick() {
-  ui.CloseDialogBox(1 + choice_);
+  ui.CloseDialogBox(1 + choice);
   return 1;
 }
 
@@ -89,7 +89,7 @@ void DialogBox::UpdateScreen() {
       buffer[kLcdWidth + 37] = 'k';
       *buffer++ = '/';
       *buffer++ = '!';
-      *buffer++ = '\x06';
+      *buffer++ = '\x06'; // backslash
       buffer++;
       break;
       
@@ -131,7 +131,7 @@ void DialogBox::UpdateScreen() {
   if (info_->dialog.dialog_type == DIALOG_SELECT) {
     buffer[25] = '[';
     ResourcesManager::LoadStringResource(
-        info_->dialog.first_choice + choice_,
+        info_->dialog.first_choice + choice,
         &buffer[27],
         10);
     AlignRight(&buffer[27], 10);

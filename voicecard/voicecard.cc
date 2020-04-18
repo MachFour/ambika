@@ -117,8 +117,8 @@ inline void Init() {
   voice.Init();
 
   dac_interface.Strobe();
-  dac_interface.Overwrite(0x10u | 0x0fu);
-  dac_interface.Overwrite(0xffu);
+  dac_interface.Overwrite(0x1f); // 0x10 | 0x0f
+  dac_interface.Overwrite(0xff);
 
   log_vca::inputMode();
   log_vca::high();

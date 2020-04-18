@@ -730,11 +730,11 @@ void Storage::SysExAcceptCommand() {
     case 0x0f:
       // POKE
       {
-        Word address;
-        address.bytes[0] = buffer_[0];
-        address.bytes[1] = buffer_[1];
+        Word address {
+          .bytes = {buffer_[0], buffer_[1]}
+        };
         uint8_t size = sysex_rx_command_[1];
-        uint8_t* p = (uint8_t*)(address.value);
+        auto p = reinterpret_cast<uint8_t*>(address.value);
         memcpy(p, buffer_ + 2, size);
       }
       break;

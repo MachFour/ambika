@@ -34,7 +34,8 @@ enum LibraryAction {
 class Library : public UiPage {
  public:
   Library() = default;
-  
+
+
   static void OnInit(PageInfo* info);
   //static void SetActiveControl(ActiveControl active_control);
 
@@ -45,6 +46,21 @@ class Library : public UiPage {
   static void UpdateScreen();
   static void UpdateLeds();
   
+  static void OnDialogClosed(uint8_t dialog_id, uint8_t return_value);
+  static void SaveLocation() {
+    loaded_objects_indices_[location_.index()] = location_.bank_slot();
+  }
+  static inline void set_name_dirty() {
+    name_dirty_ = 1;
+  }
+  static StorageLocation* mutable_location() { return &location_; }
+  static const StorageLocation& location() { return location_; }
+
+  static void PrintActiveObjectName(char* buffer);
+  static void UpdateLocation();
+
+  // Warning: this has to come AFTER the declarations of the corresponding
+  // functions, otherwise they will refer to the UiPage.h ones
   static constexpr EventHandlers event_handlers_ PROGMEM = {
       OnInit,
       UiPage::SetActiveControl,
@@ -60,20 +76,7 @@ class Library : public UiPage {
   };
 
 
-  static void OnDialogClosed(uint8_t dialog_id, uint8_t return_value);
-  static void SaveLocation() {
-    loaded_objects_indices_[location_.index()] = location_.bank_slot();
-  }
-  static inline void set_name_dirty() {
-    name_dirty_ = 1;
-  }
-  static StorageLocation* mutable_location() { return &location_; }
-  static const StorageLocation& location() { return location_; }
-
-  static void PrintActiveObjectName(char* buffer);
-  static void UpdateLocation();
-
- private:
+private:
   static void Browse();
   static void ShowDiskErrorMessage();
 

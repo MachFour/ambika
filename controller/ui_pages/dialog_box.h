@@ -35,8 +35,9 @@ class DialogBox : public UiPage {
   static uint8_t OnPot(uint8_t index, uint8_t value);
   static uint8_t OnKey(uint8_t key);
   static uint8_t OnIdle();
-  static inline void set_choice(uint8_t choice) {
-    choice_ = choice;
+
+  static inline void set_choice(uint8_t new_choice) {
+    choice = new_choice;
   }
 
   static void UpdateScreen();
@@ -57,7 +58,7 @@ class DialogBox : public UiPage {
   };
 
  protected:
-  static uint8_t choice_;
+  static uint8_t choice;
   
   DISALLOW_COPY_AND_ASSIGN(DialogBox);
 };

@@ -34,15 +34,9 @@ using namespace ambika;
 
 Lcd ambika::lcd;
 
-ShiftRegisterInput<
-  IOEnableLine,
-  IOClockLine,
-  IOInputLine, 8, LSB_FIRST> switches;
+ShiftRegisterInput<IOEnableLine, IOClockLine, IOInputLine, 8, LSB_FIRST> switches;
 
-ShiftRegisterOutput<
-  IOEnableLine,
-  IOClockLine,
-  IOOutputLine, 16, MSB_FIRST> leds;
+ShiftRegisterOutput<IOEnableLine, IOClockLine, IOOutputLine, 16, MSB_FIRST> leds;
 
 Serial<SerialPort0, 31250, POLLED, DISABLED> midi;
 
@@ -121,7 +115,7 @@ inline void SdCardUpdater() {
   return;
 }
 
-static const uint8_t sysex_header[] = {
+static constexpr uint8_t sysex_header[] = {
   0xf0,  // <SysEx>
   0x00, 0x21, 0x02,  // Mutable instruments manufacturer id.
   0x00, 0x04,  // Product ID for Ambika.
@@ -140,7 +134,7 @@ inline void MidiUpdater() {
   uint8_t state = MATCHING_HEADER;
   uint8_t checksum;
   uint8_t sysex_commands[2];
-  uint8_t status = 0;
+  //uint8_t status = 0;
 
   Print(0, msg_midi_update);
   midi.Init();
@@ -179,7 +173,7 @@ inline void MidiUpdater() {
           }
         } else {
           state = MATCHING_HEADER;
-          status = 0;
+          //status = 0;
           bytes_read = 0;
         }
         break;
@@ -236,7 +230,7 @@ int main() {
     LedsOk();
     lcd.Init();
   }
-  if (!(switches_state & 0x80) || update_requested) {
+  if (!(msb(switches_state)) || update_requested) {
     SdCardUpdater();
   } else if (!(switches_state & 0x40)) {
     MidiUpdater();
