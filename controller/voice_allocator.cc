@@ -17,6 +17,7 @@
 //
 // Polyphonic voice allocator.
 
+#include "avrlib/bitops.h"
 #include "controller/voice_allocator.h"
 
 #include <string.h>
@@ -51,7 +52,7 @@ uint8_t VoiceAllocator::NoteOn(uint8_t note) {
     // Then, try to find the least recently touched, currently inactive voice.
     if (voice == 0xff) {
       for (uint8_t i = 0; i < size_; ++i) {
-        if (lru_[i] < size_ && !(pool_[lru_[i]] & 0x80)) {
+        if (lru_[i] < size_ && !byteAnd(pool_[lru_[i]], 0x80)) {
           voice = lru_[i];
         }
       }
@@ -65,21 +66,20 @@ uint8_t VoiceAllocator::NoteOn(uint8_t note) {
       }
     }
   } else {
-    ++cyclic_allocator_;
-    if (cyclic_allocator_ >= size_) {
+    if (++cyclic_allocator_ >= size_) {
       cyclic_allocator_ = 0;
     }
     voice = cyclic_allocator_;
   }
-  
-  pool_[voice] = 0x80 | note;
+
+  pool_[voice] = byteOr(note, 0x80);
   Touch(voice);
   return voice;
 }
 
 uint8_t VoiceAllocator::Find(uint8_t note) const {
   for (uint8_t i = 0; i < size_; ++i) {
-    if ((pool_[i] & 0x7f) == note) {
+    if (byteAnd(pool_[i], 0x7f) == note) {
       return i;
     }
   }
@@ -88,7 +88,7 @@ uint8_t VoiceAllocator::Find(uint8_t note) const {
 
 uint8_t VoiceAllocator::FindActive(uint8_t note) const {
   for (uint8_t i = 0; i < size_; ++i) {
-    if ((pool_[i] & 0x7f) == note && (pool_[i] & 0x80)) {
+    if (byteAnd(pool_[i], 0x7f) == note && byteAnd(pool_[i], 0x80)) {
       return i;
     }
   }

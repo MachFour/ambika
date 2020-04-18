@@ -66,8 +66,8 @@ void Library::OnInit(PageInfo* info) {
 /* static */
 void Library::Browse() {
   action_ = LIBRARY_ACTION_BROWSE;
-  location_.bank = loaded_objects_indices_[location_.index()] >> 8;
-  location_.slot = loaded_objects_indices_[location_.index()] & 0xff;
+  location_.bank = highByte(loaded_objects_indices_[location_.index()]);
+  location_.slot = lowByte(loaded_objects_indices_[location_.index()]);
   location_.name = name_;
   edit_mode_ = EDIT_IDLE;
   active_control_ = 1;
@@ -103,9 +103,7 @@ uint8_t Library::OnIncrement(int8_t increment) {
       // Send program change.
       if (location_.object == STORAGE_OBJECT_PROGRAM) {
         midi_dispatcher.OnProgramLoaded(
-            multi.data().part_mapping_[location_.part].tx_channel(),
-            location_.bank,
-            location_.slot);
+            multi.data().part_mapping[location_.part].tx_channel(), location_.bank, location_.slot);
       }
       
       if (storage.Load(location_) != FS_OK) {
@@ -151,8 +149,8 @@ uint8_t Library::OnKeyBrowse(uint8_t key) {
           } else {
             location_.object = static_cast<StorageObject>(location_.object + 1);
           }
-          location_.bank = loaded_objects_indices_[location_.index()] >> 8;
-          location_.slot = loaded_objects_indices_[location_.index()] & 0xff;
+          location_.bank = highByte(loaded_objects_indices_[location_.index()]);
+          location_.slot = lowByte(loaded_objects_indices_[location_.index()]);
           Browse();
         }
         break;
@@ -262,8 +260,7 @@ void Library::PrintActiveObjectName(char* buffer) {
   if (location_.object == STORAGE_OBJECT_MULTI) {
     strcpy_P(&buffer[0], PSTR("multi"));
   } else {
-    ResourcesManager::LoadStringResource(
-        STR_RES_PT_X_PATCH + location_.object, &buffer[0], 14);
+    ResourcesManager::LoadStringResource(STR_RES_PT_X_PATCH + location_.object, &buffer[0], 14);
     buffer[3] = '1' + location_.part; 
   }
 }
@@ -359,34 +356,30 @@ void Library::ShowDiskErrorMessage() {
 /* static */
 void Library::OnDialogClosed(uint8_t dialog_id, uint8_t return_value) {
   switch (dialog_id) {
-    // Handler for the init dialog box.
+    default:
+      break;
+      // Handler for the init dialog box.
     case 1:
       if (return_value) {
         initialization_mode_ = return_value - 1;
         auto mode = return_value == 1 ? INITIALIZATION_RANDOM : INITIALIZATION_DEFAULT;
         storage.Snapshot(location_);
-        if (location_.object == STORAGE_OBJECT_MULTI) {
-          multi.InitSettings(mode);
-        } else {
-          switch (location_.object) {
-            case STORAGE_OBJECT_PATCH:
-              multi.mutable_part(location_.part).InitPatch(mode);
-              break;
-
-            case STORAGE_OBJECT_SEQUENCE:
-              multi.mutable_part(location_.part).InitSequence(mode);
-              break;
-
-            case STORAGE_OBJECT_PROGRAM:
-              multi.mutable_part(location_.part).InitSettings(mode);
-              break;
-
-            case STORAGE_OBJECT_MULTI:
-            case STORAGE_OBJECT_PART:
-              // TODO?
-              break;
-
-          }
+        switch( location_.object) {
+          case STORAGE_OBJECT_MULTI:
+            multi.InitSettings(mode);
+            break;
+          case STORAGE_OBJECT_PATCH:
+            multi.mutable_part(location_.part).InitPatch(mode);
+            break;
+          case STORAGE_OBJECT_SEQUENCE:
+            multi.mutable_part(location_.part).InitSequence(mode);
+            break;
+          case STORAGE_OBJECT_PROGRAM:
+            multi.mutable_part(location_.part).InitSettings(mode);
+            break;
+          case STORAGE_OBJECT_PART:
+            // TODO?
+            break;
         }
       }
       Browse();

@@ -102,7 +102,7 @@ struct PartData {
 
     // Offset: 12..16
     uint8_t sequence_length[kNumSequences];
-    uint8_t polyphony_mode;
+    PolyphonyMode polyphony_mode;
 
     // Offset: 16-80
     //  0..15: step sequence 1
@@ -138,14 +138,20 @@ private:
   Data data;
 
 public:
-  explicit PartData(Parameters params) : data(params) {};
-  explicit PartData() : data() {};
+
+  constexpr static inline size_t sizeBytes() {
+    return sizeof(Parameters);
+  }
 
   inline void setData(uint8_t address, uint8_t value) {
     data.bytes[address] = value;
   }
   inline uint8_t getData(uint8_t address) const {
     return data.bytes[address];
+  }
+
+  inline Parameters* params_addr() {
+    return &data.params;
   }
 
   // raw access to underlying bytes
@@ -214,7 +220,7 @@ public:
   inline uint8_t& sequence_length(uint8_t index) {
     return data.params.sequence_length[index];
   }
-  inline uint8_t& polyphony_mode() {
+  inline PolyphonyMode& polyphony_mode() {
     return data.params.polyphony_mode;
   }
 
@@ -289,7 +295,8 @@ public:
 };
 
 enum PartParameter : uint8_t {
-  PRM_PART_VOLUME = sizeof(Patch), // TODO move these into the actual classes
+  PRM_PATCH = 0,
+  PRM_PART_VOLUME = Patch::sizeBytes(), // TODO move these into the actual classes
   PRM_PART_OCTAVE,
   PRM_PART_TUNING,
   PRM_PART_TUNING_SPREAD,
@@ -331,6 +338,10 @@ class Part {
   void Clock();
   void Start();
   void Stop();
+
+  constexpr static inline size_t sizeBytes() {
+    return Patch::sizeBytes() + PartData::sizeBytes();
+  }
   
   uint8_t num_pressed_keys() const { return pressed_keys_.size(); }
   

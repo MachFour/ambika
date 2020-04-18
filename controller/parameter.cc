@@ -69,7 +69,7 @@ uint8_t Parameter::Scale(uint8_t value_7bits) const {
     scaled_value = value_7bits;
   } else {
     uint8_t range = max_value - min_value + 1;
-    scaled_value = U8U8MulShift8(range, value_7bits << 1);
+    scaled_value = U8U8MulShift8(range, value_7bits << 1u);
     scaled_value += min_value;
     if (unit == UNIT_TEMPO) {
       if (scaled_value >= 239) {
@@ -81,22 +81,18 @@ uint8_t Parameter::Scale(uint8_t value_7bits) const {
   return scaled_value;
 }
 
-uint8_t Parameter::is_snapped(
-    uint8_t current_value,
-    uint8_t value_7bits) const {
+uint8_t Parameter::is_snapped(uint8_t current_value, uint8_t value_7bits) const {
   uint8_t scaled_value = Scale(value_7bits);
   int16_t delta;
   if (unit == UNIT_INT8) {
-    delta = static_cast<int16_t>(static_cast<int8_t>(current_value)) - \
-        static_cast<int8_t>(scaled_value);
+    delta = S16(S8(current_value)) - S8(scaled_value);
   } else {
-    delta = static_cast<int16_t>(static_cast<uint8_t>(current_value)) - \
-        static_cast<uint8_t>(scaled_value);
+    delta = S16(U8(current_value)) - U8(scaled_value);
   }
   if (delta < 0) {
     delta = -delta;
   }
-  return delta <= static_cast<uint8_t>(max_value - min_value) >> 5;
+  return delta <= U8(max_value - min_value) >> 5u;
 }
 
 uint8_t Parameter::Clamp(uint8_t value) const {
@@ -880,10 +876,7 @@ const Parameter& ParameterManager::parameter(uint8_t index) {
     return dummy_parameter_;
   }
   if (index != cached_index_) {
-    ResourcesManager::Load(
-        parameters,
-        index,
-        &cached_definition_);
+    ResourcesManager::Load(parameters, index, &cached_definition_);
     cached_index_ = index;
   }
   return cached_definition_;

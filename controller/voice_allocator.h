@@ -26,7 +26,7 @@ namespace ambika {
 
 class VoiceAllocator {
  public: 
-  VoiceAllocator() { }
+  VoiceAllocator() = default;
   void Init(uint8_t size, bool cyclic_mode, uint8_t* pool, uint8_t* lru) {
     size_ = size;
     pool_ = pool;

@@ -36,7 +36,7 @@ static const uint16_t lfo_phase_increment_per_clock_tick[15] PROGMEM = {
   4096, 5461, 8192, 10923, 16384, 21845, 32768, 65536
 };
 
-static const Patch::Parameters init_patch_params PROGMEM {
+static constexpr Patch::Parameters init_patch_params PROGMEM {
   // Oscillators
   .osc = {
     {WAVEFORM_SAW, 0, 0, 0},
@@ -96,7 +96,7 @@ static const Patch::Parameters init_patch_params PROGMEM {
   .padding = {0, 0, 0, 0, 0, 0, 0, 0}
 };
 
-static const PartData::Parameters init_part_params PROGMEM {
+static constexpr PartData::Parameters init_part_params PROGMEM {
   .volume = 120,
   .octave = 0,
   .tuning = 0,
@@ -149,7 +149,7 @@ void Part::Touch() {
   
   uint8_t* bytes = patch_.bytes();
   for (uint8_t address = PRM_PART_VOLUME; address <= PRM_PART_PORTAMENTO_TIME; ++address) {
-    WriteToAllVoices(VOICECARD_DATA_PART, address - sizeof(Patch), bytes[address]);
+    WriteToAllVoices(VOICECARD_DATA_PART, address - Patch::sizeBytes(), bytes[address]);
   }
   
   if (data_.polyphony_mode() != polyphony_mode_) {
@@ -170,7 +170,7 @@ void Part::TouchPatch() {
   // At this stage, all the voicecards are sitting in a tight SPI receive loop.
   const uint8_t* patch_data = patch_.bytes();
   for (uint8_t i = 0; i < num_allocated_voices_; ++i) {
-    voicecard_tx.WriteBlock(allocated_voices_[i], patch_data, sizeof(Patch));
+    voicecard_tx.WriteBlock(allocated_voices_[i], patch_data, Patch::sizeBytes());
   }
 }
 
@@ -182,11 +182,9 @@ void Part::Init() {
 
 void Part::InitPatch(InitializationMode mode) {
   if (mode == INITIALIZATION_DEFAULT) {
-    Patch::Parameters p;
-    ResourcesManager::Load(&init_patch_params, 0, &p);
-    patch_ = Patch(p);
+    ResourcesManager::Load(&init_patch_params, 0, patch_.params_addr());
   } else {
-    RandomizeRange(0, sizeof(Patch));
+    RandomizeRange(PRM_PATCH, Patch::sizeBytes());
   }
   TouchPatch();
 }
@@ -194,11 +192,9 @@ void Part::InitPatch(InitializationMode mode) {
 void Part::InitSettings(InitializationMode mode) {
   InitPatch(mode);
   if (mode == INITIALIZATION_DEFAULT) {
-    PartData::Parameters p;
-    ResourcesManager::Load(&init_part_params, 0, &p);
-    data_ = PartData(p);
+    ResourcesManager::Load(&init_part_params, 0, data_.params_addr());
   } else {
-    RandomizeRange(PRM_PART_VOLUME, sizeof(PartData));
+    RandomizeRange(PRM_PART_VOLUME, PartData::sizeBytes());
   }
   Touch();
 }
@@ -293,7 +289,7 @@ void Part::SetValue(uint8_t address, uint8_t value, uint8_t user_initiated) {
   } else if (address <= PRM_PART_PORTAMENTO_TIME) {
     // We have modified a part parameter a copy of which is needed by the
     // voicecard. Notify.
-    WriteToAllVoices(VOICECARD_DATA_PART, address - sizeof(Patch), value);
+    WriteToAllVoices(VOICECARD_DATA_PART, address - Patch::sizeBytes(), value);
   }
   
   if (address == PRM_PART_POLYPHONY_MODE && old_value != value) {
@@ -445,17 +441,11 @@ void Part::ControlChange(uint8_t controller, uint8_t value) {
         uint8_t new_value = parameter.Scale(value);
         if (system_settings.rx_cc()) {
           if (parameter.level <= PARAMETER_LEVEL_PART) {
-            uint8_t address = \
-                parameter.offset + parameter.stride * instance_index;
+            uint8_t address = parameter.offset + parameter.stride * instance_index;
             SetValue(address, new_value, 0);
           } else {
             // Should not happen, but this is a graceful degradation...
-            parameter_manager.SetValue(
-                parameter,
-                0,
-                instance_index,
-                value,
-                0 /* Not user initiated */);
+            parameter_manager.SetValue(parameter, 0, instance_index, value, 0 /* Not user initiated */);
           }
         }
       }
@@ -463,10 +453,7 @@ void Part::ControlChange(uint8_t controller, uint8_t value) {
 }
 
 void Part::PitchBend(uint16_t pitch_bend) {
-  WriteToAllVoices(
-      VOICECARD_DATA_MODULATION,
-      MOD_SRC_PITCH_BEND,
-      U14ShiftRight6(pitch_bend));
+  WriteToAllVoices(VOICECARD_DATA_MODULATION, MOD_SRC_PITCH_BEND, U14ShiftRight6(pitch_bend));
 }
 
 uint8_t Part::GetNextVoice(uint8_t index) const {
@@ -478,41 +465,38 @@ uint8_t Part::GetNextVoice(uint8_t index) const {
 }
 
 void Part::Aftertouch(uint8_t note, uint8_t velocity) {
-  if (data_.polyphony_mode() == POLY ||
-      data_.polyphony_mode() == CYCLIC ||
-      data_.polyphony_mode() == CHAIN) {
-    // Send the aftertouch change to the voicecard playing the affected note.
-    uint8_t voice_index = poly_allocator_.Find(note);
-    uint8_t size = poly_allocator_.size();
-    if (data_.polyphony_mode() == CYCLIC) {
-      size >>= 1;
+  const PolyphonyMode polyMode = data().polyphony_mode();
+  switch (polyMode) {
+    case POLY:
+    case CYCLIC:
+    case CHAIN:
+    case UNISON_2X:
+    {
+      // Send the aftertouch change to the voicecard playing the affected note.
+      uint8_t voice_index = poly_allocator_.Find(note);
+      uint8_t size = poly_allocator_.size();
+      if (polyMode == CYCLIC) {
+        size >>= 1u;
+      }
+      if (voice_index < size) {
+        if (polyMode == UNISON_2X) {
+          voice_index <<= 1;
+          voicecard_tx.WriteData(allocated_voices_[voice_index],
+                                 VOICECARD_DATA_MODULATION, MOD_SRC_AFTERTOUCH, velocity);
+          voicecard_tx.WriteData(allocated_voices_[GetNextVoice(voice_index)],
+                                 VOICECARD_DATA_MODULATION, MOD_SRC_AFTERTOUCH, velocity);
+
+        } else {
+          voicecard_tx.WriteData(allocated_voices_[voice_index],
+                                 VOICECARD_DATA_MODULATION, MOD_SRC_AFTERTOUCH, velocity);
+        }
+      }
+      break;
     }
-    if (voice_index < size) {
-      voicecard_tx.WriteData(
-          allocated_voices_[voice_index],
-          VOICECARD_DATA_MODULATION,
-          MOD_SRC_AFTERTOUCH,
-          velocity);
-    }
-  } else if (data_.polyphony_mode() == UNISON_2X) {
-    // Send the aftertouch change to the voicecard playing the affected note.
-    uint8_t voice_index = poly_allocator_.Find(note);
-    if (voice_index < poly_allocator_.size()) {
-      voice_index <<= 1;
-      voicecard_tx.WriteData(
-          allocated_voices_[voice_index],
-          VOICECARD_DATA_MODULATION,
-          MOD_SRC_AFTERTOUCH,
-          velocity);
-      voicecard_tx.WriteData(
-          allocated_voices_[GetNextVoice(voice_index)],
-          VOICECARD_DATA_MODULATION,
-          MOD_SRC_AFTERTOUCH,
-          velocity);
-    }
-  } else {
-    // Process the message as if it were a global aftertouch message.
-    Aftertouch(velocity);
+    default:
+      // Process the message as if it were a global aftertouch message.
+      Aftertouch(velocity);
+      break;
   }
 }
 
@@ -643,7 +627,7 @@ uint16_t Part::TuneNote(uint8_t midi_note) {
 
 uint8_t Part::AcceptNote(uint8_t midi_note) {
   if (data_.raga()) {
-    int16_t pitch_shift = ResourcesManager::Lookup<int16_t, uint8_t>(
+    auto pitch_shift = ResourcesManager::Lookup<int16_t, uint8_t>(
         ResourceId(LUT_RES_SCALE_JUST + data_.raga() - 1),
         midi_note % 12);
     if (pitch_shift == 32767) {
@@ -684,20 +668,16 @@ void Part::InternalNoteOn(uint8_t note, uint8_t velocity) {
       if (voice_index < poly_allocator_.size()) {
         voice_index <<= 1;
         uint16_t tuned_note = TuneNote(note);
-        voicecard_tx.Trigger(allocated_voices_[voice_index],
-            tuned_note, velocity, 0);
-        voicecard_tx.Trigger(allocated_voices_[GetNextVoice(voice_index)],
-            tuned_note + data_.spread(), velocity, 0);
+        voicecard_tx.Trigger(allocated_voices_[voice_index], tuned_note, velocity, 0);
+        uint16_t spread_note = tuned_note + data_.spread();
+        voicecard_tx.Trigger(allocated_voices_[GetNextVoice(voice_index)], spread_note, velocity, 0);
         retrigger_lfos = 1;
       }
     } else if (data_.polyphony_mode() == CHAIN) {
       if (voice_index < (poly_allocator_.size() / 2)) {
         uint16_t tuned_note = TuneNote(note);
-        voicecard_tx.Trigger(
-            allocated_voices_[voice_index],
-            tuned_note + voice_index * data_.spread(),
-            velocity,
-            0);
+        uint16_t spread_note = tuned_note + voice_index * data_.spread();
+        voicecard_tx.Trigger(allocated_voices_[voice_index], spread_note, velocity, 0);
       } else {
         midi_dispatcher.ForwardNote(this, note, velocity);
       }
@@ -705,11 +685,8 @@ void Part::InternalNoteOn(uint8_t note, uint8_t velocity) {
     } else {
       if (voice_index < poly_allocator_.size()) {
         uint16_t tuned_note = TuneNote(note);
-        voicecard_tx.Trigger(
-            allocated_voices_[voice_index],
-            tuned_note + voice_index * data_.spread(),
-            velocity,
-            0);
+        uint16_t spread_note = tuned_note + voice_index * data_.spread();
+        voicecard_tx.Trigger(allocated_voices_[voice_index], spread_note, velocity, 0);
         retrigger_lfos = 1;
       }
     }
@@ -744,11 +721,8 @@ void Part::InternalNoteOff(uint8_t note) {
         uint16_t tuned_note = TuneNote(mono_allocator_.most_recent_note().note);
         uint8_t pitch_drift = 0;
         for (uint8_t i = 0; i < num_allocated_voices_; ++i) {
-          voicecard_tx.Trigger(
-              allocated_voices_[i],
-              tuned_note + pitch_drift,
-              mono_allocator_.most_recent_note().velocity & 0x7f,
-              1);
+          uint8_t velocity = byteAnd(mono_allocator_.most_recent_note().velocity, 0x7f);
+          voicecard_tx.Trigger(allocated_voices_[i], tuned_note + pitch_drift, velocity, 1);
           pitch_drift += data_.spread();
         }
         retrigger_lfos = !data_.legato();
@@ -838,8 +812,8 @@ void Part::ClockSequencer() {
   if (data_.arp_sequencer_mode() == ARP_SEQUENCER_MODE_NOTE &&
       pressed_keys_.size() && data_.sequence_length(2)) {
     NoteStep n = data_.note_step(sequencer_step_[2]);
-    uint8_t note = Clip(S16(n.note) + \
-        pressed_keys_.most_recent_note().note - 60, 0, 127);
+    uint8_t recent_note = pressed_keys_.most_recent_note().note;
+    uint8_t note = Clip(S16(n.note) + recent_note - 60, 0, 127);
     if (!n.gate) {
       // Just kill the previous note.
       InternalNoteOff(previous_generated_note_);
@@ -848,12 +822,12 @@ void Part::ClockSequencer() {
       if (!n.legato) {
         // Kill the previous note and move to the new note.
         InternalNoteOff(previous_generated_note_);
-        InternalNoteOn(note, n.velocity & 0x7f);
+        InternalNoteOn(note, U7(n.velocity));
       } else {
         // Kill the previous note, but only after having started playing the
         // new one.
         if (previous_generated_note_ != note) {
-          InternalNoteOn(note, n.velocity & 0x7f);
+          InternalNoteOn(note, U7(n.velocity));
           InternalNoteOff(previous_generated_note_);
         } else {
           // Do nothing, this is just a note being held.
@@ -873,16 +847,12 @@ void Part::ClockSequencer() {
 }
 
 void Part::ClockArpeggiator() {
-  uint16_t pattern = ResourcesManager::Lookup<uint16_t, uint8_t>(
-      lut_res_arpeggiator_patterns,
-      data_.arp_pattern());
+  using rs = ResourcesManager;
+  uint16_t pattern = rs::Lookup<uint16_t, uint8_t>(lut_res_arpeggiator_patterns, data_.arp_pattern());
   uint8_t has_arpeggiator_note = (arp_pattern_mask_ & pattern) ? 255 : 0;
   // Update the gate value in the modulation matrix.
   for (uint8_t i = 0; i < num_allocated_voices_; ++i) {
-    WriteToAllVoices(
-        VOICECARD_DATA_MODULATION,
-        MOD_SRC_ARP_STEP,
-        has_arpeggiator_note);
+    WriteToAllVoices(VOICECARD_DATA_MODULATION, MOD_SRC_ARP_STEP, has_arpeggiator_note);
   }
   
   // Trigger notes only if the arp is on, and if keys are pressed.
@@ -896,7 +866,7 @@ void Part::ClockArpeggiator() {
           arpeggio_note = &pressed_keys_.played_note(arp_step_);
         }
         uint8_t note = arpeggio_note->note;
-        uint8_t velocity = arpeggio_note->velocity & 0x7f;
+        uint8_t velocity = U7(arpeggio_note->velocity);
         note += 12 * arp_octave_;
         while (note > 127) {
           note -= 12;
@@ -906,9 +876,7 @@ void Part::ClockArpeggiator() {
       } else {
         for (uint8_t i = 0; i < pressed_keys_.size(); ++i) {
           const NoteEntry* retriggered_note = &pressed_keys_.sorted_note(i);
-          InternalNoteOn(
-              retriggered_note->note,
-              retriggered_note->velocity & 0x7f);
+          InternalNoteOn(retriggered_note->note, U7(retriggered_note->velocity));
         }
         // This is arbitrary, and used only to know at the next blank step in
         // the sequence that we have to send a note off event.
@@ -949,8 +917,8 @@ void Part::StepArpeggio() {
   uint8_t num_notes = pressed_keys_.size();
   if (data_.arp_direction() == ARPEGGIO_DIRECTION_RANDOM) {
     uint8_t random_byte = Random::GetByte();
-    arp_octave_ = random_byte & 0xf;
-    arp_step_ = (random_byte & 0xf0) >> 4;
+    arp_octave_ = lowNibble(random_byte);
+    arp_step_ = highNibble(random_byte);
     while (arp_octave_ >= data_.arp_octave()) {
       arp_octave_ -= data_.arp_octave();
     }
@@ -984,10 +952,7 @@ void Part::StepArpeggio() {
   }
 }
 
-void Part::WriteToAllVoices(
-    uint8_t data_type,
-    uint8_t address,
-    uint8_t value) {
+void Part::WriteToAllVoices(uint8_t data_type, uint8_t address, uint8_t value) {
   for (uint8_t i = 0; i < num_allocated_voices_; ++i) {
     voicecard_tx.WriteData(allocated_voices_[i], data_type, address, value);
   }

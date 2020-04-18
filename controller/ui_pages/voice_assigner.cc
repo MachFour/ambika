@@ -68,17 +68,17 @@ uint8_t VoiceAssigner::OnClick() {
   } else {
     uint8_t bit = 1 << (active_control_ - 4);
     uint8_t part = ui.state().active_part;
-    uint8_t allocation = multi.data().part_mapping_[part].voice_allocation;
+    uint8_t allocation = multi.data().part_mapping[part].voice_allocation;
       // Remove this voice from any other part that used it.
     if (!(allocation & bit)) {
       for (uint8_t i = 0; i < kNumParts; ++i) {
-        multi.mutable_data()->part_mapping_[i].voice_allocation &= ~bit;
+        multi.mutable_data()->part_mapping[i].voice_allocation &= ~bit;
       }
     }
     allocation ^= bit;
-    if (multi.mutable_data()->part_mapping_[part].voice_allocation != \
+    if (multi.mutable_data()->part_mapping[part].voice_allocation != \
         allocation) {
-      multi.mutable_data()->part_mapping_[part].voice_allocation = allocation;
+      multi.mutable_data()->part_mapping[part].voice_allocation = allocation;
       multi.SolveAllocationConflicts(-1);
       multi.AssignVoicesToParts();
     }
@@ -114,7 +114,7 @@ uint8_t VoiceAssigner::OnPot(uint8_t index, uint8_t value) {
     uint8_t mask = 3u << shift;
     uint8_t part = ui.state().active_part;
     // read, modify, write
-    uint8_t& allocation = multi.mutable_data()->part_mapping_[part].voice_allocation;
+    uint8_t& allocation = multi.mutable_data()->part_mapping[part].voice_allocation;
     uint8_t new_allocation = byteOr(byteAnd(allocation, byteInverse(mask)), value << shift);
     new_allocation &= multi.SolveAllocationConflicts(part);
     if (allocation != new_allocation) {
@@ -133,7 +133,7 @@ void VoiceAssigner::UpdateScreen() {
     active_control_ < 4 ? kLcdNoCursor : 53 + 5 * (active_control_ - 4));
   
   uint8_t part = ui.state().active_part;
-  uint8_t allocation = multi.data().part_mapping_[part].voice_allocation;
+  uint8_t allocation = multi.data().part_mapping[part].voice_allocation;
   
   char* buffer = display.line_buffer(1);
   memset(buffer, ' ', kLcdWidth);

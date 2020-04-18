@@ -63,7 +63,7 @@ struct PartMapping {
 
 struct MultiData {
   // Offset: 0-24
-  PartMapping part_mapping_[kNumParts];
+  PartMapping part_mapping[kNumParts];
   
   // Offset: 24-28
   uint8_t clock_bpm;
@@ -76,6 +76,10 @@ struct MultiData {
   
   // Offset: 52-56
   uint8_t padding2[4];
+
+  static constexpr inline size_t size() {
+    return sizeof(MultiData);
+  }
 };
 
 enum MultiParameter {
@@ -122,7 +126,7 @@ class Multi {
       Start();
     }
     for (uint8_t i = 0; i < kNumParts; ++i) {
-      if (data_.part_mapping_[i].accept_channel_note(channel, note)) {
+      if (data_.part_mapping[i].accept_channel_note(channel, note)) {
         parts_[i].NoteOn(note, velocity);
       }
     }
@@ -130,84 +134,84 @@ class Multi {
   static void NoteOff(uint8_t channel, uint8_t note, uint8_t velocity) {
     IGNORE_UNUSED(velocity);
     for (uint8_t i = 0; i < kNumParts; ++i) {
-      if (data_.part_mapping_[i].accept_channel_note(channel, note)) {
+      if (data_.part_mapping[i].accept_channel_note(channel, note)) {
         parts_[i].NoteOff(note);
       }
     }
   }
   static void ControlChange(uint8_t channel, uint8_t controller, uint8_t value) {
     for (uint8_t i = 0; i < kNumParts; ++i) {
-      if (data_.part_mapping_[i].receive_channel(channel)) {
+      if (data_.part_mapping[i].receive_channel(channel)) {
         parts_[i].ControlChange(controller, value);
       }
     }
   }
   static void PitchBend(uint8_t channel, uint16_t pitch_bend) {
     for (uint8_t i = 0; i < kNumParts; ++i) {
-      if (data_.part_mapping_[i].receive_channel(channel)) {
+      if (data_.part_mapping[i].receive_channel(channel)) {
         parts_[i].PitchBend(pitch_bend);
       }
     }
   }
   static void Aftertouch(uint8_t channel, uint8_t note, uint8_t velocity) {
     for (uint8_t i = 0; i < kNumParts; ++i) {
-      if (data_.part_mapping_[i].accept_channel_note(channel, note)) {
+      if (data_.part_mapping[i].accept_channel_note(channel, note)) {
         parts_[i].Aftertouch(note, velocity);
       }
     }
   }
   static void Aftertouch(uint8_t channel, uint8_t velocity) {
     for (uint8_t i = 0; i < kNumParts; ++i) {
-      if (data_.part_mapping_[i].receive_channel(channel)) {
+      if (data_.part_mapping[i].receive_channel(channel)) {
         parts_[i].Aftertouch(velocity);
       }
     }
   }
   static void AllSoundOff(uint8_t channel) {
     for (uint8_t i = 0; i < kNumParts; ++i) {
-      if (data_.part_mapping_[i].receive_channel(channel)) {
+      if (data_.part_mapping[i].receive_channel(channel)) {
         parts_[i].AllSoundOff();
       }
     }
   }
   static void ResetAllControllers(uint8_t channel) {
     for (uint8_t i = 0; i < kNumParts; ++i) {
-      if (data_.part_mapping_[i].receive_channel(channel)) {
+      if (data_.part_mapping[i].receive_channel(channel)) {
         parts_[i].ResetAllControllers();
       }
     }
   }
   static void AllNotesOff(uint8_t channel) {
     for (uint8_t i = 0; i < kNumParts; ++i) {
-      if (data_.part_mapping_[i].receive_channel(channel)) {
+      if (data_.part_mapping[i].receive_channel(channel)) {
         parts_[i].AllNotesOff();
       }
     }
   }
   static void OmniModeOff(uint8_t channel) {
     for (uint8_t i = 0; i < kNumParts; ++i) {
-      if (data_.part_mapping_[i].receive_channel(channel)) {
-        data_.part_mapping_[i].midi_channel = channel + 1;
+      if (data_.part_mapping[i].receive_channel(channel)) {
+        data_.part_mapping[i].midi_channel = channel + 1;
       }
     }
   }
   static void OmniModeOn(uint8_t channel) {
     for (uint8_t i = 0; i < kNumParts; ++i) {
-      if (data_.part_mapping_[i].receive_channel(channel)) {
-        data_.part_mapping_[i].midi_channel = 0;
+      if (data_.part_mapping[i].receive_channel(channel)) {
+        data_.part_mapping[i].midi_channel = 0;
       }
     }
   }
   static void MonoModeOn(uint8_t channel, uint8_t num_channels) {
     for (uint8_t i = 0; i < kNumParts; ++i) {
-      if (data_.part_mapping_[i].receive_channel(channel)) {
+      if (data_.part_mapping[i].receive_channel(channel)) {
         parts_[i].MonoModeOn(num_channels);
       }
     }
   }
   static void PolyModeOn(uint8_t channel) {
     for (uint8_t i = 0; i < kNumParts; ++i) {
-      if (data_.part_mapping_[i].receive_channel(channel)) {
+      if (data_.part_mapping[i].receive_channel(channel)) {
         parts_[i].PolyModeOn();
       }
     }
@@ -264,7 +268,7 @@ class Multi {
   static uint8_t part_channel(Part* part) {
     for (uint8_t i = 0; i < kNumParts; ++i) {
       if (&parts_[i] == part) {
-        return data_.part_mapping_[i].tx_channel();
+        return data_.part_mapping[i].tx_channel();
       }
     }
     return 0;
@@ -283,7 +287,7 @@ class Multi {
   }
   
   inline void ClearFlag(uint8_t flag) {
-    flags_ &= ~flag;
+    flags_ &= byteInverse(flag);
     for (uint8_t i = 0; i < kNumParts; ++i) {
       parts_[i].ClearFlag(flag);
     }

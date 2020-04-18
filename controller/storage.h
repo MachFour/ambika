@@ -65,7 +65,7 @@ struct StorageLocation {
   char* name;
 
   inline uint16_t bank_slot() const {
-    return (bank << 8) | slot;
+    return wordOr(bank << 8u, slot);
   }
   
   inline uint8_t index() const {
@@ -83,7 +83,7 @@ static const uint16_t kFsInitTimeout = 750;
 
 class Storage {
  public:
-  Storage() { }
+  Storage() = default;
   
   static void Init();
   static FilesystemStatus InitFilesystem() {
@@ -149,11 +149,7 @@ class Storage {
   }
   static uint8_t FileExists(const char* name, char variable);
 
-  static FilesystemStatus SpiCopy(
-      uint8_t voice_id,
-      const char* name,
-      char variable,
-      uint8_t page_size_nibbles);
+  static FilesystemStatus SpiCopy(uint8_t voice_id, const char* name, char variable, uint8_t page_size_nibbles);
   
   static uint16_t GetType() {
     return fs_.GetType();
@@ -183,10 +179,7 @@ class Storage {
       StorageDir type,
       const StorageLocation& location);
 
-  static FilesystemStatus Load(
-      StorageDir type,
-      const StorageLocation& location,
-      uint8_t load_contents);
+  static FilesystemStatus Load(StorageDir type, const StorageLocation& location, uint8_t load_contents);
 
   static char* GetFileName(StorageDir type, const StorageLocation& location);
 

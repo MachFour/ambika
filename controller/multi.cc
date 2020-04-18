@@ -41,28 +41,35 @@ uint8_t Multi::flags_;
 
 static constexpr MultiData init_settings PROGMEM = {
   // Parts mappings.
-  1, 0, 127, 0x15,
-  2, 0, 127, 0x2a,
-  3, 0, 127, 0,
-  4, 0, 127, 0,
-  5, 0, 127, 0,
-  6, 0, 127, 0,
-  
+  .part_mapping = {
+    {1, 0, 127, 0x15},
+    {2, 0, 127, 0x2a},
+    {3, 0, 127, 0},
+    {4, 0, 127, 0},
+    {5, 0, 127, 0},
+    {6, 0, 127, 0},
+  },
+
   // Clock.
-  120, 0, 0, 4,
-  
+  .clock_bpm = 120,
+  .clock_groove_template = 0,
+  .clock_groove_amount = 0,
+  .clock_release = 4,
+
   // Performance page assignments.
-  0, 1, 0,
-  0, 16, 0,
-  1, 1, 0,
-  1, 16, 0,
-  0, 22, 0,
-  0, 42, 0,
-  1, 22, 0,
-  1, 42, 0,
-  
+  .knob_assignment = {
+    {0, 1, 0},
+    {0, 16, 0},
+    {1, 1, 0},
+    {1, 16, 0},
+    {0, 22, 0},
+    {0, 42, 0},
+    {1, 22, 0},
+    {1, 42, 0},
+  },
+
   // Padding.
-  0, 0, 0, 0,
+  .padding2 = {0, 0, 0, 0}
 };
 
 /* static */
@@ -99,7 +106,7 @@ uint8_t Multi::SolveAllocationConflicts(uint8_t constraint) {
   uint8_t available_voices = 0xff;
   for (uint8_t i = 0; i < kNumParts; ++i) {
     if (i != constraint) {
-      uint8_t& part_i_allocation = data_.part_mapping_[i].voice_allocation;
+      uint8_t& part_i_allocation = data_.part_mapping[i].voice_allocation;
       part_i_allocation &= available_voices;
       available_voices &= byteInverse(part_i_allocation);
     }
@@ -110,7 +117,7 @@ uint8_t Multi::SolveAllocationConflicts(uint8_t constraint) {
 /* static */
 void Multi::AssignVoicesToParts() {
   for (uint8_t i = 0; i < kNumParts; ++i) {
-    parts_[i].AssignVoices(data_.part_mapping_[i].voice_allocation);
+    parts_[i].AssignVoices(data_.part_mapping[i].voice_allocation);
   }
 }
 

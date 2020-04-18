@@ -41,7 +41,7 @@ static constexpr uint32_t kObjectTag = FourCC('o', 'b', 'j', ' ');
 
 using namespace avrlib;
 
-static constexpr char sysex_header[] PROGMEM = {
+static constexpr uint8_t sysex_header[] PROGMEM = {
   0xf0,  // <SysEx>
   0x00, 0x21, 0x02,  // Mutable instruments manufacturer id.
   0x00, 0x04,  // Product ID for Ambika-6.
@@ -94,26 +94,26 @@ uint8_t Storage::Checksum(const void* data, uint8_t size) {
 
 /* static */
 void Storage::WriteMultiToEeprom() {
-  uint8_t* address = 0;
+  uint8_t* address = nullptr;
   for (uint8_t i = 0; i < kNumParts; ++i) {
-    EepromWrite(multi.part(i).raw_data_readonly(), sizeof(PartData), &address);
-    EepromWrite(multi.part(i).raw_patch_data_readonly(), sizeof(Patch), &address);
+    EepromWrite(multi.part(i).raw_data_readonly(), PartData::sizeBytes(), &address);
+    EepromWrite(multi.part(i).raw_patch_data_readonly(), Patch::sizeBytes(), &address);
   }
-  EepromWrite(multi.raw_data(), sizeof(MultiData), &address);
+  EepromWrite(multi.raw_data(), MultiData::size(), &address);
 }
 
 /* static */
 uint8_t Storage::LoadMultiFromEeprom() {
-  uint8_t* address = 0;
+  uint8_t* address = nullptr;
   uint8_t success = 1;
   for (uint8_t i = 0; i < kNumParts; ++i) {
     success = success && Storage::EepromRead(
-        multi.mutable_part(i).raw_data(), sizeof(PartData), &address);
+        multi.mutable_part(i).raw_data(), PartData::sizeBytes(), &address);
     success = success && Storage::EepromRead(
-        multi.mutable_part(i).raw_patch_data(), sizeof(Patch), &address);
+        multi.mutable_part(i).raw_patch_data(), Patch::sizeBytes(), &address);
   }
   success = success && Storage::EepromRead(
-      multi.mutable_raw_data(), sizeof(MultiData), &address);
+      multi.mutable_raw_data(), MultiData::size(), &address);
   return success;
 }
 
@@ -139,18 +139,21 @@ uint8_t Storage::EepromRead(void* data, uint8_t size, uint8_t** offset_ptr) {
 uint8_t Storage::object_size(const StorageLocation& location) {
   switch (location.object) {
     case STORAGE_OBJECT_PATCH:
-      return sizeof(Patch);
+      return Patch::sizeBytes();
       
     case STORAGE_OBJECT_SEQUENCE:
-      return 72;
-      
-    case STORAGE_OBJECT_PART:
-      return sizeof(PartData);
-      
-    case STORAGE_OBJECT_MULTI:
-      return sizeof(MultiData);
+      return PartData::sequence_data_size;
 
     case STORAGE_OBJECT_PROGRAM:
+      // program is PartData + patch data?
+      return Part::sizeBytes();
+
+    case STORAGE_OBJECT_PART:
+      return PartData::sizeBytes();
+      
+    case STORAGE_OBJECT_MULTI:
+      return MultiData::size();
+
     default:
       return 0;
   }
@@ -158,18 +161,18 @@ uint8_t Storage::object_size(const StorageLocation& location) {
 
 /* static */
 uint16_t Storage::riff_size(const StorageLocation& location) {
+  constexpr uint8_t extra_size = 12; // TODO is this a header?
   switch (location.object) {
     case STORAGE_OBJECT_MULTI:
-      return (sizeof(Patch) + 12 + sizeof(PartData) + 12) * kNumParts + \
-          sizeof(MultiData) + 12;
-
+      {
+        uint16_t part_size = (Patch::sizeBytes() + extra_size + PartData::sizeBytes() + extra_size);
+        return part_size * kNumParts + MultiData::size() + extra_size;
+      }
     case STORAGE_OBJECT_PROGRAM:
-      return sizeof(Patch) + 12 + sizeof(PartData) + 12;
-    
+      return Patch::sizeBytes() + extra_size + PartData::sizeBytes() + extra_size;
     default:
-      return object_size(location) + 12;
+      return object_size(location) + extra_size;
   }
-  return 0;
 }
 
 /* static */
@@ -184,7 +187,8 @@ const uint8_t* Storage::object_data(const StorageLocation& location) {
     case STORAGE_OBJECT_MULTI:
       return multi.raw_data();
     case STORAGE_OBJECT_PROGRAM:
-      /* fall through */
+      // program is patch + part, but it's not valid to do this
+      // fall-through
     default:
       // TODO is this right?
        return nullptr;
@@ -203,7 +207,8 @@ uint8_t* Storage::mutable_object_data(const StorageLocation& location) {
     case STORAGE_OBJECT_MULTI:
       return multi.mutable_raw_data();
     case STORAGE_OBJECT_PROGRAM:
-      /* fall through */
+      // program is patch + part, but it's not valid to do this
+      // fall-through
     default:
       // TODO is this right?
       return nullptr;
@@ -263,12 +268,10 @@ FilesystemStatus Storage::NextVersion(const StorageLocation& location) {
 }
 
 /* static */
-void Storage::ForEachObject(
-    const StorageLocation& location,
-    ObjectFn object_fn) {
+void Storage::ForEachObject(const StorageLocation& location, ObjectFn object_fn) {
   StorageLocation destination = location;
   destination.alias = 0;
-  switch(destination.object) {
+  switch (destination.object) {
     case STORAGE_OBJECT_PATCH:
     case STORAGE_OBJECT_SEQUENCE:
     case STORAGE_OBJECT_PART:
@@ -323,9 +326,11 @@ void Storage::TouchObject(const StorageLocation& location) {
     case STORAGE_OBJECT_MULTI:
       multi.Touch();
       break;
-
     case STORAGE_OBJECT_PROGRAM:
-      /* fall through */
+      // program is patch and sequence?
+      multi.mutable_part(location.part).TouchPatch();
+      multi.mutable_part(location.part).Touch();
+      break;
     default:
       break;
   }
@@ -340,7 +345,7 @@ void Storage::SysExSendObject(const StorageLocation& l) {
 void Storage::SysExSendRaw(uint8_t command, uint8_t argument, const uint8_t* data, uint8_t size, bool send_address) {
   midi_dispatcher.Flush();
   for (uint8_t i = 0; i < sizeof(sysex_header); ++i) {
-    midi_dispatcher.SendBlocking(pgm_read_byte(sysex_header + i));
+    midi_dispatcher.SendBlocking(pgm_read_byte(sysex_header[i]));
   }
   midi_dispatcher.SendBlocking(command);
   midi_dispatcher.SendBlocking(argument);
@@ -395,10 +400,7 @@ void Storage::RIFFWriteObject(const StorageLocation& location) {
 }
 
 /* static */
-FilesystemStatus Storage::Load(
-    StorageDir type,
-    const StorageLocation& location,
-    uint8_t load_contents) {
+FilesystemStatus Storage::Load(StorageDir type, const StorageLocation& location, uint8_t load_contents) {
   {
     scoped_resource<SdCardSession> session;
 
@@ -437,10 +439,15 @@ FilesystemStatus Storage::Load(
     
       if (id.value == kObjectTag && load_contents) {
         file_.Read(id.bytes, 4, &read);
-        StorageLocation destination;
-        destination.object = static_cast<StorageObject>(id.bytes[0] - 1);
-        destination.part = id.bytes[1] == 0 ? location.part : (id.bytes[1] - 1);
-      
+        StorageLocation destination {
+            .object = static_cast<StorageObject>(id.bytes[0] - 1),
+            .part = U8(id.bytes[1] == 0 ? location.part : (id.bytes[1] - 1)),
+            .alias = 0,
+            .bank = 0,
+            .slot = 0,
+            .name = nullptr
+        };
+
         uint8_t expected_size = object_size(destination);
         if (expected_size == size.value - 4) {
           uint8_t* data = mutable_object_data(destination);
@@ -468,9 +475,8 @@ FilesystemStatus Storage::Load(
 }
 
 /* static */
-FilesystemStatus Storage::Save(
-    StorageDir type,
-    const StorageLocation& location) {
+FilesystemStatus Storage::Save(StorageDir type, const StorageLocation& location) {
+
   scoped_resource<SdCardSession> session;
   
   FilesystemStatus s;
@@ -480,8 +486,7 @@ FilesystemStatus Storage::Save(
   InvalidatePendingSysExTransfer();
   
   // Create a backup of the older version.
-  if (type == STORAGE_CLIPBOARD ||
-      (type == STORAGE_BANK && system_settings.data().autobackup)) {
+  if (type == STORAGE_CLIPBOARD || (type == STORAGE_BANK && system_settings.data().autobackup)) {
     char* backup_name = tmp_buffer_ + 32;
     strcpy(backup_name, name);
     backup_name[strlen(backup_name) - 3] = '~';
@@ -592,11 +597,7 @@ void Storage::Expand(const char* name, char variable) {
 }
 
 /* static */
-FilesystemStatus Storage::SpiCopy(
-    uint8_t voice_id,
-    const char* name,
-    char variable,
-    uint8_t page_size_nibbles) {
+FilesystemStatus Storage::SpiCopy(uint8_t voice_id, const char* name, char variable, uint8_t page_size_nibbles) {
   scoped_resource<SdCardSession> session;
   file_.Close();
   InvalidatePendingSysExTransfer();
@@ -663,8 +664,14 @@ void Storage::SysExParseCommand() {
     case 0x04:
     case 0x05:
       {
-        StorageLocation location;
-        location.object = static_cast<StorageObject>(sysex_rx_command_[0] - 1);
+        StorageLocation location {
+          .object = static_cast<StorageObject>(sysex_rx_command_[0] - 1),
+          .part = 0,
+          .alias = 0,
+          .bank = 0,
+          .slot = 0,
+          .name = nullptr
+        };
         sysex_rx_expected_size_ = object_size(location);
       }
       break;
@@ -700,12 +707,16 @@ void Storage::SysExParseCommand() {
 void Storage::SysExAcceptCommand() {
   uint8_t success = 1;
   
-  StorageLocation location;
-  location.part = sysex_rx_command_[1] == 0
-    ?  ui.state().active_part
-    : sysex_rx_command_[1] - 1;
+  StorageLocation location {
+      .object = static_cast<StorageObject>(0), // null object
+      .part = U8(sysex_rx_command_[1] == 0 ? ui.state().active_part : sysex_rx_command_[1] - 1),
+      .alias = 0,
+      .bank = 0,
+      .slot = 0,
+      .name = nullptr
+  };
 
-  switch (sysex_rx_command_[0]) {
+    switch (sysex_rx_command_[0]) {
     case 0x01:
     case 0x02:
     case 0x03:
@@ -740,11 +751,11 @@ void Storage::SysExAcceptCommand() {
     case 0x1f:
       // PEEK
       {
-        Word address;
-        address.bytes[0] = buffer_[0];
-        address.bytes[1] = buffer_[1];
+        Word address {
+          .bytes = {buffer_[0], buffer_[1]}
+        };
         uint8_t size = sysex_rx_command_[1];
-        const uint8_t* p = (const uint8_t*)(address.value);
+        auto p = reinterpret_cast<const uint8_t*>(address.value);
         SysExSendRaw(0x0f, size, p, size, true);
       }
       break;
@@ -805,9 +816,8 @@ void Storage::SysExReceive(uint8_t byte) {
     break;
 
   case RECEIVING_FOOTER:
-    if (byte == 0xf7 &&
-        sysex_rx_checksum_ == buffer_[sysex_rx_expected_size_] &&
-        system_settings.rx_sysex()) {
+    bool checksum_ok = sysex_rx_checksum_ == buffer_[sysex_rx_expected_size_];
+    if (byte == 0xf7 && checksum_ok && system_settings.rx_sysex()) {
       SysExAcceptCommand();
     } else {
       sysex_rx_state_ = RECEPTION_ERROR;

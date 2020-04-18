@@ -111,10 +111,10 @@ class MidiDispatcher : public midi::MidiDevice {
         bool error = false;
         if (current_bank_ < 26) {
           for (uint8_t i = 0; i < kNumParts; ++i) {
-            if (multi.data().part_mapping_[i].receive_channel(channel)) {
+            if (multi.data().part_mapping[i].receive_channel(channel)) {
               StorageLocation* location = Library::mutable_location();
               location->object = STORAGE_OBJECT_PROGRAM;
-              location->name = NULL;  // We don't want to load the name.
+              location->name = nullptr;  // We don't want to load the name.
               location->part = i;
               location->bank = current_bank_;
               location->slot = program;
@@ -129,7 +129,7 @@ class MidiDispatcher : public midi::MidiDevice {
         } else {
           StorageLocation* location = Library::mutable_location();
           location->object = STORAGE_OBJECT_MULTI;
-          location->name = NULL;  // We don't want to load the name.
+          location->name = nullptr;  // We don't want to load the name.
           location->part = 0;
           location->bank = current_bank_ - 26;
           location->slot = program;
@@ -249,11 +249,11 @@ class MidiDispatcher : public midi::MidiDevice {
       uint8_t bank,
       uint8_t program) {
     if (mode() == MIDI_OUT_FULL) {
-      Send3(0xb0 | channel, 0x20, bank & 0x7f);
+      Send3(0xb0 | channel, 0x20, U7(bank));
       // We send a program change + an active sensing message that does
       // strictly nothing. This way, we can use the already unrolled
       // Send3 function.
-      Send3(0xc0 | channel, program & 0x7f, 0xfe);
+      Send3(0xc0 | channel, U7(program), 0xfe);
     }
   }
   
@@ -268,14 +268,14 @@ class MidiDispatcher : public midi::MidiDevice {
     uint8_t channel = multi.part_channel(part);
     ++data_entry_counter_;
     if (current_parameter_address_ != address || data_entry_counter_ >= 32) {
-      Send3(0xb0 | channel, midi::kNrpnMsb, (address & 0x80) ? 1 : 0);
-      Send3(0xb0 | channel, midi::kNrpnLsb, address & 0x7f);
+      Send3(byteOr(channel, 0xb0), midi::kNrpnMsb, MSB8(address) ? 1 : 0);
+      Send3(byteOr(channel, 0xb0), midi::kNrpnLsb, U7(address));
       current_parameter_address_ = address;
       data_entry_counter_ = 0;
     }
-    uint8_t msb = (value & 0x80) ? 1 : 0;
-    Send3(0xb0 | channel, midi::kDataEntryMsb, msb);
-    Send3(0xb0 | channel, midi::kDataEntryLsb, value & 0x7f);
+    uint8_t msb = MSB8(value) ? 1 : 0;
+    Send3(byteOr(channel, 0xb0), midi::kDataEntryMsb, msb);
+    Send3(byteOr(channel, 0xb0), midi::kDataEntryLsb, U7(value));
   }
   
   static void Send3(uint8_t status, uint8_t a, uint8_t b);

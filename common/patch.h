@@ -302,6 +302,7 @@ struct Patch {
 
   };
 
+private:
   union Data {
     Parameters params;
     uint8_t bytes[sizeof(Parameters)];
@@ -316,15 +317,24 @@ public:
   explicit Patch(Parameters p) : data(p) {};
   explicit Patch() = default;
 
+  constexpr static inline size_t sizeBytes() {
+    return sizeof(Parameters);
+  }
+
   inline void setData(uint8_t address, uint8_t value) {
     data.bytes[address] = value;
   }
   inline uint8_t getData(uint8_t address) const {
     return data.bytes[address];
   }
+
   // raw underlying data
   inline uint8_t* bytes() {
     return data.bytes;
+  }
+
+  inline Parameters* params_addr() {
+    return &data.params;
   }
 
   [[nodiscard]] // Clang-Tidy wants this
