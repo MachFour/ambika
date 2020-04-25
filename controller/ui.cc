@@ -318,9 +318,9 @@ void Ui::DoEvents() {
         if (e.control_id == 0) {
           (*event_handlers_.OnIncrement)(e.value);
         } else {
-          int8_t new_part = state_.active_part + e.value;
+          int8_t new_part = state_.active_part() + e.value;
           new_part = Clip(new_part, 0, kNumParts - 1);
-          state_.active_part = new_part;
+          state_.active_part() = new_part;
         }
         break;
         
@@ -368,7 +368,7 @@ void Ui::DoEvents() {
   
   leds.Clear();
   leds.set_pixel(
-      LED_PART_1 + pgm_read_byte(part_leds_remap + state_.active_part), 0xf0);
+      LED_PART_1 + pgm_read_byte(part_leds_remap + state_.active_part()), 0xf0);
   for (uint8_t i = 0; i < kNumVoices; ++i) {
     uint8_t led_index = pgm_read_byte(part_leds_remap + i);
     uint8_t velocity = voicecard_tx.voice_status(i) >> 3;
@@ -376,7 +376,7 @@ void Ui::DoEvents() {
         velocity | leds.pixel(LED_PART_1 + led_index));
   }
   (*event_handlers_.UpdateLeds)();
-  if (system_settings.data().swap_leds_colors) {
+  if (system_settings.data().swap_leds_colors()) {
     for (uint8_t i = 0; i < 15; ++i) {
       leds.set_pixel(i, U8Swap4(leds.pixel(i)));
     }

@@ -99,7 +99,7 @@ void Storage::WriteMultiToEeprom() {
     EepromWrite(multi.part(i).raw_data_readonly(), PartData::sizeBytes(), &address);
     EepromWrite(multi.part(i).raw_patch_data_readonly(), Patch::sizeBytes(), &address);
   }
-  EepromWrite(multi.raw_data(), MultiData::size(), &address);
+  EepromWrite(&multi.data(), MultiData::size(), &address);
 }
 
 /* static */
@@ -108,12 +108,11 @@ uint8_t Storage::LoadMultiFromEeprom() {
   uint8_t success = 1;
   for (uint8_t i = 0; i < kNumParts; ++i) {
     success = success && Storage::EepromRead(
-        multi.mutable_part(i).raw_data(), PartData::sizeBytes(), &address);
+        multi.part(i).raw_data(), PartData::sizeBytes(), &address);
     success = success && Storage::EepromRead(
-        multi.mutable_part(i).raw_patch_data(), Patch::sizeBytes(), &address);
+        multi.part(i).raw_patch_data(), Patch::sizeBytes(), &address);
   }
-  success = success && Storage::EepromRead(
-      multi.mutable_raw_data(), MultiData::size(), &address);
+  success = success && Storage::EepromRead(&multi.data(), MultiData::size(), &address);
   return success;
 }
 
@@ -185,7 +184,7 @@ const uint8_t* Storage::object_data(const StorageLocation& location) {
     case STORAGE_OBJECT_PART:
       return multi.part(location.part).raw_data_readonly();
     case STORAGE_OBJECT_MULTI:
-      return multi.raw_data();
+      return multi.data().bytes();
     case STORAGE_OBJECT_PROGRAM:
       // program is patch + part, but it's not valid to do this
       // fall-through
@@ -199,13 +198,13 @@ const uint8_t* Storage::object_data(const StorageLocation& location) {
 uint8_t* Storage::mutable_object_data(const StorageLocation& location) {
   switch (location.object) {
     case STORAGE_OBJECT_PATCH:
-      return multi.mutable_part(location.part).raw_patch_data();
+      return multi.part(location.part).raw_patch_data();
     case STORAGE_OBJECT_SEQUENCE:
-      return multi.mutable_part(location.part).raw_sequence_data();
+      return multi.part(location.part).raw_sequence_data();
     case STORAGE_OBJECT_PART:
-      return multi.mutable_part(location.part).raw_data();
+      return multi.part(location.part).raw_data();
     case STORAGE_OBJECT_MULTI:
-      return multi.mutable_raw_data();
+      return multi.data().bytes();
     case STORAGE_OBJECT_PROGRAM:
       // program is patch + part, but it's not valid to do this
       // fall-through
@@ -314,13 +313,13 @@ void Storage::TouchObject(const StorageLocation& location) {
   // object is freshly loaded and has received no user changes.
   switch (location.object) {
     case STORAGE_OBJECT_PATCH:
-      multi.mutable_part(location.part).TouchPatch();
+      multi.part(location.part).TouchPatch();
       break;
 
     case STORAGE_OBJECT_PART:
       /* fall through */
     case STORAGE_OBJECT_SEQUENCE:
-      multi.mutable_part(location.part).Touch();
+      multi.part(location.part).Touch();
       break;
     
     case STORAGE_OBJECT_MULTI:
@@ -328,8 +327,8 @@ void Storage::TouchObject(const StorageLocation& location) {
       break;
     case STORAGE_OBJECT_PROGRAM:
       // program is patch and sequence?
-      multi.mutable_part(location.part).TouchPatch();
-      multi.mutable_part(location.part).Touch();
+      multi.part(location.part).TouchPatch();
+      multi.part(location.part).Touch();
       break;
     default:
       break;
@@ -352,6 +351,7 @@ void Storage::SysExSendRaw(uint8_t command, uint8_t argument, const uint8_t* dat
   // Outputs the data.
   uint8_t checksum = 0;
   if (send_address) {
+    // OK on AVR (not a narrowing conversion)
     auto address = reinterpret_cast<uint16_t>(data);
     auto addr_low = lowByte(address);
     auto addr_high = highByte(address);
@@ -476,9 +476,8 @@ FilesystemStatus Storage::Load(StorageDir type, const StorageLocation& location,
 
 /* static */
 FilesystemStatus Storage::Save(StorageDir type, const StorageLocation& location) {
-
   scoped_resource<SdCardSession> session;
-  
+
   FilesystemStatus s;
   char* name = GetFileName(type, location);
 
@@ -486,7 +485,7 @@ FilesystemStatus Storage::Save(StorageDir type, const StorageLocation& location)
   InvalidatePendingSysExTransfer();
   
   // Create a backup of the older version.
-  if (type == STORAGE_CLIPBOARD || (type == STORAGE_BANK && system_settings.data().autobackup)) {
+  if (type == STORAGE_CLIPBOARD || (type == STORAGE_BANK && system_settings.data().autobackup())) {
     char* backup_name = tmp_buffer_ + 32;
     strcpy(backup_name, name);
     backup_name[strlen(backup_name) - 3] = '~';
@@ -709,7 +708,7 @@ void Storage::SysExAcceptCommand() {
   
   StorageLocation location {
       .object = static_cast<StorageObject>(0), // null object
-      .part = U8(sysex_rx_command_[1] == 0 ? ui.state().active_part : sysex_rx_command_[1] - 1),
+      .part = U8(sysex_rx_command_[1] == 0 ? ui.active_part() : sysex_rx_command_[1] - 1),
       .alias = 0,
       .bank = 0,
       .slot = 0,

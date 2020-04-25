@@ -61,24 +61,28 @@ uint8_t VoiceAssigner::OnIncrement(int8_t increment) {
   }
 }
 
+// TODO code duplication between OnClick() and OnPot()?
 /* static */
 uint8_t VoiceAssigner::OnClick() {
   if (active_control_ < 4) {
     return ParameterEditor::OnClick();
   } else {
+    // needs commenting
     uint8_t bit = 1 << (active_control_ - 4);
-    uint8_t part = ui.state().active_part;
-    uint8_t allocation = multi.data().part_mapping[part].voice_allocation;
+    uint8_t part = ui.active_part();
+    uint8_t new_allocation = multi.data().part_mapping(part).voice_allocation;
       // Remove this voice from any other part that used it.
-    if (!(allocation & bit)) {
+    if (!(new_allocation & bit)) {
       for (uint8_t i = 0; i < kNumParts; ++i) {
-        multi.mutable_data()->part_mapping[i].voice_allocation &= ~bit;
+        multi.data().part_mapping(i).voice_allocation &= byteInverse(bit);
       }
     }
-    allocation ^= bit;
-    if (multi.mutable_data()->part_mapping[part].voice_allocation != \
-        allocation) {
-      multi.mutable_data()->part_mapping[part].voice_allocation = allocation;
+    new_allocation ^= bit;
+
+    uint8_t& active_part_allocation = multi.data().part_mapping(part).voice_allocation;
+
+    if (active_part_allocation != new_allocation) {
+      active_part_allocation = new_allocation;
       multi.SolveAllocationConflicts(-1);
       multi.AssignVoicesToParts();
     }
@@ -109,16 +113,18 @@ uint8_t VoiceAssigner::OnPot(uint8_t index, uint8_t value) {
     }
     return 1;
   } else {
+    // what is this doing in words please?
     value >>= 5u;
     uint8_t shift = 2 * (index - 5);
     uint8_t mask = 3u << shift;
-    uint8_t part = ui.state().active_part;
+    uint8_t part = ui.active_part();
+
     // read, modify, write
-    uint8_t& allocation = multi.mutable_data()->part_mapping[part].voice_allocation;
-    uint8_t new_allocation = byteOr(byteAnd(allocation, byteInverse(mask)), value << shift);
+    uint8_t& active_part_allocation = multi.data().part_mapping(part).voice_allocation;
+    uint8_t new_allocation = byteOr(byteAnd(active_part_allocation, byteInverse(mask)), value << shift);
     new_allocation &= multi.SolveAllocationConflicts(part);
-    if (allocation != new_allocation) {
-      allocation = new_allocation;
+    if (active_part_allocation != new_allocation) {
+      active_part_allocation = new_allocation;
       multi.AssignVoicesToParts();
     }
     return 1;
@@ -132,8 +138,8 @@ void VoiceAssigner::UpdateScreen() {
   display.set_cursor_position(
     active_control_ < 4 ? kLcdNoCursor : 53 + 5 * (active_control_ - 4));
   
-  uint8_t part = ui.state().active_part;
-  uint8_t allocation = multi.data().part_mapping[part].voice_allocation;
+  uint8_t part = ui.active_part();
+  uint8_t allocation = multi.data().part_mapping(part).voice_allocation;
   
   char* buffer = display.line_buffer(1);
   memset(buffer, ' ', kLcdWidth);

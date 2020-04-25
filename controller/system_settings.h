@@ -34,16 +34,71 @@ enum MidiOutMode : uint8_t {
   MIDI_OUT_FULL
 };
 
+// has to match members of SystemSettingsData::Parameters
+enum SystemSettingsParameter : uint8_t {
+  PRM_SYSTEM_MIDI_IN_MASK,
+  PRM_SYSTEM_MIDI_OUT_MODE,
+  PRM_SYSTEM_SHOW_HELP,
+  PRM_SYSTEM_SNAP,
+  PRM_SYSTEM_AUTOBACKUP,
+  PRM_SYSTEM_VOICECARD_LEDS,
+  PRM_SYSTEM_VOICECARD_SWAP_LEDS_COLORS
+};
+
 struct SystemSettingsData {
-  uint8_t midi_in_mask;
-  MidiOutMode midi_out_mode;
-  uint8_t show_help;
-  uint8_t snap;
-  uint8_t autobackup;
-  uint8_t voicecard_leds;
-  uint8_t swap_leds_colors;
-  uint8_t padding[8];
-  uint8_t checksum;
+  struct Parameters {
+    uint8_t midi_in_mask;
+    MidiOutMode midi_out_mode;
+    uint8_t show_help;
+    uint8_t snap;
+    uint8_t autobackup;
+    uint8_t voicecard_leds;
+    uint8_t swap_leds_colors;
+    uint8_t padding[8];
+    uint8_t checksum;
+  };
+
+private:
+  union Data {
+    Parameters params;
+    uint8_t bytes[sizeof(Parameters)];
+
+  };
+
+  Data data;
+
+public:
+  inline uint8_t* bytes() {
+    return data.bytes;
+  }
+  inline Parameters* params_addr() {
+    return &data.params;
+  }
+
+  inline uint8_t& midi_in_mask() {
+    return data.params.midi_in_mask;
+  }
+  inline MidiOutMode& midi_out_mode() {
+    return data.params.midi_out_mode;
+  }
+  inline uint8_t& show_help() {
+    return data.params.show_help;
+  }
+  inline uint8_t& snap() {
+    return data.params.snap;
+  }
+  inline uint8_t& autobackup() {
+    return data.params.autobackup;
+  }
+  inline uint8_t& voicecard_leds() {
+    return data.params.voicecard_leds;
+  }
+  inline uint8_t& swap_leds_colors() {
+    return data.params.swap_leds_colors;
+  }
+  inline uint8_t& checksum() {
+    return data.params.checksum;
+  }
 };
 
 class SystemSettings {
@@ -53,36 +108,33 @@ class SystemSettings {
   static void Save();
   static void Init(bool force_reset);
   
-  static inline SystemSettingsData* mutable_data() { return &data_; }
-  static inline const SystemSettingsData& data() { return data_; }
-  
+  static inline SystemSettingsData& data() {
+    return data_;
+  }
+
   static inline uint8_t rx_sysex() {
-    return !byteAnd(data_.midi_in_mask, 1);
+    return !byteAnd(data_.midi_in_mask(), 1);
   }
   static inline uint8_t rx_program_change() {
-    return !byteAnd(data_.midi_in_mask, 2);
+    return !byteAnd(data_.midi_in_mask(), 2);
   }
   static inline uint8_t rx_nrpn() {
-    return !byteAnd(data_.midi_in_mask, 4);
+    return !byteAnd(data_.midi_in_mask(), 4);
   }
   static inline uint8_t rx_cc() {
-    return !byteAnd(data_.midi_in_mask, 8);
+    return !byteAnd(data_.midi_in_mask(), 8);
   }
-  
+  static inline void setValue(uint8_t address, uint8_t value) {
+    data_.bytes()[address] = value;
+  }
+  static inline uint8_t getValue(uint8_t address) {
+    return data_.bytes()[address];
+  }
+
  private:
   static SystemSettingsData data_;
  
   DISALLOW_COPY_AND_ASSIGN(SystemSettings);
-};
-
-enum SystemParameter : uint8_t {
-  PRM_SYSTEM_MIDI_IN_MASK,
-  PRM_SYSTEM_MIDI_OUT_MODE,
-  PRM_SYSTEM_SHOW_HELP,
-  PRM_SYSTEM_SNAP,
-  PRM_SYSTEM_AUTOBACKUP,
-  PRM_SYSTEM_VOICECARD_LEDS,
-  PRM_SYSTEM_VOICECARD_SWAP_LEDS_COLORS
 };
 
 extern SystemSettings system_settings;

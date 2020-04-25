@@ -58,7 +58,7 @@ uint8_t Library::name_dirty_ = 0;
 void Library::OnInit(PageInfo* info) {
   IGNORE_UNUSED(info);
   more_ = 0;
-  location_.part = ui.state().active_part;
+  location_.part = ui.active_part();
   if (storage.InitFilesystem() != FS_OK) {
     ShowDiskErrorMessage();
   }
@@ -107,7 +107,7 @@ uint8_t Library::OnIncrement(int8_t increment) {
       // Send program change.
       if (location_.object == STORAGE_OBJECT_PROGRAM) {
         midi_dispatcher.OnProgramLoaded(
-            multi.data().part_mapping[location_.part].tx_channel(), location_.bank, location_.slot);
+            multi.data().part_mapping(location_.part).tx_channel(), location_.bank, location_.slot);
       }
       
       if (storage.Load(location_) != FS_OK) {
@@ -282,8 +282,8 @@ void Library::PrintActiveObjectName(char* buffer) {
 
 /* static */
 void Library::UpdateLocation() {
-  if (location_.part != ui.state().active_part || name_dirty_) {
-    location_.part = ui.state().active_part;
+  if (location_.part != ui.active_part() || name_dirty_) {
+    location_.part = ui.active_part();
     name_dirty_ = 0;
     Browse();
   }
@@ -377,21 +377,23 @@ void Library::OnDialogClosed(uint8_t dialog_id, uint8_t return_value) {
         initialization_mode_ = return_value - 1;
         auto mode = return_value == 1 ? INITIALIZATION_RANDOM : INITIALIZATION_DEFAULT;
         storage.Snapshot(location_);
-        switch( location_.object) {
+        switch (location_.object) {
           case STORAGE_OBJECT_MULTI:
             multi.InitSettings(mode);
             break;
           case STORAGE_OBJECT_PATCH:
-            multi.mutable_part(location_.part).InitPatch(mode);
+            multi.part(location_.part).InitPatch(mode);
             break;
           case STORAGE_OBJECT_SEQUENCE:
-            multi.mutable_part(location_.part).InitSequence(mode);
+            multi.part(location_.part).InitSequence(mode);
             break;
           case STORAGE_OBJECT_PROGRAM:
-            multi.mutable_part(location_.part).InitSettings(mode);
+            multi.part(location_.part).InitSettings(mode);
             break;
+
           case STORAGE_OBJECT_PART:
-            // TODO?
+            // don't need to handle this case
+          default:
             break;
         }
       }

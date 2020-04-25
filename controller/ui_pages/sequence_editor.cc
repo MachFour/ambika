@@ -35,12 +35,12 @@ uint8_t SequenceEditor::step_ = 0;
 
 /* static */
 inline PartData& SequenceEditor::mutable_part_data() {
-  return multi.mutable_part(ui.state().active_part).data();
+  return multi.part(ui.active_part()).data();
 }
 
 /* static */
 inline const PartData& SequenceEditor::part_data() {
-  return multi.part(ui.state().active_part).data_readonly();
+  return multi.part(ui.active_part()).data_readonly();
 }
 
 /* static */
@@ -255,10 +255,7 @@ void SequenceEditor::UpdateScreen() {
         column += 10;
       }
     } else {
-      memcpy_P(
-          &buffer[3],
-          PSTR("\x07 note \x07velocity \x07stepseq 1\x07stepseq 2"),
-          37);
+      memcpy_P(&buffer[3], PSTR("\x07 note \x07velocity \x07stepseq 1\x07stepseq 2"), 37);
     }
   }
   display.set_cursor_character(edit_mode_ == EDIT_IDLE ? 0xff : '_');

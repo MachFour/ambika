@@ -506,7 +506,7 @@ static constexpr Parameter parameters[kNumParameters] PROGMEM = {
   
   // 24
   { PARAMETER_LEVEL_UI,
-    PRM_UI_ACTIVE_ENV_LFO,
+    UiStateParameter::PRM_UI_ACTIVE_ENV_LFO,
     UNIT_INDEX, 0, 2,
     1, 0, 0xff, 0xff,
     STR_RES_LFO_EG, STR_RES_LFO_EG, 0 },
@@ -515,49 +515,49 @@ static constexpr Parameter parameters[kNumParameters] PROGMEM = {
   { PARAMETER_LEVEL_PATCH,
     PRM_PATCH_ENV_ATTACK,
     UNIT_RAW_UINT8, 0, 127,
-    3, 8, PRM_UI_ACTIVE_ENV_LFO, 73,
+    3, 8, UiStateParameter::PRM_UI_ACTIVE_ENV_LFO, 73,
     STR_RES_ATTK, STR_RES_ATTACK, STR_RES_ENVELOPE },
   
   // 26
   { PARAMETER_LEVEL_PATCH,
     PRM_PATCH_ENV_DECAY,
     UNIT_RAW_UINT8, 0, 127,
-    3, 8, PRM_UI_ACTIVE_ENV_LFO, 75,
+    3, 8, UiStateParameter::PRM_UI_ACTIVE_ENV_LFO, 75,
     STR_RES_DECAY, STR_RES_DECAY, STR_RES_ENVELOPE },
 
   // 27
   { PARAMETER_LEVEL_PATCH,
     PRM_PATCH_ENV_SUSTAIN,
     UNIT_RAW_UINT8, 0, 127,
-    3, 8, PRM_UI_ACTIVE_ENV_LFO, 70,
+    3, 8, UiStateParameter::PRM_UI_ACTIVE_ENV_LFO, 70,
     STR_RES_SUSTAIN, STR_RES_SUSTAIN, STR_RES_ENVELOPE },
   
   // 28
   { PARAMETER_LEVEL_PATCH,
     PRM_PATCH_ENV_RELEASE,
     UNIT_RAW_UINT8, 0, 127,
-    3, 8, PRM_UI_ACTIVE_ENV_LFO, 72,
+    3, 8, UiStateParameter::PRM_UI_ACTIVE_ENV_LFO, 72,
     STR_RES_RELEASE, STR_RES_RELEASE, STR_RES_ENVELOPE },
   
   // 29
   { PARAMETER_LEVEL_PATCH,
     PRM_PATCH_LFO_SYNC,
     UNIT_LFO_SYNC_MODE, 0, LFO_SYNC_MODE_COUNT - 1,
-    3, 8, PRM_UI_ACTIVE_ENV_LFO, 44,
+    3, 8, UiStateParameter::PRM_UI_ACTIVE_ENV_LFO, 44,
     STR_RES_TRIGGER, STR_RES_TRIGGER, STR_RES_LFO },
   
   // 30
   { PARAMETER_LEVEL_PATCH,
     PRM_PATCH_LFO_RATE,
     UNIT_LFO_RATE, 0, kNumSyncedLfoRates + 127,
-    3, 8, PRM_UI_ACTIVE_ENV_LFO, 45,
+    3, 8, UiStateParameter::PRM_UI_ACTIVE_ENV_LFO, 45,
     STR_RES_RATE, STR_RES_RATE, STR_RES_LFO },
   
   // 31
   { PARAMETER_LEVEL_PATCH,
     PRM_PATCH_LFO_SHAPE,
     UNIT_LFO_SHAPE, 0, LFO_WAVEFORM_COUNT - 1,
-    3, 8, PRM_UI_ACTIVE_ENV_LFO, 46,
+    3, 8, UiStateParameter::PRM_UI_ACTIVE_ENV_LFO, 46,
     STR_RES_WAVEFORM, STR_RES_WAVEFORM, STR_RES_LFO },
   
   // 32
@@ -576,7 +576,7 @@ static constexpr Parameter parameters[kNumParameters] PROGMEM = {
 
   // 34
   { PARAMETER_LEVEL_UI,
-    PRM_UI_ACTIVE_MODULATION,
+    UiStateParameter::PRM_UI_ACTIVE_MODULATION,
     UNIT_INDEX, 0, 13,
     1, 0, 0xff, 0xff,
     STR_RES_MODUL_, STR_RES_MODULATION, 0 },
@@ -585,26 +585,26 @@ static constexpr Parameter parameters[kNumParameters] PROGMEM = {
   { PARAMETER_LEVEL_PATCH,
     PRM_PATCH_MOD_SOURCE,
     UNIT_MODULATION_SOURCE, 0, MOD_SRC_CONSTANT_256,
-    14, 3, PRM_UI_ACTIVE_MODULATION, 0xff,
+    14, 3, UiStateParameter::PRM_UI_ACTIVE_MODULATION, 0xff,
     STR_RES_SRCE, STR_RES_SOURCE, STR_RES_MODULATION },
   
   // 36
   { PARAMETER_LEVEL_PATCH,
     PRM_PATCH_MOD_DESTINATION,
     UNIT_MODULATION_DESTINATION, 0, MOD_DST_COUNT - 1,
-    14, 3, PRM_UI_ACTIVE_MODULATION, 0xff,
+    14, 3, UiStateParameter::PRM_UI_ACTIVE_MODULATION, 0xff,
     STR_RES_DESTINATION, STR_RES_DESTINATION, STR_RES_MODULATION },
   
   // 37
   { PARAMETER_LEVEL_PATCH,
     PRM_PATCH_MOD_AMOUNT,
     UNIT_INT8, -63, 63,
-    14, 3, PRM_UI_ACTIVE_MODULATION, 0xff,
+    14, 3, UiStateParameter::PRM_UI_ACTIVE_MODULATION, 0xff,
     STR_RES_AMNT, STR_RES_AMOUNT, STR_RES_MODULATION },
   
   // 38
   { PARAMETER_LEVEL_UI,
-    PRM_UI_ACTIVE_MODIFIER,
+    UiStateParameter::PRM_UI_ACTIVE_MODIFIER,
     UNIT_INDEX, 0, 3,
     1, 0, 0xff, 0xff,
     STR_RES_MODIF_, STR_RES_MODIFIER, 0 },
@@ -613,21 +613,21 @@ static constexpr Parameter parameters[kNumParameters] PROGMEM = {
   { PARAMETER_LEVEL_PATCH,
     PRM_PATCH_MOD_OPERAND1,
     UNIT_MODULATION_SOURCE, 0, MOD_SRC_COUNT - 1,
-    4, 3, PRM_UI_ACTIVE_MODIFIER, 0xff,
+    4, 3, UiStateParameter::PRM_UI_ACTIVE_MODIFIER, 0xff,
     STR_RES_IN1, STR_RES_IN1, STR_RES_MODIFIER },
 
   // 40
   { PARAMETER_LEVEL_PATCH,
     PRM_PATCH_MOD_OPERAND2,
     UNIT_MODULATION_SOURCE, 0, MOD_SRC_COUNT - 1,
-    4, 3, PRM_UI_ACTIVE_MODIFIER, 0xff,
+    4, 3, UiStateParameter::PRM_UI_ACTIVE_MODIFIER, 0xff,
     STR_RES_IN2, STR_RES_IN2, STR_RES_MODIFIER },
   
   // 41
   { PARAMETER_LEVEL_PATCH,
     PRM_PATCH_MOD_OPERATOR,
     UNIT_MODIFIER, 0, MODIFIER_COUNT - 1,
-    4, 3, PRM_UI_ACTIVE_MODIFIER, 0xff,
+    4, 3, UiStateParameter::PRM_UI_ACTIVE_MODIFIER, 0xff,
     STR_RES_OPERATOR, STR_RES_OPERATOR, STR_RES_MODIFIER },
   
   // Parameters for part editor
@@ -745,7 +745,7 @@ static constexpr Parameter parameters[kNumParameters] PROGMEM = {
   
   // 58
   { PARAMETER_LEVEL_UI,
-    PRM_UI_ACTIVE_PART,
+    UiStateParameter::PRM_UI_ACTIVE_PART,
     UNIT_INDEX, 0, 5,
     1, 0, 0xff, 0xff,
     STR_RES_PART, STR_RES_PART, 0 },
@@ -754,21 +754,21 @@ static constexpr Parameter parameters[kNumParameters] PROGMEM = {
   { PARAMETER_LEVEL_MULTI,
     PRM_MULTI_MIDI_CHANNEL,
     UNIT_MIDI_CHANNEL, 0, 16,
-    6, 4, PRM_UI_ACTIVE_PART, 0xff,
+    6, 4, UiStateParameter::PRM_UI_ACTIVE_PART, 0xff,
     STR_RES_CHANNEL, STR_RES_CHANNEL, STR_RES_PART },
   
   // 60
   { PARAMETER_LEVEL_MULTI,
     PRM_MULTI_KEYRANGE_LOW,
     UNIT_NOTE, 0, 127,
-    6, 4, PRM_UI_ACTIVE_PART, 0xff,
+    6, 4, UiStateParameter::PRM_UI_ACTIVE_PART, 0xff,
     STR_RES_LOW, STR_RES_LOW, STR_RES_PART },
   
   // 61
   { PARAMETER_LEVEL_MULTI,
     PRM_MULTI_KEYRANGE_HIGH,
     UNIT_NOTE, 0, 127,
-    6, 4, PRM_UI_ACTIVE_PART, 0xff,
+    6, 4, UiStateParameter::PRM_UI_ACTIVE_PART, 0xff,
     STR_RES_HIGH, STR_RES_HIGH, STR_RES_PART },
   
   // 62
@@ -801,49 +801,49 @@ static constexpr Parameter parameters[kNumParameters] PROGMEM = {
 
   // 66
   { PARAMETER_LEVEL_SYSTEM,
-    PRM_SYSTEM_MIDI_IN_MASK,
+    SystemSettingsParameter::PRM_SYSTEM_MIDI_IN_MASK,
     UNIT_MIDI_IN_MASK, 0, 15,
     1, 0, 0xff, 0xff,
     STR_RES_INPT_FILTER, STR_RES_INPT_FILTER, STR_RES_MIDI },
   
   // 67
   { PARAMETER_LEVEL_SYSTEM,
-    PRM_SYSTEM_MIDI_OUT_MODE,
+    SystemSettingsParameter::PRM_SYSTEM_MIDI_OUT_MODE,
     UNIT_MIDI_OUT_MODE, MIDI_OUT_THRU, MIDI_OUT_FULL,
     1, 0, 0xff, 0xff,
     STR_RES_OUTP_MODE, STR_RES_OUTP_MODE, STR_RES_MIDI },
   
   // 68
   { PARAMETER_LEVEL_SYSTEM,
-    PRM_SYSTEM_SHOW_HELP,
+    SystemSettingsParameter::PRM_SYSTEM_SHOW_HELP,
     UNIT_BOOLEAN, 0, 1,
     1, 0, 0xff, 0xff,
     STR_RES_HELP, STR_RES_HELP, STR_RES_SYSTEM },
   
   // 69
   { PARAMETER_LEVEL_SYSTEM,
-    PRM_SYSTEM_SNAP,
+    SystemSettingsParameter::PRM_SYSTEM_SNAP,
     UNIT_BOOLEAN, 0, 1,
     1, 0, 0xff, 0xff,
     STR_RES_SNAP, STR_RES_SNAP, STR_RES_SYSTEM },
     
   // 70
   { PARAMETER_LEVEL_SYSTEM,
-    PRM_SYSTEM_AUTOBACKUP,
+    SystemSettingsParameter::PRM_SYSTEM_AUTOBACKUP,
     UNIT_BOOLEAN, 0, 1,
     1, 0, 0xff, 0xff,
     STR_RES_AUTO_BACKUP, STR_RES_AUTO_BACKUP, STR_RES_SYSTEM },
   
   // 71  
   { PARAMETER_LEVEL_SYSTEM,
-    PRM_SYSTEM_VOICECARD_LEDS,
+    SystemSettingsParameter::PRM_SYSTEM_VOICECARD_LEDS,
     UNIT_BOOLEAN, 0, 1,
     1, 0, 0xff, 0xff,
     STR_RES_LEDS, STR_RES_CARD_LEDS, STR_RES_SYSTEM },
   
   // 72
   { PARAMETER_LEVEL_SYSTEM,
-    PRM_SYSTEM_VOICECARD_SWAP_LEDS_COLORS,
+    SystemSettingsParameter::PRM_SYSTEM_VOICECARD_SWAP_LEDS_COLORS,
     UNIT_BOOLEAN, 0, 1,
     1, 0, 0xff, 0xff,
     STR_RES_SWAP_COLORS, STR_RES_SWAP_COLORS, STR_RES_SYSTEM },
@@ -896,6 +896,7 @@ inline uint8_t get_address(const Parameter& p, uint8_t instance_index) {
   return p.offset + p.stride * instance_index;
 }
 
+// TODO use references for both functions below
 /* static */
 void ParameterManager::SetValue(const Parameter& p,
       uint8_t part, uint8_t instance_index, uint8_t value, uint8_t user_initiated) {
@@ -903,22 +904,16 @@ void ParameterManager::SetValue(const Parameter& p,
   switch(p.level) {
     case PARAMETER_LEVEL_PATCH:
     case PARAMETER_LEVEL_PART:
-      multi.mutable_part(part).SetValue(address, value, user_initiated);
+      multi.part(part).SetValue(address, value, user_initiated);
       break;
     case PARAMETER_LEVEL_MULTI:
       multi.SetValue(address, value);
       break;
     case PARAMETER_LEVEL_SYSTEM:
-      {
-        auto bytes = reinterpret_cast<uint8_t*>(system_settings.mutable_data());
-        bytes[address] = value;
-      }
+      system_settings.setValue(address, value);
       break;
     default:
-      {
-        auto bytes = reinterpret_cast<uint8_t*>(ui.mutable_state());
-        bytes[address] = value;
-      }
+      ui.setStateValue(address, value);
       break;
   }
 }
@@ -926,7 +921,7 @@ void ParameterManager::SetValue(const Parameter& p,
 /* static */
 uint8_t ParameterManager::GetValue(const Parameter& p, uint8_t part, uint8_t instance_index) {
   auto address = get_address(p, instance_index);
-  uint8_t value = 0;
+  uint8_t value;
   switch (p.level) {
     case PARAMETER_LEVEL_PATCH:
     case PARAMETER_LEVEL_PART:
@@ -936,13 +931,10 @@ uint8_t ParameterManager::GetValue(const Parameter& p, uint8_t part, uint8_t ins
       value = multi.GetValue(address);
       break;
     case PARAMETER_LEVEL_SYSTEM:
-      {
-        auto bytes = reinterpret_cast<uint8_t *>(system_settings.mutable_data());
-        value = bytes[address];
-      }
+      value = system_settings.getValue(address);
       break;
     default:
-      value = ui.GetValue(address);
+      value = ui.getStateValue(address);
       break;
   }
   return value;

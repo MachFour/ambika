@@ -39,7 +39,7 @@ uint16_t Multi::tick_duration_table_[kNumStepsInGroovePattern];
 uint8_t Multi::flags_;
 /* </static> */
 
-static constexpr MultiData init_settings PROGMEM = {
+static constexpr MultiData::Parameters init_settings PROGMEM {
   // Parts mappings.
   .part_mapping = {
     {1, 0, 127, 0x15},
@@ -94,7 +94,7 @@ void Multi::Init(bool force_reset) {
 
 /* static */
 void Multi::InitSettings(InitializationMode mode) {
-  ResourcesManager::Load(&init_settings, 0, &data_);
+  ResourcesManager::Load(&init_settings, 0, data_.params_addr());
   for (uint8_t i = 0; i < kNumParts; ++i) {
     parts_[i].InitSettings(mode);
   }
@@ -106,7 +106,7 @@ uint8_t Multi::SolveAllocationConflicts(uint8_t constraint) {
   uint8_t available_voices = 0xff;
   for (uint8_t i = 0; i < kNumParts; ++i) {
     if (i != constraint) {
-      uint8_t& part_i_allocation = data_.part_mapping[i].voice_allocation;
+      uint8_t& part_i_allocation = data_.part_mapping(i).voice_allocation;
       part_i_allocation &= available_voices;
       available_voices &= byteInverse(part_i_allocation);
     }
@@ -117,7 +117,7 @@ uint8_t Multi::SolveAllocationConflicts(uint8_t constraint) {
 /* static */
 void Multi::AssignVoicesToParts() {
   for (uint8_t i = 0; i < kNumParts; ++i) {
-    parts_[i].AssignVoices(data_.part_mapping[i].voice_allocation);
+    parts_[i].AssignVoices(data_.part_mapping(i).voice_allocation);
   }
 }
 
@@ -135,14 +135,14 @@ const int32_t kTempoFactor = (4 * kSampleRateNum * 60L / 24L / kSampleRateDen);
 void Multi::ComputeInternalClockOverflowsTable() {
   static_assert(kTempoFactor == 392156L);
 
-  int32_t rounding = 2 * data_.clock_bpm;
-  int32_t denominator = 4 * data_.clock_bpm;
+  int32_t rounding = 2 * data_.clock_bpm();
+  int32_t denominator = 4 * data_.clock_bpm();
   int16_t base_tick_duration = (kTempoFactor + rounding) / denominator;
   for (uint8_t i = 0; i < kNumStepsInGroovePattern; ++i) {
     int32_t swing_direction = ResourcesManager::Lookup<int16_t, uint8_t>(
-        LUT_RES_GROOVE_SWING + data_.clock_groove_template, i);
+        LUT_RES_GROOVE_SWING + data_.clock_groove_template(), i);
     swing_direction *= base_tick_duration;
-    swing_direction *= data_.clock_groove_amount;
+    swing_direction *= data_.clock_groove_amount();
     int16_t swing = highWord(swing_direction);
     tick_duration_table_[i] = base_tick_duration + swing;
   }
@@ -181,7 +181,7 @@ void Multi::Clock() {
       } else {
         idle_ticks_ = 0;
       }
-      if (idle_ticks_ > U8U8Mul(data_.clock_release, 24)) {
+      if (idle_ticks_ > U8U8Mul(data_.clock_release(), 24)) {
         Stop();
       }
     }
@@ -233,13 +233,12 @@ void Multi::UpdateClocks() {
 
 /* static */
 void Multi::SetValue(uint8_t address, uint8_t value) {
-  // TODO fix this
-  auto bytes = reinterpret_cast<uint8_t*>(&data_);
+  auto bytes = data_.bytes();
   if (bytes[address] != value) {
     bytes[address] = value;
     flags_ |= FLAG_HAS_USER_CHANGE;
     if (address < PRM_MULTI_CLOCK_BPM) {
-      if ((address & 3) == 3) {
+      if (byteAnd(address, 3) == 3) {
         Touch();
       }
     } else if (address <= PRM_MULTI_CLOCK_GROOVE_AMOUNT) {

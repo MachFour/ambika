@@ -32,11 +32,12 @@ namespace ambika {
 /* static */
 ParameterEditor::SnapMask ParameterEditor::snapped_;
 
+// TODO code duplication in the three functions below
 /* static */
 uint8_t ParameterEditor::parameter_index(uint8_t control_id) {
   uint8_t parameter_id = info_->data[control_id];
   if (parameter_id >= 0xf0 && parameter_id <= 0xf7) {
-    return multi.data().knob_assignment[parameter_id & 0x0f].parameter;
+    return multi.data().knob_assignment[lowNibble(parameter_id)].parameter;
   } else {
     return parameter_id;
   }
@@ -48,7 +49,7 @@ uint8_t ParameterEditor::part_index(uint8_t control_id) {
   if (parameter_id >= 0xf0 && parameter_id <= 0xf7) {
     return multi.data().knob_assignment[parameter_id & 0x0f].part;
   } else {
-    return ui.state().active_part;
+    return ui.active_part();
   }
 }
 
@@ -56,15 +57,14 @@ uint8_t ParameterEditor::part_index(uint8_t control_id) {
 uint8_t ParameterEditor::instance_index(uint8_t control_id) {
   uint8_t parameter_id = info_->data[control_id];
   if (parameter_id >= 0xf0 && parameter_id <= 0xf7) {
-    return multi.data().knob_assignment[parameter_id & 0x0f].instance;
+    return multi.data().knob_assignment[lowNibble(parameter_id)].instance;
   } else {
     if (parameter_id == 0xff) {
       return 0xff;
     } else {
       const Parameter& parameter = parameter_manager.parameter(parameter_id);
       if (parameter.indexed_by != 0xff) {
-        // TODO this may be a problem
-        return reinterpret_cast<uint8_t*>(ui.mutable_state())[parameter.indexed_by];
+        return ui.state().bytes()[parameter.indexed_by];
       } else {
         return 0;
       }
@@ -125,7 +125,7 @@ uint8_t ParameterEditor::OnPot(uint8_t index, uint8_t value) {
     return 1;
   }
   const Parameter& parameter = parameter_manager.parameter(parameter_id);
-  if (system_settings.data().snap) {
+  if (system_settings.data().snap()) {
     SnapMask mask = (1 << index);
     // If this pot has not reached the right position yet, test if the position
     // of the pot matches the value of the parameter.
@@ -157,7 +157,7 @@ void ParameterEditor::UpdateScreen() {
   uint8_t detailed_info_line = 2;
   // If we are in editing mode, draw the detailed information for the edited
   // parameter. Disable this detailed information when "help" is set to off.
-  if (edit_mode_ && system_settings.data().show_help) {
+  if (edit_mode_ && system_settings.data().show_help()) {
     uint8_t parameter_id = parameter_index(active_control_);
     // Depending on the active control, draw on first or second line.
     uint8_t line = active_control_ < 4 ? 0 : 1;
@@ -229,9 +229,8 @@ void ParameterEditor::UpdateScreen() {
 void ParameterEditor::UpdateLeds() {
   UiPage::UpdateLeds();
   if (info_->index == PAGE_ENV_LFO) {
-    uint8_t current_lfo_value = multi.part(ui.state().active_part).lfo_value(
-        ui.state().active_env_lfo);
-    leds.set_pixel(LED_STATUS, current_lfo_value & 0xf0);
+    uint8_t current_lfo_value = multi.part(ui.active_part()).lfo_value(ui.state().active_env_lfo());
+    leds.set_pixel(LED_STATUS, highNibbleUnshifted(current_lfo_value));
   } else {
     if (multi.running() && (multi.step() & 3) == 0) {
       leds.set_pixel(LED_STATUS, 0xf0);

@@ -106,7 +106,7 @@ void Init() {
 
   voicecard_tx.Init();
   voicecard_tx.SyncAllVoices();
-  if (!system_settings.data().voicecard_leds) {
+  if (!system_settings.data().voicecard_leds()) {
     voicecard_tx.LightsOut();
   }
   if (ui.shifted()) {

@@ -111,7 +111,7 @@ class MidiDispatcher : public midi::MidiDevice {
         bool error = false;
         if (current_bank_ < 26) {
           for (uint8_t i = 0; i < kNumParts; ++i) {
-            if (multi.data().part_mapping[i].receive_channel(channel)) {
+            if (multi.data().part_mapping(i).receive_channel(channel)) {
               StorageLocation* location = Library::mutable_location();
               location->object = STORAGE_OBJECT_PROGRAM;
               location->name = nullptr;  // We don't want to load the name.
@@ -287,7 +287,7 @@ class MidiDispatcher : public midi::MidiDevice {
  private:
   static void Send(uint8_t status, uint8_t* data, uint8_t size);
   static void SendNow(uint8_t byte);
-  static uint8_t mode() { return system_settings.data().midi_out_mode; }
+  static uint8_t mode() { return system_settings.data().midi_out_mode(); }
   static void ProcessSysEx(uint8_t byte) {
     if (mode() == MIDI_OUT_FULL || mode() == MIDI_OUT_CHAIN) {
       Send(byte, nullptr, 0);

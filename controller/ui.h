@@ -34,21 +34,54 @@ namespace ambika {
 
 using namespace avrlib;
 
+// has to match order of members in UiState::Parameters
+
+enum UiStateParameter : uint8_t {
+  PRM_UI_ACTIVE_ENV_LFO,     // uint8_t active_env_lfo;
+  PRM_UI_ACTIVE_MODULATION,  // uint8_t active_modulation;
+  PRM_UI_ACTIVE_MODIFIER,    // uint8_t active_modifier;
+  PRM_UI_ACTIVE_PART,        // uint8_t active_part;
+};
+
 struct UiState {
-  uint8_t active_env_lfo;
-  uint8_t active_modulation;
-  uint8_t active_modifier;
-  uint8_t active_part;
+  struct Parameters {
+    uint8_t active_env_lfo;
+    uint8_t active_modulation;
+    uint8_t active_modifier;
+    uint8_t active_part;
+  };
+private:
+  union Data {
+    Parameters params;
+    uint8_t bytes[sizeof(Parameters)];
+  };
+
+  Data data;
+
+public:
+
+  inline uint8_t* bytes() {
+    return data.bytes;
+  }
+  inline uint8_t getValue(uint8_t offset) const {
+    return data.bytes[offset];
+  }
+  inline uint8_t& active_env_lfo() {
+    return data.params.active_env_lfo;
+  }
+  inline uint8_t& active_modulation() {
+    return data.params.active_modulation;
+  }
+  inline uint8_t& active_modifier() {
+    return data.params.active_modifier;
+  }
+  inline uint8_t& active_part() {
+    return data.params.active_part;
+  }
 };
 
-enum UIStateParameter {
-  PRM_UI_ACTIVE_ENV_LFO,
-  PRM_UI_ACTIVE_MODULATION,
-  PRM_UI_ACTIVE_MODIFIER,
-  PRM_UI_ACTIVE_PART
-};
 
-enum SwitchNumber {
+enum SwitchNumber : uint8_t {
   SWITCH_1,
   SWITCH_2,
   SWITCH_3,
@@ -68,12 +101,12 @@ enum SwitchNumber {
   SWITCH_SHIFT_8
 };
 
-enum ActiveControl {
+enum ActiveControl : uint8_t {
   ACTIVE_CONTROL_FIRST,
   ACTIVE_CONTROL_LAST,
 };
 
-enum UiPageNumber {
+enum UiPageNumber : uint8_t {
   PAGE_OSCILLATORS,
   PAGE_MIXER,
   
@@ -120,7 +153,7 @@ struct EventHandlers {
   void (*OnDialogClosed)(uint8_t, uint8_t);
 };
 
-enum DialogType {
+enum DialogType : uint8_t {
   DIALOG_ERROR,
   DIALOG_INFO,
   DIALOG_CONFIRM,
@@ -178,17 +211,23 @@ class Ui {
   static void ShowDialogBox(uint8_t dialog_id, Dialog dialog, uint8_t choice);
   static void CloseDialogBox(uint8_t return_value);
   
-  static UiState* mutable_state() { return &state_; }
-  static const UiState& state() { return state_; }
-  
-  static uint8_t GetValue(uint8_t address) {
-      // TODO this may be a problem
-    return reinterpret_cast<uint8_t*>(&state_)[address];
+  static UiState& state() { return state_; }
+
+  static void setStateValue(uint8_t index, uint8_t value) {
+    state_.bytes()[index] = value;
+  }
+
+  static uint8_t getStateValue(uint8_t address) {
+    return state_.bytes()[address];
+  }
+
+
+  static uint8_t& active_part() {
+    return state_.active_part();
   }
   
   static uint8_t OnNote(uint8_t note, uint8_t velocity) {
-    if (event_handlers_.OnNote && \
-          (*event_handlers_.OnNote)(note, velocity)) {
+    if (event_handlers_.OnNote && (*event_handlers_.OnNote)(note, velocity)) {
       queue_.AddEvent(0x3, 0x3f, 0xff);
       return 1;
     }

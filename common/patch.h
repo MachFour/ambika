@@ -399,6 +399,8 @@ public:
   // no need to access padding
 };
 
+// these offsets have to match the order of members in Patch::Parameters
+// TODO this is kind of ugly, can we reduce repetition
 enum PatchParameter : uint8_t {
   PRM_PATCH_OSC1_SHAPE,
   PRM_PATCH_OSC1_PWM,

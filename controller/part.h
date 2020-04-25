@@ -245,7 +245,7 @@ private:
 public:
   uint8_t note(uint8_t step) const {
     auto offset = get_note_offset(step);
-    return byteAnd(data.params.sequence_data[offset], 0x7f);
+    return U7(data.params.sequence_data[offset]);
   }
   
   void set_note(uint8_t step, uint8_t note) {
@@ -288,14 +288,15 @@ public:
     n.velocity = data.params.sequence_data[offset + 1];
     n.gate = byteAnd(n.note, 0x80);
     n.legato = byteAnd(n.velocity, 0x80);
-    n.note &= 0x7fu;
-    n.velocity &= 0x7fu;
+    n.note = U7(n.note);
+    n.velocity = U7(n.velocity);
     return n;
   }
 };
 
 enum PartParameter : uint8_t {
   PRM_PATCH = 0,
+  // These enums have to match the order of members in PartData::Parameters
   PRM_PART_VOLUME = Patch::sizeBytes(), // TODO move these into the actual classes
   PRM_PART_OCTAVE,
   PRM_PART_TUNING,

@@ -39,9 +39,10 @@ struct PartMapping {
   uint8_t keyrange_low;
   uint8_t keyrange_high;
   uint8_t voice_allocation;
-  
+
+  // channels are 1-indexed; midi_channel == 0 means receive all
   inline uint8_t receive_channel(uint8_t channel) const {
-    return !midi_channel || (channel + 1 == midi_channel);
+    return midi_channel == 0 || (channel + 1 == midi_channel);
   }
   
   inline uint8_t accept_note(uint8_t note) const {
@@ -62,14 +63,63 @@ struct PartMapping {
 };
 
 struct MultiData {
-  // Offset: 0-24
-  PartMapping part_mapping[kNumParts];
-  
-  // Offset: 24-28
-  uint8_t clock_bpm;
-  uint8_t clock_groove_template;
-  uint8_t clock_groove_amount;
-  uint8_t clock_release;
+  struct Parameters {
+    // Offset: 0-24
+    PartMapping part_mapping[kNumParts];
+
+    // Offset: 24-28
+    uint8_t clock_bpm;
+    uint8_t clock_groove_template;
+    uint8_t clock_groove_amount;
+    uint8_t clock_release;
+
+    // Offset: 28-52
+    KnobAssignment knob_assignment[8];
+
+    // Offset: 52-56
+    uint8_t padding2[4];
+  };
+
+private:
+  union Data {
+    Parameters params;
+    uint8_t bytes[sizeof(Parameters)];
+
+    explicit Data(Parameters p) : params(p) {};
+    explicit Data() = default;
+  };
+
+  Data data;
+
+public:
+  inline Parameters* params_addr() {
+    return &data.params;
+  }
+
+  inline uint8_t* bytes() {
+    return data.bytes;
+  }
+
+  inline PartMapping& part_mapping(uint8_t index) {
+    return data.params.part_mapping[index];
+  }
+
+  inline uint8_t& clock_bpm() {
+    return data.params.clock_bpm;
+  }
+  inline uint8_t& clock_groove_template() {
+    return data.params.clock_groove_template;
+  }
+  inline uint8_t& clock_groove_amount() {
+    return data.params.clock_groove_amount;
+  }
+  inline uint8_t& clock_release() {
+    return data.params.clock_release;
+  }
+
+  inline KnobAssignment& knobAssignment(uint8_t index) {
+    return data.params.knob_assignment[index];
+  }
   
   // Offset: 28-52
   KnobAssignment knob_assignment[8];
@@ -78,20 +128,24 @@ struct MultiData {
   uint8_t padding2[4];
 
   static constexpr inline size_t size() {
-    return sizeof(MultiData);
+    return sizeof(Parameters);
   }
 };
 
+// has to match order (and size) of members in MultiData::Parameteters
+// TODO this is kind of ugly, can we reduce repetition
 enum MultiParameter {
+  // 1x partMapping
   PRM_MULTI_MIDI_CHANNEL,
   PRM_MULTI_KEYRANGE_LOW,
   PRM_MULTI_KEYRANGE_HIGH,
   PRM_MULTI_VOICE_ALLOCATION,
-  
-  PRM_MULTI_CLOCK_BPM = 24,
-  PRM_MULTI_CLOCK_GROOVE_TEMPLATE = 25,
-  PRM_MULTI_CLOCK_GROOVE_AMOUNT = 26,
-  PRM_MULTI_CLOCK_LATCH = 27,
+
+  // clock parameters after all part mappings
+  PRM_MULTI_CLOCK_BPM = sizeof(PartMapping)*kNumParts,
+  PRM_MULTI_CLOCK_GROOVE_TEMPLATE,
+  PRM_MULTI_CLOCK_GROOVE_AMOUNT,
+  PRM_MULTI_CLOCK_LATCH,
 };
 
 static const uint8_t kNumStepsInGroovePattern = 16;
@@ -126,7 +180,7 @@ class Multi {
       Start();
     }
     for (uint8_t i = 0; i < kNumParts; ++i) {
-      if (data_.part_mapping[i].accept_channel_note(channel, note)) {
+      if (data_.part_mapping(i).accept_channel_note(channel, note)) {
         parts_[i].NoteOn(note, velocity);
       }
     }
@@ -134,84 +188,84 @@ class Multi {
   static void NoteOff(uint8_t channel, uint8_t note, uint8_t velocity) {
     IGNORE_UNUSED(velocity);
     for (uint8_t i = 0; i < kNumParts; ++i) {
-      if (data_.part_mapping[i].accept_channel_note(channel, note)) {
+      if (data_.part_mapping(i).accept_channel_note(channel, note)) {
         parts_[i].NoteOff(note);
       }
     }
   }
   static void ControlChange(uint8_t channel, uint8_t controller, uint8_t value) {
     for (uint8_t i = 0; i < kNumParts; ++i) {
-      if (data_.part_mapping[i].receive_channel(channel)) {
+      if (data_.part_mapping(i).receive_channel(channel)) {
         parts_[i].ControlChange(controller, value);
       }
     }
   }
   static void PitchBend(uint8_t channel, uint16_t pitch_bend) {
     for (uint8_t i = 0; i < kNumParts; ++i) {
-      if (data_.part_mapping[i].receive_channel(channel)) {
+      if (data_.part_mapping(i).receive_channel(channel)) {
         parts_[i].PitchBend(pitch_bend);
       }
     }
   }
   static void Aftertouch(uint8_t channel, uint8_t note, uint8_t velocity) {
     for (uint8_t i = 0; i < kNumParts; ++i) {
-      if (data_.part_mapping[i].accept_channel_note(channel, note)) {
+      if (data_.part_mapping(i).accept_channel_note(channel, note)) {
         parts_[i].Aftertouch(note, velocity);
       }
     }
   }
   static void Aftertouch(uint8_t channel, uint8_t velocity) {
     for (uint8_t i = 0; i < kNumParts; ++i) {
-      if (data_.part_mapping[i].receive_channel(channel)) {
+      if (data_.part_mapping(i).receive_channel(channel)) {
         parts_[i].Aftertouch(velocity);
       }
     }
   }
   static void AllSoundOff(uint8_t channel) {
     for (uint8_t i = 0; i < kNumParts; ++i) {
-      if (data_.part_mapping[i].receive_channel(channel)) {
+      if (data_.part_mapping(i).receive_channel(channel)) {
         parts_[i].AllSoundOff();
       }
     }
   }
   static void ResetAllControllers(uint8_t channel) {
     for (uint8_t i = 0; i < kNumParts; ++i) {
-      if (data_.part_mapping[i].receive_channel(channel)) {
+      if (data_.part_mapping(i).receive_channel(channel)) {
         parts_[i].ResetAllControllers();
       }
     }
   }
   static void AllNotesOff(uint8_t channel) {
     for (uint8_t i = 0; i < kNumParts; ++i) {
-      if (data_.part_mapping[i].receive_channel(channel)) {
+      if (data_.part_mapping(i).receive_channel(channel)) {
         parts_[i].AllNotesOff();
       }
     }
   }
   static void OmniModeOff(uint8_t channel) {
     for (uint8_t i = 0; i < kNumParts; ++i) {
-      if (data_.part_mapping[i].receive_channel(channel)) {
-        data_.part_mapping[i].midi_channel = channel + 1;
+      if (data_.part_mapping(i).receive_channel(channel)) {
+        data_.part_mapping(i).midi_channel = channel + 1;
       }
     }
   }
   static void OmniModeOn(uint8_t channel) {
     for (uint8_t i = 0; i < kNumParts; ++i) {
-      if (data_.part_mapping[i].receive_channel(channel)) {
-        data_.part_mapping[i].midi_channel = 0;
+      if (data_.part_mapping(i).receive_channel(channel)) {
+        data_.part_mapping(i).midi_channel = 0;
       }
     }
   }
   static void MonoModeOn(uint8_t channel, uint8_t num_channels) {
     for (uint8_t i = 0; i < kNumParts; ++i) {
-      if (data_.part_mapping[i].receive_channel(channel)) {
+      if (data_.part_mapping(i).receive_channel(channel)) {
         parts_[i].MonoModeOn(num_channels);
       }
     }
   }
   static void PolyModeOn(uint8_t channel) {
     for (uint8_t i = 0; i < kNumParts; ++i) {
-      if (data_.part_mapping[i].receive_channel(channel)) {
+      if (data_.part_mapping(i).receive_channel(channel)) {
         parts_[i].PolyModeOn();
       }
     }
@@ -238,29 +292,17 @@ class Multi {
   }
   
   static void SetValue(uint8_t address, uint8_t value);
+
   static inline uint8_t GetValue(uint8_t address) {
-    // TODO this may be a problem
-    auto bytes = reinterpret_cast<uint8_t*>(&data_);
-    return bytes[address];
+    return data_.bytes()[address];
   }
   
   static void UpdateClocks();
   
-  static Part& mutable_part(uint8_t i) { return parts_[i]; }
-  static const Part& part(uint8_t i) { return parts_[i]; }
-  
-  static MultiData* mutable_data() { return &data_; }
-  static const MultiData& data() { return data_; }
-  static const uint8_t* raw_data() {
-    // TODO this may be a problem
-    return reinterpret_cast<const uint8_t*>(&data_);
-  }
-  static uint8_t* mutable_raw_data() {
-    // TODO this may be a problem
-    return reinterpret_cast<uint8_t*>(&data_);
-  }
+  static Part& part(uint8_t i) { return parts_[i]; }
+  static MultiData& data() { return data_; }
 
-  static uint8_t internal_clock() { return data_.clock_bpm >= 40; }
+  static uint8_t internal_clock() { return data_.clock_bpm() >= 40; }
 
   static uint8_t SolveAllocationConflicts(uint8_t constraint);
   static void AssignVoicesToParts();
@@ -268,7 +310,7 @@ class Multi {
   static uint8_t part_channel(Part* part) {
     for (uint8_t i = 0; i < kNumParts; ++i) {
       if (&parts_[i] == part) {
-        return data_.part_mapping[i].tx_channel();
+        return data_.part_mapping(i).tx_channel();
       }
     }
     return 0;

@@ -77,7 +77,7 @@ uint8_t UiPage::OnPot(uint8_t index, uint8_t value) {
 uint8_t UiPage::OnKey(uint8_t key) {
   if (key >= SWITCH_SHIFT_1) {
     StorageLocation location = { STORAGE_OBJECT_PROGRAM, 0, 0, 0, 0, nullptr};
-    location.part = ui.state().active_part;
+    location.part = ui.active_part();
     storage.InitFilesystem();
     switch (key) {
       case SWITCH_SHIFT_1:

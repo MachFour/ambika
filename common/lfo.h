@@ -45,36 +45,36 @@ class Lfo {
     is_looped = phase < phase_increment;
     
     // Compute the LFO value.
-    uint8_t new_value;
+    uint8_t value;
     switch (shape) {
       case LFO_WAVEFORM_RAMP:
-        new_value = highByte(phase);
+        value = highByte(phase);
         break;
       case LFO_WAVEFORM_S_H:
         if (is_looped) {
-          value = Random::GetByte();
+          s_h_value = Random::GetByte();
         }
-        new_value = value;
+        value = s_h_value;
         break;
       case LFO_WAVEFORM_TRIANGLE:
-        new_value = (phase & 0x8000u) ? phase >> 7u : byteInverse(phase >> 7u);
+        value = (phase & 0x8000u) ? phase >> 7u : byteInverse(phase >> 7u);
         break;
       case LFO_WAVEFORM_SQUARE:
-        new_value = (phase & 0x8000u) ? 255 : 0;
+        value = (phase & 0x8000u) ? 255 : 0;
         break;
       default:
         {
 #ifndef DISABLE_WAVETABLE_LFOS
           uint8_t shape_offset = shape - LFO_WAVEFORM_WAVE_1;
           uint16_t offset = word(shape_offset, shape_offset);
-          new_value = InterpolateSample(wav_res_lfo_waveforms + offset, phase);
+          value = InterpolateSample(wav_res_lfo_waveforms + offset, phase);
 #else
         new_value = 0;
 #endif  // DISABLE_WAVETABLE_LFOS
         }
         break;
     }
-    return new_value;
+    return value;
   }
 
   void set_phase(uint16_t new_phase) {
@@ -100,7 +100,7 @@ class Lfo {
   uint8_t is_looped;
 
   // Current value of S&H.
-  uint8_t value;
+  uint8_t s_h_value;
   //uint8_t step;
   
   DISALLOW_COPY_AND_ASSIGN(Lfo);
