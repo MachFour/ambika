@@ -299,9 +299,14 @@ struct Patch {
     Modulation modulation[kNumModulations];
     // Offset: 92-104
     Modifier modifier[kNumModifiers];
-    // Offset: 104-112
-    uint8_t padding[8];
 
+    // Offset: 104-106
+    // Phase57 filter parameter mods
+    uint8_t filter_velo;
+    int8_t filter_kbt;
+
+    // Offset: 106-112
+    uint8_t padding[6];
   };
 
 private:
@@ -396,6 +401,14 @@ public:
   inline Modifier& modifier(uint8_t index) {
       return data.params.modifier[index];
   }
+
+  inline uint8_t& filter_velo() {
+    return data.params.filter_velo;
+  }
+
+  inline int8_t& filter_kbt() {
+    return data.params.filter_kbt;
+  }
   // no need to access padding
 };
 
@@ -447,7 +460,11 @@ enum PatchParameter : uint8_t {
   
   PRM_PATCH_MOD_OPERAND1 = 92,
   PRM_PATCH_MOD_OPERAND2,
-  PRM_PATCH_MOD_OPERATOR
+  PRM_PATCH_MOD_OPERATOR,
+
+  // Phase57 filter mods
+  PRM_PATCH_FILTER1_VELO = 104,
+  PRM_PATCH_FILTER1_KBT
 };
 
 }  // namespace ambika

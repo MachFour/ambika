@@ -173,7 +173,7 @@ struct PageInfo {
   
   const EventHandlers* event_handlers;
   // For a standard parameter editing page, indices of the parameters to edit ;
-  // or 0xf0 -- x0f7 for the 8 assignable knobs.
+  // or 0xf0 -- 0xf7 for the 8 assignable knobs.
   union {
     uint8_t data[8];
     Dialog dialog;

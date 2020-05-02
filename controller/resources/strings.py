@@ -33,6 +33,8 @@ resonance
 mode
 env2~vcf
 lfo2~vcf
+velo~vcf
+keyb~vcf
 attack
 decay
 sustain

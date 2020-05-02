@@ -93,11 +93,8 @@ void ParameterEditor::SetActiveControl(ActiveControl active_control) {
 /* static */
 uint8_t ParameterEditor::OnIncrement(int8_t increment) {
   if (edit_mode_ != EDIT_IDLE) {
-    parameter_manager.Increment(
-        parameter_index(active_control_),
-        part_index(active_control_),
-        instance_index(active_control_),
-        increment);
+    int8_t active = active_control_;
+    parameter_manager.Increment(parameter_index(active), part_index(active), instance_index(active), increment);
     edit_mode_ = EDIT_STARTED_BY_ENCODER;
   } else {
     int8_t new_control = active_control_ + increment;
@@ -131,10 +128,8 @@ uint8_t ParameterEditor::OnPot(uint8_t index, uint8_t value) {
     // of the pot matches the value of the parameter.
     // Pots used to scroll among UI pages are not subject to snap.
     if (!(snapped_ & mask)) {
-      if (parameter_manager.is_snapped(parameter,
-              part_index(index),
-              instance_index(index),
-              value) || parameter.level == PARAMETER_LEVEL_UI) {
+      if (parameter_manager.is_snapped(parameter, part_index(index), instance_index(index), value) ||
+            parameter.level == PARAMETER_LEVEL_UI) {
         snapped_ |= mask;
       } else {
         // Not there yet!
@@ -143,11 +138,7 @@ uint8_t ParameterEditor::OnPot(uint8_t index, uint8_t value) {
     }
   }
   active_control_ = index;
-  parameter_manager.Scale(
-      parameter,
-      part_index(active_control_),
-      instance_index(active_control_),
-      value);
+  parameter_manager.Scale(parameter, part_index(active_control_), instance_index(active_control_), value);
   edit_mode_ = EDIT_STARTED_BY_POT;
   return 1;
 }
@@ -176,13 +167,14 @@ void ParameterEditor::UpdateScreen() {
   }
   
   // Draw the 8 cells with parameter names and values.
+  // TODO code duplication with the next for loop after this one (not nested)
   for (uint8_t i = 0; i < kNumParametersPerPage; ++i) {
     uint8_t parameter_id = parameter_index(i);
     uint8_t line = i < 4 ? 0 : 1;
     if (line == detailed_info_line) {
       continue;
     }
-    uint8_t row = byteAnd(i, 3) * 10;
+    uint8_t row = 10 * (i % 4);
     char* buffer = display.line_buffer(line) + row;
     if (row != 0) {
       buffer[0] = kDelimiter;
@@ -192,20 +184,26 @@ void ParameterEditor::UpdateScreen() {
     }
     if (parameter_id != 0xff) {
       const Parameter& parameter = parameter_manager.parameter(parameter_id);
-      uint8_t value = parameter_manager.GetValue(
-          parameter,
-          part_index(i),
-          instance_index(i));
+      uint8_t value = parameter_manager.GetValue(parameter, part_index(i), instance_index(i));
+
+      // Phase57 mod: make the whole active parameter name uppercase.
+
+      // Use up to 4 letters for ordinary parameters names, 6 for page names
+      uint8_t name_width = 4;
+      uint8_t value_width = 4;
       if (parameter.level == PARAMETER_LEVEL_UI) {
-        // Use up to 6 letters for page names.
-        parameter.Print(value, &buffer[1], 6, 2);
-      } else {
-        // Use up to 4 letters for ordinary parameters names.
-        parameter.Print(value, &buffer[1], 4, 4);
+        name_width = 6;
+        value_width = 2;
       }
-      if (i == active_control_ && buffer[1] >= 'a' && buffer[1] <= 'z') {
-        // Change the first letter of the active control to uppercase.
-        buffer[1] -= 0x20;
+      parameter.Print(value, &buffer[1], name_width, value_width);
+
+      if (i == active_control_) {
+        // This is the part where the whole parameter name is made uppercase
+        for (uint8_t c = 1; c < name_width + 1 ; ++c) {
+          if (buffer[c] >= 'a' && buffer[c] <= 'z') {
+            buffer[c] -= 0x20;
+          }
+        }
       }
     }
   }
@@ -216,7 +214,7 @@ void ParameterEditor::UpdateScreen() {
     if (line == detailed_info_line) {
       continue;
     }
-    uint8_t row = (i & 3) * 10;
+    uint8_t row = 10 * (i % 4);
     char* buffer = display.line_buffer(line) + row;
     if (parameter_id == 0xff) {
       buffer[0] = ' ';
@@ -232,7 +230,7 @@ void ParameterEditor::UpdateLeds() {
     uint8_t current_lfo_value = multi.part(ui.active_part()).lfo_value(ui.state().active_env_lfo());
     leds.set_pixel(LED_STATUS, highNibbleUnshifted(current_lfo_value));
   } else {
-    if (multi.running() && (multi.step() & 3) == 0) {
+    if (multi.running() && (multi.step() % 4) == 0) {
       leds.set_pixel(LED_STATUS, 0xf0);
     }
   }

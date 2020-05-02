@@ -56,7 +56,7 @@ constexpr PageInfo page_registry[] PROGMEM = {
   
   { PAGE_FILTER,
     &ParameterEditor::event_handlers_,
-    { 16, 17, 0xff, 18, 22, 23, 0xff, 0xff },
+    { 16, 17, 0xff, 18, 22, 23, 73, 74 },
     PAGE_FILTER, 1, 0xf0,
   },
   

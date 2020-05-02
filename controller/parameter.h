@@ -109,7 +109,8 @@ struct Parameter {
   static void PrintNote(uint8_t note, char* buffer);
 };
 
-const uint8_t kNumParameters = 73;
+// counts parameters in Patch.h
+constexpr uint8_t kNumParameters = 75;
 
 // The parameter manager is the class who knows how to apply a parameter change
 // for each specific object type.
@@ -124,14 +125,10 @@ class ParameterManager {
   static uint8_t ControlChangeToParameterId(uint8_t cc);
   static uint8_t AddressToParameterId(uint8_t address);
   
-  static void SetValue(const Parameter& p,
-      uint8_t part, uint8_t instance_index, uint8_t value, uint8_t user_initiated);
-
-  static uint8_t GetValue(const Parameter& p,
-      uint8_t part, uint8_t instance_index);
+  static void SetValue(const Parameter& p, uint8_t part, uint8_t instance_index, uint8_t value, uint8_t user_initiated);
+  static uint8_t GetValue(const Parameter& p, uint8_t part, uint8_t instance_index);
 
   static void Increment(const Parameter& p, uint8_t part, uint8_t instance_index, int8_t increment) {
-
     uint8_t value = GetValue(p, part, instance_index);
     value = p.Increment(value, increment);
     SetValue(p, part, instance_index, value, 1);

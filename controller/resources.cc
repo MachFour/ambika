@@ -38,6 +38,8 @@ static constexpr char str_res_resonance[] PROGMEM = "resonance";
 static constexpr char str_res_mode[] PROGMEM = "mode";
 static constexpr char str_res_env2Tvcf[] PROGMEM = "env2~vcf";
 static constexpr char str_res_lfo2Tvcf[] PROGMEM = "lfo2~vcf";
+static constexpr char str_res_veloTvcf[] PROGMEM = "velo~vcf";
+static constexpr char str_res_keybTvcf[] PROGMEM = "keyb~vcf";
 static constexpr char str_res_attack[] PROGMEM = "attack";
 static constexpr char str_res_decay[] PROGMEM = "decay";
 static constexpr char str_res_sustain[] PROGMEM = "sustain";
@@ -389,6 +391,8 @@ const char* const string_table[] PROGMEM = {
   str_res_mode,
   str_res_env2Tvcf,
   str_res_lfo2Tvcf,
+  str_res_veloTvcf,
+  str_res_keybTvcf,
   str_res_attack,
   str_res_decay,
   str_res_sustain,

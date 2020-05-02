@@ -93,7 +93,10 @@ static constexpr Patch::Parameters init_patch_params PROGMEM {
     {MOD_SRC_SEQ_1, MOD_SRC_SEQ_2, MODIFIER_NONE}
   },
 
-  .padding = {0, 0, 0, 0, 0, 0, 0, 0}
+  .filter_velo = 0,
+  .filter_kbt = 0,
+
+  .padding = {0}
 };
 
 static constexpr PartData::Parameters init_part_params PROGMEM {

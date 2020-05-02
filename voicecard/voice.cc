@@ -120,8 +120,11 @@ static const Patch::Parameters init_patch_params PROGMEM {
       {.operands = {NULL_MOD_ENV_SRC, NULL_MOD_ENV_SRC}, .op = MODIFIER_NONE},
   },
 
+  .filter_velo = 0,
+  .filter_kbt = 0,
+
   // Padding
-  .padding = {0, 0, 0, 0, 0, 0, 0, 0}
+  .padding = {0}
 };
 
 /* static */
@@ -339,12 +342,18 @@ inline void Voice::ProcessModulationMatrix() {
 /* static */
 inline void Voice::UpdateDestinations() {
   // Hardcoded filter modulations.
-  // By default, the resonance tracks the note. Tracking works best when the
+  // Pichenettes: By default, the resonance tracks the note. Tracking works best when the
   // transistors are thermically coupled. You can disable tracking by applying
-  // a negative modulation from NOTE to CUTOFF.
+  // a negative modulation from NOTE to CUTOFF. (Phase57 mod below exposes this parameter explicitly)
   uint16_t cutoff = dst[MOD_DST_FILTER_CUTOFF];
   cutoff = S16ClipU14(cutoff + S8U8Mul(patch().filter_env(), mod_source_value[MOD_SRC_ENV_2]));
   cutoff = S16ClipU14(cutoff + S8S8Mul(patch().filter_lfo(), mod_source_value[MOD_SRC_LFO_2] + 128));
+
+  // Phase57 mods: velocity to cutoff & keyboard tracking to cutoff. Filter velocity is now unsigned.
+  // velocity to filter freq
+  cutoff = S16ClipU14(cutoff + U8U8Mul(patch().filter_velo(), mod_source_value[MOD_SRC_VELOCITY]));
+  // keyb tracking (note) to filter freq
+  cutoff = S16ClipU14(cutoff + S8S8Mul(patch().filter_kbt(), mod_source_value[MOD_SRC_NOTE] + 128));
   
   // Store in memory all the updated parameters.
   modulation_destinations[MOD_DST_FILTER_CUTOFF] = U14ShiftRight6(cutoff);
