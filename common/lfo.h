@@ -66,7 +66,7 @@ class Lfo {
         {
 #ifndef DISABLE_WAVETABLE_LFOS
           uint8_t shape_offset = shape - LFO_WAVEFORM_WAVE_1;
-          uint16_t offset = word(shape_offset, shape_offset);
+          uint16_t offset = word(shape_offset, shape_offset); // == (shape_offset << 8) + shape_offset == shape_offset * 257
           value = InterpolateSample(wav_res_lfo_waveforms + offset, phase);
 #else
         new_value = 0;

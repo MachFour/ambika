@@ -59,8 +59,6 @@ create_specialized_manager = True
 
 resources = [
   ('dummy', 'string', 'STR_RES', 'char', str, False),
-  (lookup_tables.lookup_tables,
-   'lookup_table', 'LUT_RES', 'uint16_t', int, False),
-  (waveforms.waveforms,
-   'waveform', 'WAV_RES', 'uint8_t', int, True),
+  (lookup_tables.lookup_tables, 'lookup_table', 'LUT_RES', 'uint16_t', int, False),
+  (waveforms.waveforms, 'waveform', 'WAV_RES', 'uint8_t', int, True),
 ]

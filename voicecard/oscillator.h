@@ -134,10 +134,6 @@ class Oscillator {
 
   // Union of state data used by each algorithm.
   OscillatorState data;
-
-  // Pointer to the render function.
-  static const RenderFn fn_table[];
-  
   // A flag set to true when sync is enabled ; and a table to record the
   // position of phrase wraps
   uint8_t* sync_input;
@@ -150,6 +146,7 @@ class Oscillator {
   void RenderCzResoSaw(uint8_t* buffer);
   void RenderCzResoPulse(uint8_t* buffer);
   void RenderCzResoTri(uint8_t* buffer);
+  void RenderCzResoWave(uint8_t* buffer);
   void RenderFm(uint8_t* buffer);
   void Render8BitLand(uint8_t* buffer);
   void RenderVowel(uint8_t* buffer);
@@ -158,7 +155,41 @@ class Oscillator {
   void RenderFilteredNoise(uint8_t* buffer);
   void RenderInterpolatedWavetable(uint8_t* buffer);
   void RenderWavequence(uint8_t* buffer);
-  
+
+
+  // Pointer to the render function.
+  static constexpr RenderFn fn_table[] PROGMEM {
+      &Oscillator::RenderSilence,
+
+      &Oscillator::RenderSimpleWavetable,
+      &Oscillator::RenderBandlimitedPwm,
+      &Oscillator::RenderSimpleWavetable,
+      &Oscillator::RenderSimpleWavetable,
+
+      &Oscillator::RenderCzSaw,
+      &Oscillator::RenderCzResoSaw,
+      &Oscillator::RenderCzResoSaw,
+      &Oscillator::RenderCzResoSaw,
+      &Oscillator::RenderCzResoSaw,
+      &Oscillator::RenderCzResoPulse,
+      &Oscillator::RenderCzResoPulse,
+      &Oscillator::RenderCzResoPulse,
+      &Oscillator::RenderCzResoPulse,
+      &Oscillator::RenderCzResoTri,
+
+      &Oscillator::RenderQuadSawPad,
+
+      &Oscillator::RenderFm,
+
+      &Oscillator::Render8BitLand,
+      &Oscillator::RenderDirtyPwm,
+      &Oscillator::RenderFilteredNoise,
+      &Oscillator::RenderVowel,
+
+      &Oscillator::RenderInterpolatedWavetable
+  };
+
+
   DISALLOW_COPY_AND_ASSIGN(Oscillator);
 };
 

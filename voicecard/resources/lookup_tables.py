@@ -37,12 +37,9 @@ num_values = 128
 min_increment = excursion * min_frequency / control_rate
 max_increment = excursion * max_frequency / control_rate
 
-rates = numpy.linspace(numpy.log(min_increment),
-                       numpy.log(max_increment), num_values)
+rates = numpy.linspace(numpy.log(min_increment), numpy.log(max_increment), num_values)
 
-lookup_tables.append(
-    ('lfo_increments', numpy.exp(rates).astype(int))
-)
+lookup_tables.append(('lfo_increments', numpy.exp(rates).astype(int)))
 
 
 # Create lookup table for envelope times (x^0.25).
@@ -63,9 +60,7 @@ while slow_values[i] != values[i]:
   values[i] = slow_values[i]
   i -= 1
 values[0] = 65535
-lookup_tables.append(
-    ('env_portamento_increments', values)
-)
+lookup_tables.append(('env_portamento_increments', values))
 
 # Create table for pitch.
 a4_midi = 69
@@ -75,9 +70,7 @@ notes = numpy.arange(116 * 128.0, 128 * 128.0, 2)
 pitches = a4_pitch * 2 ** ((notes - a4_midi * 128) / (128 * 12))
 increments = excursion / sample_rate * pitches
 
-lookup_tables.append(
-    ('oscillator_increments', increments.astype(int))
-)
+lookup_tables.append(('oscillator_increments', increments.astype(int)))
 
 
 """----------------------------------------------------------------------------
@@ -116,9 +109,7 @@ fm_frequency_ratios = numpy.array(
   8]
 )
 
-lookup_tables.append(
-    ('fm_frequency_ratios', (fm_frequency_ratios * 256).astype(int))
-)
+lookup_tables.append(('fm_frequency_ratios', (fm_frequency_ratios * 256).astype(int)))
 
 """----------------------------------------------------------------------------
 SSM2164 pseudo-linearization.
@@ -148,10 +139,6 @@ vca_gain = 10 ** (-1.5 * v_dac)
 # pylab.savefig('curve.pdf')
 # pylab.show()
 
-lookup_tables.append(
-    ('vca_linearization', vca_linearization_table.astype(int))
-)
+lookup_tables.append(('vca_linearization', vca_linearization_table.astype(int)))
 
-lookup_tables.append(
-    ('cz_phase_reset', [0, 32768, 16384, 32768])
-)
+lookup_tables.append(('cz_phase_reset', [0, 32768, 16384, 32768]))

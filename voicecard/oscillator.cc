@@ -110,40 +110,45 @@ void Oscillator::RenderSimpleWavetable(uint8_t* buffer) {
   uint8_t gain_2 = highNibbleUnshifted(balance_index);
   uint8_t gain_1 = byteInverse(gain_2);
   uint8_t wave_1_index, wave_2_index;
-  if (shape != WAVEFORM_SINE) {
+  if (shape == WAVEFORM_SINE) {
+    wave_1_index = WAV_RES_SINE;
+    wave_2_index = WAV_RES_SINE;
+  } else {
     uint8_t wave_index = lowNibble(balance_index);
     uint8_t base_resource_id;
     switch (shape) {
-      default: base_resource_id = WAV_RES_BANDLIMITED_TRIANGLE_0; break;
-      case WAVEFORM_SAW: base_resource_id = WAV_RES_BANDLIMITED_SAW_0; break;
-      case WAVEFORM_SQUARE: base_resource_id = WAV_RES_BANDLIMITED_SQUARE_0; break;
+      default:
+        base_resource_id = WAV_RES_BANDLIMITED_TRIANGLE_0;
+        break;
+      case WAVEFORM_SAW:
+        base_resource_id = WAV_RES_BANDLIMITED_SAW_0;
+        break;
+      case WAVEFORM_SQUARE:
+        base_resource_id = WAV_RES_BANDLIMITED_SQUARE_0;
+        break;
     }
     wave_1_index = base_resource_id + wave_index;
-    wave_index = U8AddClip(wave_index, 1, kNumZonesFullSampleRate);
-    wave_2_index = base_resource_id + wave_index;
-  } else {
-    wave_1_index = WAV_RES_SINE;
-    wave_2_index = WAV_RES_SINE;
+    wave_2_index = base_resource_id + U8AddClip(wave_index, 1, kNumZonesFullSampleRate);
   }
   const uint8_t* wave_1 = waveform_table[wave_1_index];
   const uint8_t* wave_2 = waveform_table[wave_2_index];
 
-  if (shape != WAVEFORM_TRIANGLE) {
-    BEGIN_SAMPLE_LOOP_WITH_TMP
-      UPDATE_PHASE_WITH_TMP
-      uint8_t sample = InterpolateTwoTables(wave_1, wave_2, phase_tmp.integral, gain_1, gain_2);
-      if (sample < parameter) {
-        sample += parameter / 2;
-      }
-      *buffer++ = sample;
-    END_SAMPLE_LOOP
-  } else {
-    // The waveshaper for the triangle is different.
+  // The waveshaper for the triangle is different.
+  if (shape == WAVEFORM_TRIANGLE) {
     BEGIN_SAMPLE_LOOP_WITH_TMP
       UPDATE_PHASE_WITH_TMP
       uint8_t sample = InterpolateTwoTables(wave_1, wave_2, phase_tmp.integral, gain_1, gain_2);
       if (sample < parameter) {
         sample = parameter;
+      }
+      *buffer++ = sample;
+    END_SAMPLE_LOOP
+  } else {
+    BEGIN_SAMPLE_LOOP_WITH_TMP
+      UPDATE_PHASE_WITH_TMP
+      uint8_t sample = InterpolateTwoTables(wave_1, wave_2, phase_tmp.integral, gain_1, gain_2);
+      if (sample < parameter) {
+        sample = sample + parameter / 2;
       }
       *buffer++ = sample;
     END_SAMPLE_LOOP
@@ -155,26 +160,27 @@ void Oscillator::RenderCzSaw(uint8_t* buffer) {
   BEGIN_SAMPLE_LOOP_WITH_TMP
     UPDATE_PHASE_WITH_TMP
     uint8_t phi = highByte(phase_tmp.integral);
-    uint8_t clipped_phi = phi < 0x20 ? phi << 3u : 0xff;
+    // thanks to https://github.com/bjoeri/ambika/
+    uint8_t clipped_phi = phase.integral < 0x2000 ? phase.integral >> 5u : 0xff;
     // Interpolation causes more aliasing here.
     *buffer++ = ReadSample(wav_res_sine, U8MixU16(phi, clipped_phi, parameter * 2));
   END_SAMPLE_LOOP
 }
 
 void Oscillator::RenderCzResoSaw(uint8_t* buffer) {
-  uint16_t increment = phase_increment.integral + U16((phase_increment.integral * U16(parameter)) / 4);
-  uint8_t type = shape - WAVEFORM_CZ_SAW_LP;
+  const uint8_t wave_type = shape - WAVEFORM_CZ_SAW_LP;
+  const uint8_t isBPorHP = byteAnd(wave_type, 2); // used as boolean (nonzero is true)
   uint16_t phase_2 = data.secondary_phase;
-  uint8_t typeCheck = byteAnd(type, 2); // TODO rename this when I figure out what it means
+  uint16_t increment = phase_increment.integral + U16((phase_increment.integral * U16(parameter)) / 4);
   BEGIN_SAMPLE_LOOP_WITH_TMP
     UPDATE_PHASE_WITH_TMP
     if (phase_tmp.carry) {
-      phase_2 = ResourcesManager::Lookup<uint16_t, uint8_t>(lut_res_cz_phase_reset, byteAnd(type, 0x03));
+      phase_2 = ResourcesManager::Lookup<uint16_t, uint8_t>(lut_res_cz_phase_reset, byteAnd(wave_type, 0x03));
     }
     phase_2 += increment;
     uint8_t carrier = ReadSample(wav_res_sine, phase_2);
     uint8_t window = ~highByte(phase_tmp.integral);
-    if (typeCheck) {
+    if (isBPorHP) {
       *buffer++ = S8U8MulShift8(carrier + 128, window) + 128;
     } else {
       *buffer++ = U8U8MulShift8(carrier, window);
@@ -203,6 +209,7 @@ void Oscillator::RenderCzResoPulse(uint8_t* buffer) {
       window = U16(~(phase_tmp.integral - 0x4000u)) >> 6u;
     }
     if (wave_type == 5) {
+      // WAVEFORM_CZ_PLS_PK
       carrier >>= 1u;
       carrier += 128;
     }
@@ -244,19 +251,66 @@ void Oscillator::RenderCzResoTri(uint8_t* buffer) {
   data.secondary_phase = phase_2;
 }
 
+/*
+ * Merges RenderCzResoTri, RenderCzResoPulse, RenderCzResoSaw
+ */
+
+void Oscillator::RenderCzResoWave(uint8_t* buffer) {
+    using rs = ResourcesManager;
+    const uint8_t cz_wave_type = shape - WAVEFORM_CZ_SAW_LP; // == 8 for ztri
+    const uint8_t cz_wave_shape = cz_wave_type / 4; // == 0 for saw, 1, for pulse, 2 for tri
+    // this computation depends on order of waves specified in patch.h
+    // 0 corresponds to LP, 1 to PK, 2 to BP, 3 to HP
+    const uint8_t filter_type = cz_wave_type % 4; // == byteAnd(cz_wave_type, 3); (optimiser should take care of this)
+    const uint8_t isBPorHP = byteAnd(cz_wave_type, 2); // == (filter_type >= 2) in boolean expressions
+    uint16_t increment = phase_increment.integral + ((phase_increment.integral * U16(parameter)) / 4);
+    uint16_t phase_2 = data.secondary_phase;
+    BEGIN_SAMPLE_LOOP_WITH_TMP
+      UPDATE_PHASE_WITH_TMP
+      if (phase_tmp.carry) {
+        phase_2 = rs::Lookup<uint16_t, uint8_t>(lut_res_cz_phase_reset, filter_type);
+      }
+      phase_2 += increment;
+      uint8_t carrier = ReadSample(wav_res_sine, phase_2);
+      uint8_t window;
+      // TODO is having the switch statement inside the loop incredibad?
+      switch (cz_wave_shape) {
+        case 0: // saw
+          window = byteInverse(highByte(phase_tmp.integral));
+          break;
+        case 1: // pulse
+          window = 0;
+          if (phase_tmp.integral < 0x4000) {
+            window = 255;
+          } else if (phase_tmp.integral < 0x8000) {
+            window = U16(byteInverse(phase_tmp.integral - 0x4000u)) >> 6u;
+          }
+          if (cz_wave_type == 5) { // WAVEFORM_CZ_PLS_PK
+            carrier = carrier / 2 + 128;
+          }
+          break;
+        case 2: // tri
+          window = phase_tmp.integral >> 7u;
+          if (wordAnd(phase_tmp.integral, 0x8000)) {
+            window = byteInverse(window);
+          }
+          break;
+      }
+      if (isBPorHP) {
+        *buffer++ = S8U8MulShift8(carrier + 128, window) + 128;
+      } else {
+        *buffer++ = U8U8MulShift8(carrier, window);
+      }
+    END_SAMPLE_LOOP
+    data.secondary_phase = phase_2;
+}
+
 // ------- FM ----------------------------------------------------------------
 void Oscillator::RenderFm(uint8_t* buffer) {
-  uint8_t offset = fm_parameter;
-  if (offset < 24) {
-    offset = 0;
-  } else if (offset > 48) {
-    offset = 24;
-  } else {
-    offset = offset - 24;
-  }
+  uint8_t offset = fm_parameter < 24 ? 0 : (fm_parameter > 48 ? 24 : fm_parameter - 24);
   auto multiplier = ResourcesManager::Lookup<uint16_t, uint8_t>(lut_res_fm_frequency_ratios, offset);
   uint16_t increment = U32(phase_increment.integral * U16(multiplier)) >> 8u;
-    parameter *= 2;
+  parameter *= 2;
   
   uint16_t phase_2 = data.secondary_phase;
   BEGIN_SAMPLE_LOOP
@@ -280,12 +334,12 @@ void Oscillator::Render8BitLand(uint8_t* buffer) {
 
 void Oscillator::RenderVowel(uint8_t* buffer) {
   using rs = ResourcesManager;
-  data.vw.update = byteAnd(data.vw.update + 1, 0x3);
+  data.vw.update = (data.vw.update + 1) % 4; //byteAnd(data.vw.update + 1, 0x3);
   if (!data.vw.update) {
     uint8_t offset_1 = highNibble(parameter);
     uint8_t balance = lowNibble(parameter);
     offset_1 = U8U8Mul(offset_1, 7);
-    uint8_t offset_2 = offset_1 + 7; // == offset 1 * 8
+    uint8_t offset_2 = offset_1 + 7; // == 8 * (original value of) offset 1
 
     // Interpolate formant frequencies.
     for (uint8_t i = 0; i < 3; ++i) {
@@ -434,36 +488,5 @@ void Oscillator::RenderWavequence(uint8_t* buffer) {
   END_SAMPLE_LOOP
 }
 
-/* static */
-const Oscillator::RenderFn Oscillator::fn_table[] PROGMEM = {
-  &Oscillator::RenderSilence,
-
-  &Oscillator::RenderSimpleWavetable,
-  &Oscillator::RenderBandlimitedPwm,
-  &Oscillator::RenderSimpleWavetable,
-  &Oscillator::RenderSimpleWavetable,
-
-  &Oscillator::RenderCzSaw,
-  &Oscillator::RenderCzResoSaw,
-  &Oscillator::RenderCzResoSaw,
-  &Oscillator::RenderCzResoSaw,
-  &Oscillator::RenderCzResoSaw,
-  &Oscillator::RenderCzResoPulse,
-  &Oscillator::RenderCzResoPulse,
-  &Oscillator::RenderCzResoPulse,
-  &Oscillator::RenderCzResoPulse,
-  &Oscillator::RenderCzResoTri,
-  
-  &Oscillator::RenderQuadSawPad,
-  
-  &Oscillator::RenderFm,
-  
-  &Oscillator::Render8BitLand,
-  &Oscillator::RenderDirtyPwm,
-  &Oscillator::RenderFilteredNoise,
-  &Oscillator::RenderVowel,
-  
-  &Oscillator::RenderInterpolatedWavetable
-};
 
 }  // namespace
