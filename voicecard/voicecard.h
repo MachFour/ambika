@@ -29,16 +29,16 @@ namespace ambika {
 //#define ALTERNATIVE_CODE
 
 // One control signal sample is generated for each 40 audio sample.
-static const uint8_t kControlRate = 40;
+static constexpr uint8_t kControlRate = 40;
 
 // The latency is 1ms, with a buffer storing 4ms of audio.
-static const uint8_t kAudioBlockSize = kControlRate;
+static constexpr uint8_t kAudioBlockSize = kControlRate;
 
-const uint8_t kSystemVersion = 0x11;
+constexpr uint8_t kSystemVersion = 0x11;
 
 static const auto kFirmwareUpdateFlagPtr = reinterpret_cast<uint8_t*>(E2END);
 
-enum VoicecardFirmwareUpdateStatus {
+enum VoicecardFirmwareUpdateStatus : uint8_t {
   FIRMWARE_UPDATE_DONE = 0,
   FIRMWARE_UPDATE_REQUESTED = 1,
   FIRMWARE_UPDATE_PROBING_BOOT = 2,

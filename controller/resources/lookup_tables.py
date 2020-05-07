@@ -318,7 +318,7 @@ Groove templates
 def ConvertGrooveTemplate(values):
   # Center
   values = numpy.array(values)
-  values -= values.mean()
+  values = values - values.mean()
   # Scale
   scale = numpy.abs(values).max() / 127.0
   values /= scale

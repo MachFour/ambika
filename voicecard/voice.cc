@@ -419,8 +419,9 @@ inline void Voice::RenderOscillators() {
       ref_pitch += kOctave;
       ++num_shifts;
     }
+    using rs = ResourcesManager;
     uint24_t increment {
-      ResourcesManager::Lookup<uint16_t, uint16_t>(lut_res_oscillator_increments, ref_pitch / 2),
+      rs::Lookup<uint16_t, uint16_t>(lut_res_oscillator_increments, ref_pitch / 2),
       0
     };
     // Divide the pitch increment by the number of octaves we had to transpose
@@ -435,9 +436,14 @@ inline void Voice::RenderOscillators() {
       midi_note = 0;
     }
     if (i == 0) {
+      // Seems like sub osc is fixed 1 octave below osc1
       sub_osc.set_increment(U24ShiftRight(increment));
+
+      // OSC1's sync input is a null array (no_sync is never written to), and outputs its sync state to sync_state
       osc_1.Render(patch().osc(0).shape(), midi_note, increment, no_sync, sync_state, buffer);
     } else {
+      // OSC2's sync input is set to OSC1's sync output if mix_op is OP_SYNC, else it gets no_sync.
+      // dummy sync state is there just to fill the argument, it's never read from
       osc_2.Render(patch().osc(1).shape(), midi_note, increment,
                    patch().mix_op() == OP_SYNC ? sync_state : no_sync, dummy_sync_state, osc2_buffer);
     }

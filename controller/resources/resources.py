@@ -44,7 +44,7 @@ header = """// Copyright 2009 Emilie Gillet.
 
 namespace = 'ambika'
 target = 'controller'
-modifier = 'PROGMEM'
+# modifier = 'PROGMEM'
 types = ['uint8_t', 'uint16_t']
 includes = """
 #include "avrlib/base.h"
@@ -55,16 +55,15 @@ create_specialized_manager = True
 
 import numpy
 
-import characters
-import lookup_tables
-import strings
-import waveforms
+from .characters import characters
+from .lookup_tables import lookup_tables, strings
+from .strings import strings as actual_strings
+from .waveforms import waveforms
 
 resources = [
-  (strings.strings + lookup_tables.strings,
+  (actual_strings + strings,
    'string', 'STR_RES', 'char', str, False),
-  (lookup_tables.lookup_tables,
-   'lookup_table', 'LUT_RES', 'uint16_t', int, False),
-  (characters.characters, 'character', 'CHR_RES', 'uint8_t', int, True),
-  (waveforms.waveforms, 'waveform', 'WAV_RES', 'uint8_t', int, True),
+  (lookup_tables, 'lookup_table', 'LUT_RES', 'uint16_t', int, False),
+  (characters, 'character', 'CHR_RES', 'uint8_t', int, True),
+  (waveforms, 'waveform', 'WAV_RES', 'uint8_t', int, True),
 ]

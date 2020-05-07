@@ -34,11 +34,11 @@
 
 namespace ambika {
 
-using ResourceId = uint8_t;
+typedef uint8_t ResourceId;
 
-extern const char* const string_table[] PROGMEM;
+extern const char* const string_table[];
 
-extern const uint16_t* const lookup_table_table[] PROGMEM;
+extern const uint16_t* const lookup_table_table[];
 
 extern const uint8_t* const waveform_table[];
 
@@ -72,7 +72,7 @@ extern const uint8_t wav_res_distortion[] PROGMEM;
 extern const uint8_t wav_res_lfo_waveforms[] PROGMEM;
 extern const uint8_t wav_res_env_expo[] PROGMEM;
 extern const uint8_t wav_res_division_table[] PROGMEM;
-extern const uint8_t wav_res_square_table[] PROGMEM;
+extern const uint8_t wav_res_blep_table[] PROGMEM;
 extern const uint8_t wav_res_waves[] PROGMEM;
 extern const uint8_t wav_res_wavetables[] PROGMEM;
 #define STR_RES_DUMMY 0  // dummy
@@ -146,11 +146,11 @@ extern const uint8_t wav_res_wavetables[] PROGMEM;
 #define WAV_RES_ENV_EXPO_SIZE 257
 #define WAV_RES_DIVISION_TABLE 28
 #define WAV_RES_DIVISION_TABLE_SIZE 128
-#define WAV_RES_SQUARE_TABLE 29
-#define WAV_RES_SQUARE_TABLE_SIZE 128
-#define WAV_RES_WAVES 30
+#define WAV_RES_BLEP_TABLE 28
+#define WAV_RES_BLEP_TABLE_SIZE 128
+#define WAV_RES_WAVES 29
 #define WAV_RES_WAVES_SIZE 10320
-#define WAV_RES_WAVETABLES 31
+#define WAV_RES_WAVETABLES 30
 #define WAV_RES_WAVETABLES_SIZE 288
 
 using ResourcesManager = avrlib::ResourcesManager<ResourceId,

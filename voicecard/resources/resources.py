@@ -44,7 +44,7 @@ header = """// Copyright 2011 Emilie Gillet.
 
 namespace = 'ambika'
 target = 'voicecard'
-modifier = 'PROGMEM'
+#modifier = 'PROGMEM' # does this do anything?
 types = ['uint8_t', 'uint16_t']
 includes = """
 #include "avrlib/base.h"
@@ -52,13 +52,13 @@ includes = """
 #include <avr/pgmspace.h>
 """
 
-import lookup_tables
-import waveforms
+from .lookup_tables import lookup_tables
+from .waveforms import waveforms
 
 create_specialized_manager = True
 
 resources = [
   ('dummy', 'string', 'STR_RES', 'char', str, False),
-  (lookup_tables.lookup_tables, 'lookup_table', 'LUT_RES', 'uint16_t', int, False),
-  (waveforms.waveforms, 'waveform', 'WAV_RES', 'uint8_t', int, True),
+  (lookup_tables, 'lookup_table', 'LUT_RES', 'uint16_t', int, False),
+  (waveforms, 'waveform', 'WAV_RES', 'uint8_t', int, True),
 ]

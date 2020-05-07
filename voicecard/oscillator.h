@@ -71,6 +71,8 @@ union OscillatorState {
   FilteredNoiseState no;
   QuadSawPadState qs;
   uint16_t secondary_phase;
+  // used in polyblep algorithms
+  uint8_t output_sample;
 };
 
 class Oscillator {
@@ -83,7 +85,7 @@ class Oscillator {
     data.no.rng_reset_value = Random::GetByte() + 1;
   }
 
-  inline void Render(uint8_t new_shape, uint8_t new_note, uint24_t new_phase_increment,
+  inline void Render(OscillatorAlgorithm new_shape, uint8_t new_note, uint24_t new_phase_increment,
                  uint8_t* new_sync_input, uint8_t* new_sync_output, uint8_t* buffer) {
     shape = new_shape;
     note = new_note;
@@ -98,7 +100,7 @@ class Oscillator {
         RenderBandlimitedPwm(buffer);
       }
     } else {
-      uint8_t index = new_shape >= WAVEFORM_WAVETABLE_1 ? U8(WAVEFORM_WAVETABLE_1) : new_shape;
+      uint8_t index = new_shape >= WAVEFORM_WAVETABLE_1 ? WAVEFORM_WAVETABLE_1 : new_shape;
       RenderFn fn;
       ResourcesManager::Load(fn_table, index, &fn);
       if (new_shape == WAVEFORM_WAVEQUENCE) {
@@ -125,7 +127,7 @@ class Oscillator {
 
   // Copy of the shape used by this oscillator. When changing this, you
   // should also update the Update/Render pointers.
-  uint8_t shape;
+  OscillatorAlgorithm shape;
 
   // Current value of the oscillator parameter.
   uint8_t parameter;
@@ -155,9 +157,14 @@ class Oscillator {
   void RenderFilteredNoise(uint8_t* buffer);
   void RenderInterpolatedWavetable(uint8_t* buffer);
   void RenderWavequence(uint8_t* buffer);
+  // polyblep synthesis methods by Bjarne (bjoeri on github)
+  void RenderPolyBlepSaw(uint8_t* buffer);
+  void RenderPolyBlepPwm(uint8_t* buffer);
+  void RenderPolyBlepCSaw(uint8_t* buffer);
+  // combines previous three functions
+  void RenderPolyBlepWave(uint8_t* buffer);
 
-
-  // Pointer to the render function.
+    // Pointer to the render function.
   static constexpr RenderFn fn_table[] PROGMEM {
       &Oscillator::RenderSilence,
 
@@ -167,15 +174,15 @@ class Oscillator {
       &Oscillator::RenderSimpleWavetable,
 
       &Oscillator::RenderCzSaw,
-      &Oscillator::RenderCzResoSaw,
-      &Oscillator::RenderCzResoSaw,
-      &Oscillator::RenderCzResoSaw,
-      &Oscillator::RenderCzResoSaw,
-      &Oscillator::RenderCzResoPulse,
-      &Oscillator::RenderCzResoPulse,
-      &Oscillator::RenderCzResoPulse,
-      &Oscillator::RenderCzResoPulse,
-      &Oscillator::RenderCzResoTri,
+      &Oscillator::RenderCzResoWave, // saw (LP)
+      &Oscillator::RenderCzResoWave, // saw (BP)
+      &Oscillator::RenderCzResoWave, // saw (HP)
+      &Oscillator::RenderCzResoWave, // saw (PK)
+      &Oscillator::RenderCzResoWave, // pulse (LP)
+      &Oscillator::RenderCzResoWave, // pulse (BP)
+      &Oscillator::RenderCzResoWave, // pulse (HP)
+      &Oscillator::RenderCzResoWave, // pulse (PK)
+      &Oscillator::RenderCzResoWave, // tri (LP)
 
       &Oscillator::RenderQuadSawPad,
 
@@ -186,7 +193,15 @@ class Oscillator {
       &Oscillator::RenderFilteredNoise,
       &Oscillator::RenderVowel,
 
-      &Oscillator::RenderInterpolatedWavetable
+      &Oscillator::RenderPolyBlepSaw,
+      &Oscillator::RenderPolyBlepPwm,
+      &Oscillator::RenderPolyBlepCSaw,
+      &Oscillator::RenderPolyBlepWave, // saw
+      &Oscillator::RenderPolyBlepWave, //pwm
+      &Oscillator::RenderPolyBlepWave, // csaw
+
+      &Oscillator::RenderInterpolatedWavetable,
+
   };
 
 

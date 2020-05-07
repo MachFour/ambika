@@ -118,6 +118,9 @@ fm
 pwm
 noise
 vowel
+polysaw
+polypwm
+polycsw
 male
 female
 choir

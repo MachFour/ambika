@@ -88,15 +88,18 @@ def Scale(array, min=1, max=254, center=True, dither=2):
 sine = -numpy.sin(numpy.arange(WAVETABLE_SIZE + 1) / float(WAVETABLE_SIZE) * 2 * numpy.pi) * 127.5 + 127.5
 
 # Band limited waveforms.
-num_zones = (107 - 24) / 16 + 2
+num_zones = round((107 - 24) / 16 + 2) # round to integer so it can be an index
 bl_pulse_tables = []
 bl_square_tables = []
 bl_saw_tables = []
 bl_tri_tables = []
 
-wrap = numpy.fmod(numpy.arange(WAVETABLE_SIZE + 1) + WAVETABLE_SIZE / 2, WAVETABLE_SIZE)
-quadrature = numpy.fmod(numpy.arange(WAVETABLE_SIZE + 1) + WAVETABLE_SIZE / 4, WAVETABLE_SIZE)
-fill = numpy.fmod(numpy.arange(WAVETABLE_SIZE + 1), WAVETABLE_SIZE)
+# have to make arrays into integer type to use as index
+wrap = numpy.fmod(numpy.arange(WAVETABLE_SIZE + 1) + WAVETABLE_SIZE / 2,
+        WAVETABLE_SIZE).astype(int)
+quadrature = numpy.fmod(numpy.arange(WAVETABLE_SIZE + 1) + WAVETABLE_SIZE / 4,
+        WAVETABLE_SIZE).astype(int)
+fill = numpy.fmod(numpy.arange(WAVETABLE_SIZE + 1), WAVETABLE_SIZE).astype(int)
 
 waveforms.append(('sine', Scale(sine[quadrature])))
 # waveforms.append(('sine_no_dither', Scale(sine[quadrature], dither=0)))
@@ -107,7 +110,7 @@ for zone in range(num_zones):
   m = 2 * numpy.floor(period / 2) + 1.0
   i = numpy.arange(-WAVETABLE_SIZE / 2, WAVETABLE_SIZE / 2) / float(WAVETABLE_SIZE)
   pulse = numpy.sin(numpy.pi * i * m) / (m * numpy.sin(numpy.pi * i) + 1e-9)
-  pulse[WAVETABLE_SIZE / 2] = 1.0
+  pulse[WAVETABLE_SIZE // 2] = 1.0
   pulse = pulse[fill]
 
   square = numpy.cumsum(pulse - pulse[wrap])
@@ -211,13 +214,29 @@ waveforms.append(('env_expo', env_expo / env_expo.max() * 255))
 # pylab.plot(env_expo / env_expo.max() * 255)
 # pylab.savefig('foo.pdf')
 
+"""-----------------------------------------------------------------------------
+Polyblep tables
+----------------------------------------------------------------------------"""
+
+#Table of x^-1 used for crude division calculations
+quotients = numpy.arange(256, 512, 2)
+divisions = 65535.0 / quotients
+divisions = divisions.astype(int)
+waveforms.append(('division_table', divisions))
+
+#Table of x^2 used in polyblep calculations
+square_table = numpy.linspace(0.0, 1.0, 128) ** 2.0
+square_table = numpy.round(127*square_table).astype(int)
+waveforms.append(('square_table', square_table))
+
 
 """----------------------------------------------------------------------------
 Wavetables
 -----------------------------------------------------------------------------"""
 
 
-waveforms.append(('waves', map(ord, file('data/waves.bin', 'rb').read())))
+with open('data/waves.bin', 'rb') as wave_file:
+    waveforms.append(('waves', list(wave_file.read())))
 
 wavetables = [
 # Male
