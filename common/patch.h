@@ -61,7 +61,7 @@ enum OscillatorAlgorithm : uint8_t {
   WAVEFORM_TRIANGLE,
   WAVEFORM_SINE,
   WAVEFORM_CZ_SAW,
-  WAVEFORM_CZ_SAW_LP,
+  WAVEFORM_CZ_SAW_LP, // these rendered by CzResoWave
   WAVEFORM_CZ_SAW_PK,
   WAVEFORM_CZ_SAW_BP,
   WAVEFORM_CZ_SAW_HP,
@@ -76,15 +76,12 @@ enum OscillatorAlgorithm : uint8_t {
   WAVEFORM_DIRTY_PWM,
   WAVEFORM_FILTERED_NOISE,
   WAVEFORM_VOWEL,
+  WAVEFORM_POLYBLEP_SAW, // these three are rendered by PolyblepWave
+  WAVEFORM_POLYBLEP_PWM,
+  WAVEFORM_POLYBLEP_CSAW,
   WAVEFORM_WAVETABLE_1,
   WAVEFORM_WAVETABLE_16 = WAVEFORM_WAVETABLE_1 - 1 + 16,
   WAVEFORM_WAVEQUENCE,
-  WAVEFORM_POLYBLEP_SAW,
-  WAVEFORM_POLYBLEP_PWM,
-  WAVEFORM_POLYBLEP_CSAW,
-  WAVEFORM_POLYBLEP_SAW_WAVE, // these three are rendered by PolyblepWave
-  WAVEFORM_POLYBLEP_PWM_WAVE,
-  WAVEFORM_POLYBLEP_CSAW_WAVE,
   WAVEFORM_LAST
 };
 
@@ -253,7 +250,7 @@ struct EnvelopeLfoSettings {
   LfoWave shape;
   uint8_t rate;
   uint8_t padding;
-  uint8_t retrigger_mode;
+  LfoSyncMode retrigger_mode;
 };
 
 
@@ -308,7 +305,7 @@ struct Patch {
 
     // Offset: 104-106
     // Phase57 filter parameter mods
-    uint8_t filter_velo;
+    int8_t filter_velo;
     int8_t filter_kbt;
 
     // Offset: 106-112
@@ -408,7 +405,7 @@ public:
       return data.params.modifier[index];
   }
 
-  inline uint8_t& filter_velo() {
+  inline int8_t& filter_velo() {
     return data.params.filter_velo;
   }
 

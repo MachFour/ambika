@@ -60,9 +60,9 @@ static constexpr Patch::Parameters init_patch_params PROGMEM {
   .filter_lfo = 0,
   // ADSR
   .env_lfo = {
-    {0, 40, 20,  60, LFO_WAVEFORM_TRIANGLE, kNumSyncedLfoRates + 24, 0, 0},
-    {0, 40, 0,   40, LFO_WAVEFORM_TRIANGLE, kNumSyncedLfoRates + 32, 0, 0},
-    {0, 40, 100, 40, LFO_WAVEFORM_TRIANGLE, kNumSyncedLfoRates + 48, 0, 0}
+    {0, 40, 20,  60, LFO_WAVEFORM_TRIANGLE, kNumSyncedLfoRates + 24, 0, LFO_SYNC_MODE_FREE},
+    {0, 40, 0,   40, LFO_WAVEFORM_TRIANGLE, kNumSyncedLfoRates + 32, 0, LFO_SYNC_MODE_FREE},
+    {0, 40, 100, 40, LFO_WAVEFORM_TRIANGLE, kNumSyncedLfoRates + 48, 0, LFO_SYNC_MODE_FREE}
   },
 
   .voice_lfo_shape = LFO_WAVEFORM_TRIANGLE,

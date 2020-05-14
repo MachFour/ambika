@@ -52,9 +52,9 @@ int8_t Voice::modulation_destinations[kNumModulationDestinations];
 int16_t Voice::dst[kNumModulationDestinations];
 uint8_t Voice::buffer[kAudioBlockSize];
 uint8_t Voice::osc2_buffer[kAudioBlockSize];
-uint8_t Voice::sync_state[kAudioBlockSize];
-uint8_t Voice::no_sync[kAudioBlockSize];
-uint8_t Voice::dummy_sync_state[kAudioBlockSize];
+bool Voice::sync_state[kAudioBlockSize];
+bool Voice::no_sync[kAudioBlockSize];
+bool Voice::dummy_sync_state[kAudioBlockSize];
 /* </static> */
 
 
@@ -86,9 +86,9 @@ static const Patch::Parameters init_patch_params PROGMEM {
   .filter_lfo = 0,
   // ADSR
   .env_lfo = {
-      {0, 40, 20, 60, LFO_WAVEFORM_TRIANGLE, 0, 0, 0},
-      {0, 40, 20, 60, LFO_WAVEFORM_TRIANGLE, 0, 0, 0},
-      {0, 40, 20, 60, LFO_WAVEFORM_TRIANGLE, 0, 0, 0}
+      {0, 40, 20, 60, LFO_WAVEFORM_TRIANGLE, 0, 0, LFO_SYNC_MODE_FREE},
+      {0, 40, 20, 60, LFO_WAVEFORM_TRIANGLE, 0, 0, LFO_SYNC_MODE_FREE},
+      {0, 40, 20, 60, LFO_WAVEFORM_TRIANGLE, 0, 0, LFO_SYNC_MODE_FREE}
   },
   .voice_lfo_shape = LFO_WAVEFORM_TRIANGLE,
   .voice_lfo_rate = 16,
@@ -349,16 +349,16 @@ inline void Voice::UpdateDestinations() {
   cutoff = S16ClipU14(cutoff + S8U8Mul(patch().filter_env(), mod_source_value[MOD_SRC_ENV_2]));
   cutoff = S16ClipU14(cutoff + S8S8Mul(patch().filter_lfo(), mod_source_value[MOD_SRC_LFO_2] + 128));
 
-  // Phase57 mods: velocity to cutoff & keyboard tracking to cutoff. Filter velocity is now unsigned.
+  // Phase57 mods: velocity to cutoff & keyboard tracking to cutoff.
   // velocity to filter freq
-  cutoff = S16ClipU14(cutoff + U8U8Mul(patch().filter_velo(), mod_source_value[MOD_SRC_VELOCITY]));
+  cutoff = S16ClipU14(cutoff + S8U8Mul(patch().filter_velo(), mod_source_value[MOD_SRC_VELOCITY]));
   // keyb tracking (note) to filter freq
   cutoff = S16ClipU14(cutoff + S8S8Mul(patch().filter_kbt(), mod_source_value[MOD_SRC_NOTE] + 128));
   
   // Store in memory all the updated parameters.
   modulation_destinations[MOD_DST_FILTER_CUTOFF] = U14ShiftRight6(cutoff);
   modulation_destinations[MOD_DST_FILTER_RESONANCE] = U14ShiftRight6(dst[MOD_DST_FILTER_RESONANCE]);
-  modulation_destinations[MOD_DST_MIX_CRUSH] = S8(highByte(dst[MOD_DST_MIX_CRUSH])) + 1;
+  modulation_destinations[MOD_DST_MIX_CRUSH] = S8(highByte(U16(dst[MOD_DST_MIX_CRUSH]))) + 1;
 
   osc_1.set_parameter(U15ShiftRight7(dst[MOD_DST_PARAMETER_1]));
   osc_1.set_fm_parameter(patch().osc(0).range() + 36);
@@ -420,14 +420,12 @@ inline void Voice::RenderOscillators() {
       ++num_shifts;
     }
     using rs = ResourcesManager;
-    uint24_t increment {
-      rs::Lookup<uint16_t, uint16_t>(lut_res_oscillator_increments, ref_pitch / 2),
-      0
-    };
+    uint24_t increment = U32(rs::Lookup<uint16_t, uint16_t>(lut_res_oscillator_increments, ref_pitch / 2)) << 8;
+
     // Divide the pitch increment by the number of octaves we had to transpose
     // to get a value in the lookup table.
     while (num_shifts--) {
-      increment = U24ShiftRight(increment);
+      increment >>= 1;
     }
 
     // Now the oscillators can recompute all their internal variables!
@@ -437,7 +435,7 @@ inline void Voice::RenderOscillators() {
     }
     if (i == 0) {
       // Seems like sub osc is fixed 1 octave below osc1
-      sub_osc.set_increment(U24ShiftRight(increment));
+      sub_osc.set_increment(increment / 2);
 
       // OSC1's sync input is a null array (no_sync is never written to), and outputs its sync state to sync_state
       osc_1.Render(patch().osc(0).shape(), midi_note, increment, no_sync, sync_state, buffer);

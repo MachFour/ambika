@@ -151,9 +151,9 @@ class Voice {
   
   static uint8_t buffer[kAudioBlockSize];
   static uint8_t osc2_buffer[kAudioBlockSize];
-  static uint8_t sync_state[kAudioBlockSize];
-  static uint8_t no_sync[kAudioBlockSize];
-  static uint8_t dummy_sync_state[kAudioBlockSize];
+  static bool sync_state[kAudioBlockSize];
+  static bool no_sync[kAudioBlockSize];
+  static bool dummy_sync_state[kAudioBlockSize];
 
   DISALLOW_COPY_AND_ASSIGN(Voice);
 };

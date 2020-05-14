@@ -186,7 +186,6 @@ void ParameterEditor::UpdateScreen() {
       const Parameter& parameter = parameter_manager.parameter(parameter_id);
       uint8_t value = parameter_manager.GetValue(parameter, part_index(i), instance_index(i));
 
-      // Phase57 mod: make the whole active parameter name uppercase.
 
       // Use up to 4 letters for ordinary parameters names, 6 for page names
       uint8_t name_width = 4;
@@ -198,11 +197,15 @@ void ParameterEditor::UpdateScreen() {
       parameter.Print(value, &buffer[1], name_width, value_width);
 
       if (i == active_control_) {
-        // This is the part where the whole parameter name is made uppercase
-        for (uint8_t c = 1; c < name_width + 1 ; ++c) {
-          if (buffer[c] >= 'a' && buffer[c] <= 'z') {
-            buffer[c] -= 0x20;
-          }
+        // Phase57 mod: make the whole active parameter name uppercase.
+        // actually nah
+        //for (uint8_t c = 1; c < name_width + 1 ; ++c) {
+        //  if (buffer[c] >= 'a' && buffer[c] <= 'z') {
+        //    buffer[c] -= 0x20;
+        //  }
+        //}
+        if (buffer[1] >= 'a' && buffer[1] <= 'z') {
+          buffer[1] -= 0x20;
         }
       }
     }

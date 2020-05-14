@@ -42,25 +42,26 @@ class Lfo {
 
   uint8_t Render(LfoWave shape) {
     phase += phase_increment;
-    is_looped = phase < phase_increment;
-    
+    phase_reset = phase < phase_increment;
+
+    const uint8_t phase_byte = highByte(phase);
     // Compute the LFO value.
     uint8_t value;
     switch (shape) {
       case LFO_WAVEFORM_RAMP:
-        value = highByte(phase);
+        value = phase_byte;
         break;
       case LFO_WAVEFORM_S_H:
-        if (is_looped) {
+        if (phase_reset) {
           s_h_value = Random::GetByte();
         }
         value = s_h_value;
         break;
       case LFO_WAVEFORM_TRIANGLE:
-        value = (phase & 0x8000u) ? phase >> 7u : byteInverse(phase >> 7u);
+        value = byteAnd(phase_byte, 0x80) ? phase >> 7u : byteInverse(phase >> 7u);
         break;
       case LFO_WAVEFORM_SQUARE:
-        value = (phase & 0x8000u) ? 255 : 0;
+        value = byteAnd(phase_byte, 0x80) ? 255 : 0;
         break;
       default:
         {
@@ -78,7 +79,7 @@ class Lfo {
   }
 
   void set_phase(uint16_t new_phase) {
-    is_looped = (new_phase <= phase);
+    phase_reset = (new_phase <= phase);
     phase = new_phase;
   }
   
@@ -88,7 +89,7 @@ class Lfo {
   }
   
   inline uint8_t looped() const {
-    return is_looped;
+    return phase_reset;
   }
 
  private:
@@ -97,12 +98,11 @@ class Lfo {
 
   // Current phase of the lfo.
   uint16_t phase;
-  uint8_t is_looped;
+  bool phase_reset;
 
   // Current value of S&H.
   uint8_t s_h_value;
-  //uint8_t step;
-  
+
   DISALLOW_COPY_AND_ASSIGN(Lfo);
 };
 

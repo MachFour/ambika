@@ -37,9 +37,8 @@ static inline uint8_t ReadSample(const uint8_t* table, uint16_t phase) {
   return ResourcesManager::Lookup<uint8_t, uint8_t>(table, highByte(phase));
 }
 
-static inline uint8_t InterpolateTwoTables(
-    const uint8_t* table_a, const uint8_t* table_b,
-    uint16_t phase, uint8_t gain_a, uint8_t gain_b) {
+static inline uint8_t InterpolateTwoTables(const uint8_t* table_a, const uint8_t* table_b,
+      uint16_t phase, uint8_t gain_a, uint8_t gain_b) {
   auto a = InterpolateSample(table_a, phase);
   auto b = InterpolateSample(table_b, phase);
   return U8Mix(a, b, gain_a, gain_b);
@@ -86,7 +85,7 @@ class Oscillator {
   }
 
   inline void Render(OscillatorAlgorithm new_shape, uint8_t new_note, uint24_t new_phase_increment,
-                 uint8_t* new_sync_input, uint8_t* new_sync_output, uint8_t* buffer) {
+                     bool* new_sync_input, bool* new_sync_output, uint8_t* buffer) {
     shape = new_shape;
     note = new_note;
     phase_increment = new_phase_increment;
@@ -111,11 +110,11 @@ class Oscillator {
   }
   
   inline void set_parameter(uint8_t new_parameter) {
-    this->parameter = new_parameter;
+    parameter = new_parameter;
   }
   
   inline void set_fm_parameter(uint8_t new_fm_parameter) {
-    this->fm_parameter = new_fm_parameter;
+    fm_parameter = new_fm_parameter;
   }
   
  private:
@@ -138,16 +137,18 @@ class Oscillator {
   OscillatorState data;
   // A flag set to true when sync is enabled ; and a table to record the
   // position of phrase wraps
-  uint8_t* sync_input;
-  uint8_t* sync_output;
-  
+  bool* sync_input;
+  bool* sync_output;
+
+  inline static bool update_phase_and_sync(uint24_t& phase, const uint24_t& phase_increment, bool*& sync_in, bool*& sync_out);
+
   void RenderSilence(uint8_t* buffer);
   void RenderBandlimitedPwm(uint8_t* buffer);
   void RenderSimpleWavetable(uint8_t* buffer);
   void RenderCzSaw(uint8_t* buffer);
-  void RenderCzResoSaw(uint8_t* buffer);
-  void RenderCzResoPulse(uint8_t* buffer);
-  void RenderCzResoTri(uint8_t* buffer);
+  //void RenderCzResoSaw(uint8_t* buffer);
+  //void RenderCzResoPulse(uint8_t* buffer);
+  //void RenderCzResoTri(uint8_t* buffer);
   void RenderCzResoWave(uint8_t* buffer);
   void RenderFm(uint8_t* buffer);
   void Render8BitLand(uint8_t* buffer);
@@ -158,9 +159,9 @@ class Oscillator {
   void RenderInterpolatedWavetable(uint8_t* buffer);
   void RenderWavequence(uint8_t* buffer);
   // polyblep synthesis methods by Bjarne (bjoeri on github)
-  void RenderPolyBlepSaw(uint8_t* buffer);
-  void RenderPolyBlepPwm(uint8_t* buffer);
-  void RenderPolyBlepCSaw(uint8_t* buffer);
+  //void RenderPolyBlepSaw(uint8_t* buffer);
+  //void RenderPolyBlepPwm(uint8_t* buffer);
+  //void RenderPolyBlepCSaw(uint8_t* buffer);
   // combines previous three functions
   void RenderPolyBlepWave(uint8_t* buffer);
 
@@ -193,15 +194,11 @@ class Oscillator {
       &Oscillator::RenderFilteredNoise,
       &Oscillator::RenderVowel,
 
-      &Oscillator::RenderPolyBlepSaw,
-      &Oscillator::RenderPolyBlepPwm,
-      &Oscillator::RenderPolyBlepCSaw,
       &Oscillator::RenderPolyBlepWave, // saw
       &Oscillator::RenderPolyBlepWave, //pwm
       &Oscillator::RenderPolyBlepWave, // csaw
 
       &Oscillator::RenderInterpolatedWavetable,
-
   };
 
 

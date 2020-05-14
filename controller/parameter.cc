@@ -97,10 +97,10 @@ uint8_t Parameter::is_snapped(uint8_t current_value, uint8_t value_7bits) const 
 
 uint8_t Parameter::Clamp(uint8_t value) const {
   if (unit == UNIT_INT8) {
-    int8_t signed_value = static_cast<int8_t>(value);
-    if (signed_value < static_cast<int8_t>(min_value)) {
+    int8_t signed_value = S8(value);
+    if (signed_value < S8(min_value)) {
       value = min_value;
-    } else if (signed_value > static_cast<int8_t>(max_value)) {
+    } else if (signed_value > S8(max_value)) {
       value = max_value;
     }
   } else {
@@ -851,7 +851,7 @@ static constexpr Parameter parameters[kNumParameters] PROGMEM = {
     // 73
   { PARAMETER_LEVEL_PATCH,
       PRM_PATCH_FILTER1_VELO,
-      UNIT_UINT8, 0, 63,
+      UNIT_INT8, -63, 63,
       1, 0, 0xff, 108,
       STR_RES_VELOTVCF, STR_RES_VELOTVCF, STR_RES_FILTER_1 },
 
@@ -910,7 +910,6 @@ inline uint8_t get_address(const Parameter& p, uint8_t instance_index) {
   return p.offset + p.stride * instance_index;
 }
 
-// TODO use references for both functions below
 /* static */
 void ParameterManager::SetValue(const Parameter& p,
       uint8_t part, uint8_t instance_index, uint8_t value, uint8_t user_initiated) {

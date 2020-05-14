@@ -31,13 +31,13 @@ class SubOscillator {
   SubOscillator() = default;
 
   static inline void set_increment(uint24_t increment) {
-    phase_increment_ = increment;
+    phase_increment = increment;
   }
 
   static inline void Render(uint8_t shape, uint8_t* buffer, uint8_t amount) {
-    uint24_t increment = phase_increment_;
+    uint24_t increment = phase_increment;
     if (shape >= 3) {
-      increment = U24ShiftRight(increment);
+      increment >>= 1;
       shape -= 3;
     }
     uint8_t size = kAudioBlockSize;
@@ -45,13 +45,13 @@ class SubOscillator {
     uint8_t sub_gain = amount;
     uint8_t mix_gain = ~sub_gain;
     while (size--) {
-      phase_ = U24Add(phase_, increment);
+      phase += increment;
       uint8_t v;
       if (shape != 1) {
-        v = U8(phase_.integral >> 8u) < pulse_width ? 0 : 255;
+        v = highByte24(phase) < pulse_width ? 0 : 255;
       } else {
-        uint8_t tri = phase_.integral >> 7u;
-        v = phase_.integral & 0x8000u ? tri : ~tri;
+        uint8_t tri = highWord24(phase) >> 7u;
+        v = highByte24(phase) & 0x80u ? tri : ~tri;
       }
       *buffer = U8Mix(*buffer, v, mix_gain, sub_gain);
       ++buffer;
@@ -60,17 +60,17 @@ class SubOscillator {
 
  private:
   // Current phase of the oscillator.
-  static uint24_t phase_;
-  static uint24_t phase_increment_;
+  static uint24_t phase;
+  static uint24_t phase_increment;
 
   DISALLOW_COPY_AND_ASSIGN(SubOscillator);
 };
 
 /* static */
-uint24_t SubOscillator::phase_;
+uint24_t SubOscillator::phase;
 
 /* static */
-uint24_t SubOscillator::phase_increment_;
+uint24_t SubOscillator::phase_increment;
 
 }  // namespace ambika
 
