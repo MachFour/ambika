@@ -82,31 +82,73 @@ like.
 ----------------------------------------------------------------------------"""
 
 fm_frequency_ratios = numpy.array(
-[ 0.125,
-  0.25,
-  0.5,
-  0.5 * 2 ** (16 / 1200.0),
-  numpy.sqrt(2) / 2,
-  numpy.pi / 4,
-  1.0,
-  1.0 * 2 ** (8 / 1200.0),
-  numpy.sqrt(2),
-  numpy.pi / 2,
-  7.0 / 4,
-  2,
-  2 * 2 ** (8 / 1200.0),
-  9.0 / 4,
-  11.0 / 4,
-  2 * numpy.sqrt(2),
-  3,
-  numpy.pi,
-  numpy.sqrt(3) * 2,
-  4,
-  numpy.sqrt(2) * 3,
-  numpy.pi * 3 / 2,
-  5,
-  numpy.sqrt(2) * 4,
-  8]
+[
+    1
+  , 1 / 8
+  , 1 / 6
+  , 1 / 5
+  , 1 / 4
+  , 1 / 3
+  , 1 / 2
+  ,(1 / 2) * 2 ** (16 / 1200)
+  , 2 / 3
+  , 3 / 4
+  , 4 / 5
+  , 5 / 6
+  , 7 / 8
+  , 1
+  , 1 * 2 ** (8 / 1200)
+  , 6 / 5
+  , 5 / 4
+  , 4 / 3
+  , 7 / 5
+  , 6 / 4
+  , 5 / 3
+  , 7 / 4
+  , 2
+  , 2 * 2 ** (8 / 1200)
+  , 9 / 4
+  , 11 / 4
+  , 3
+  , 4
+  , 5
+  , 8
+  , 0
+  , 0
+  , 0
+  , 0
+  , 0
+  , 0
+  , 0
+  , 0
+  , 0
+  # chromatic scale
+  , numpy.power(2, -12/12)
+  , numpy.power(2, -11/12)
+  , numpy.power(2, -10/12)
+  , numpy.power(2, -9/12)
+  , numpy.power(2, -8/12)
+  , numpy.power(2, -7/12)
+  , numpy.power(2, -6/12)
+  , numpy.power(2, -5/12)
+  , numpy.power(2, -4/12)
+  , numpy.power(2, -3/12)
+  , numpy.power(2, -2/12)
+  , numpy.power(2, -1/12)
+  , numpy.power(2, 0/12)
+  , numpy.power(2, 1/12)
+  , numpy.power(2, 2/12)
+  , numpy.power(2, 3/12)
+  , numpy.power(2, 4/12)
+  , numpy.power(2, 5/12)
+  , numpy.power(2, 6/12)
+  , numpy.power(2, 7/12)
+  , numpy.power(2, 8/12)
+  , numpy.power(2, 9/12)
+  , numpy.power(2, 10/12)
+  , numpy.power(2, 11/12)
+  , numpy.power(2, 12/12)
+  ]
 )
 
 lookup_tables.append(('fm_frequency_ratios', (fm_frequency_ratios * 256).astype(int)))

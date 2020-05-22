@@ -69,7 +69,8 @@ union OscillatorState {
   VowelSynthesizerState vw;
   FilteredNoiseState no;
   QuadSawPadState qs;
-  uint16_t secondary_phase;
+  // for FM synthesis
+  uint24_t secondary_phase;
   // used in polyblep algorithms
   uint8_t output_sample;
 };

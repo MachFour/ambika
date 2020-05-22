@@ -361,9 +361,9 @@ inline void Voice::UpdateDestinations() {
   modulation_destinations[MOD_DST_MIX_CRUSH] = S8(highByte(U16(dst[MOD_DST_MIX_CRUSH]))) + 1;
 
   osc_1.set_parameter(U15ShiftRight7(dst[MOD_DST_PARAMETER_1]));
-  osc_1.set_fm_parameter(patch().osc(0).range() + 36);
+  osc_1.set_fm_parameter(patch().osc(0).range() + 36); // minimum zero
   osc_2.set_parameter(U15ShiftRight7(dst[MOD_DST_PARAMETER_2]));
-  osc_2.set_fm_parameter(patch().osc(1).range() + 36);
+  osc_2.set_fm_parameter(patch().osc(1).range() + 36); // minimum zero
   
   int8_t attack_mod = U15ShiftRight7(dst[MOD_DST_ATTACK]) - 64;
   int8_t decay_mod = U15ShiftRight7(dst[MOD_DST_DECAY]) - 64;

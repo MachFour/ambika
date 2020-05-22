@@ -352,7 +352,7 @@ static constexpr Parameter parameters[kNumParameters] PROGMEM = {
   // 2
   { PARAMETER_LEVEL_PATCH,
     PRM_PATCH_OSC1_RANGE,
-    UNIT_INT8, -24, 24,
+    UNIT_INT8, -36, 36,
     1, 0, 0xff, 14,
     STR_RES_RANGE, STR_RES_RANGE, STR_RES_OSCILLATOR_1 },
 
@@ -380,7 +380,7 @@ static constexpr Parameter parameters[kNumParameters] PROGMEM = {
   // 6
   { PARAMETER_LEVEL_PATCH,
     PRM_PATCH_OSC2_RANGE,
-    UNIT_INT8, -24, 24,
+    UNIT_INT8, -36, 36,
     1, 0, 0xff, 20,
     STR_RES_RANGE, STR_RES_RANGE, STR_RES_OSCILLATOR_2 },
 

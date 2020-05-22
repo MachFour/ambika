@@ -206,22 +206,29 @@ void Oscillator::RenderCzResoWave(uint8_t* buffer) {
 
 // ------- FM ----------------------------------------------------------------
 void Oscillator::RenderFm(uint8_t* buffer) {
-  uint8_t offset = fm_parameter < 24 ? 0 : (fm_parameter > 48 ? 24 : fm_parameter - 24);
-  auto multiplier = ResourcesManager::Lookup<uint16_t, uint8_t>(lut_res_fm_frequency_ratios, offset);
-  uint16_t increment = U32(highWord24(phase_increment) * U16(multiplier)) >> 8u;
-  parameter *= 2;
-  
+  // FM table currently has 64 entries. fn_parameter goes from 0 to 72 = 2*36
+  const uint8_t fm_type = byteAnd(fm_parameter, 64 - 1); // == mod 64
+  const auto multiplier = ResourcesManager::Lookup<uint16_t, uint8_t>(lut_res_fm_frequency_ratios, fm_type);
+  const uint24_t modulator_phase_inc = phase_increment * multiplier >> 8u;
+
+
+  const uint8_t depth_parameter = parameter * 2;
+
   uint24_t phase_tmp = phase;
-  uint16_t phase_2 = data.secondary_phase;
+  uint24_t modulator_phase = data.secondary_phase;
+
+
   for (uint8_t samples_left = kAudioBlockSize; samples_left > 0; samples_left--) {
     update_phase_and_sync(phase_tmp, phase_increment, sync_input, sync_output);
-    phase_2 += increment;
-    uint8_t modulator = InterpolateSample(wav_res_sine, phase_2);
-    uint16_t modulation = modulator * parameter;
+    modulator_phase += modulator_phase_inc;
+
+    int8_t modulator = InterpolateSample(wav_res_sine, highWord24(modulator_phase)) - 128;
+    uint16_t modulation = S8U8Mul(modulator, depth_parameter);
+    // sin(phi(n) + m), where m = sin(phi_2(n)) is the modulation
     *buffer++ = InterpolateSample(wav_res_sine, highWord24(phase_tmp) + modulation);
   }
   phase = phase_tmp;
-  data.secondary_phase = phase_2;
+  data.secondary_phase = modulator_phase;
 }
 
 // ------- 8-bit land --------------------------------------------------------
@@ -241,8 +248,8 @@ void Oscillator::Render8BitLand(uint8_t* buffer) {
 void Oscillator::RenderVowel(uint8_t* buffer) {
   using rs = ResourcesManager;
   data.vw.update = byteAnd(data.vw.update + 1, 0x3); // reset to zero every 4th call
-  if (data.vw.update == 0) {
-    uint8_t offset_1 = highNibble(parameter) * U8(7);
+  if (data.vw.update != 0) {
+    uint8_t offset_1 = highNibble(parameter) * 7;
     uint8_t balance = lowNibble(parameter);
     uint8_t offset_2 = offset_1 + 7; // highNibble(parameter) * 8
 
