@@ -37,7 +37,7 @@ ParameterEditor::SnapMask ParameterEditor::snapped_;
 uint8_t ParameterEditor::parameter_index(uint8_t control_id) {
   uint8_t parameter_id = info_->data[control_id];
   if (parameter_id >= 0xf0 && parameter_id <= 0xf7) {
-    return multi.data().knob_assignment[lowNibble(parameter_id)].parameter;
+    return multi.data().knobAssignment(lowNibble(parameter_id)).parameter;
   } else {
     return parameter_id;
   }
@@ -47,7 +47,7 @@ uint8_t ParameterEditor::parameter_index(uint8_t control_id) {
 uint8_t ParameterEditor::part_index(uint8_t control_id) {
   uint8_t parameter_id = info_->data[control_id];
   if (parameter_id >= 0xf0 && parameter_id <= 0xf7) {
-    return multi.data().knob_assignment[parameter_id & 0x0f].part;
+    return multi.data().knobAssignment(lowNibble(parameter_id)).part;
   } else {
     return ui.active_part();
   }
@@ -57,7 +57,7 @@ uint8_t ParameterEditor::part_index(uint8_t control_id) {
 uint8_t ParameterEditor::instance_index(uint8_t control_id) {
   uint8_t parameter_id = info_->data[control_id];
   if (parameter_id >= 0xf0 && parameter_id <= 0xf7) {
-    return multi.data().knob_assignment[lowNibble(parameter_id)].instance;
+    return multi.data().knobAssignment(lowNibble(parameter_id)).instance;
   } else {
     if (parameter_id == 0xff) {
       return 0xff;
@@ -123,7 +123,7 @@ uint8_t ParameterEditor::OnPot(uint8_t index, uint8_t value) {
   }
   const Parameter& parameter = parameter_manager.parameter(parameter_id);
   if (system_settings.data().snap()) {
-    SnapMask mask = (1 << index);
+    SnapMask mask = (1u << index);
     // If this pot has not reached the right position yet, test if the position
     // of the pot matches the value of the parameter.
     // Pots used to scroll among UI pages are not subject to snap.

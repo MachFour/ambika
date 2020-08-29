@@ -120,12 +120,6 @@ public:
   inline KnobAssignment& knobAssignment(uint8_t index) {
     return data.params.knob_assignment[index];
   }
-  
-  // Offset: 28-52
-  KnobAssignment knob_assignment[8];
-  
-  // Offset: 52-56
-  uint8_t padding2[4];
 
   static constexpr inline size_t size() {
     return sizeof(Parameters);
